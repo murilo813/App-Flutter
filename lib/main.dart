@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import '../services/sync_service.dart';
 import 'home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await syncEstoqueDeTodasLojas();
+
   runApp(MyApp());
 }
 

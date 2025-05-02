@@ -19,7 +19,7 @@ class _StorePageState extends State<StorePage> {
   late TextEditingController searchController;
   final ApiService apiService = ApiService();
   String? ultimaAtualizacao;
-  bool isSyncing = false;  // ✅ 1. Controle de sincronização
+  bool isSyncing = false;  
 
   final Map<String, String> storeLabels = {
     'aurora': 'Aurora',
@@ -107,7 +107,6 @@ class _StorePageState extends State<StorePage> {
                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ),
-          // ✅ 5. Exibe "Sincronizando" apenas se isSyncing for verdadeiro
           if (isSyncing)
             Padding(
               padding: const EdgeInsets.all(8.0),
