@@ -8,13 +8,22 @@ class ApiService {
   ApiService({this.baseUrl = 'http://192.168.2.25:5000/'}); 
 
   Future<List<Product>> fetchProducts(String store) async {
-    final response = await http.get(Uri.parse('$baseUrl/estoque/$store'));
+    final url = '$baseUrl/estoque/$store';
+    print('Fazendo requisição para: $url');
+    try {
+      final response = await http.get(Uri.parse(url));
+      print('Status code: ${response.statusCode}');
+      print('Body: ${response.body}');
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Product.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load products');
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Product.fromJson(json)).toList();
+      } else {
+        throw Exception('Erro ao carregar produtos (status ${response.statusCode})');
+      }
+    } catch (e) {
+      print('Erro na requisição: $e');
+      throw Exception('Erro ao conectar: $e');
     }
   }
 }
