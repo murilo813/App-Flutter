@@ -102,6 +102,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_background_service:
+    dependency: "direct main"
+    description:
+      name: flutter_background_service
+      sha256: "6c32940a40eceade9b63be1be758ce84f0a016828ce86c007f2822f6a8b4f5fb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.7"
   flutter_lints:
     dependency: "direct dev"
     description:
