@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
+import '../services/sync_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'database/local_database.dart'; // banco local
 
 class StorePage extends StatefulWidget {
   final String storeName;
@@ -18,8 +18,9 @@ class _StorePageState extends State<StorePage> {
   late List<Product> filteredProducts;
   late TextEditingController searchController;
   final ApiService apiService = ApiService();
+  String? ultimaAtualizacao;
+  bool isSyncing = false;  // ✅ 1. Controle de sincronização
 
-  // Mapeia os nomes técnicos para nomes a ser exibidos
   final Map<String, String> storeLabels = {
     'aurora': 'Aurora',
     'imbuia': 'Imbuia',
@@ -36,39 +37,52 @@ class _StorePageState extends State<StorePage> {
     checkConnectionAndLoadData();
   }
 
-    void checkConnectionAndLoadData() async {
-        var result = await Connectivity().checkConnectivity();
+  void checkConnectionAndLoadData() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    
+    if (connectivityResult == ConnectivityResult.none) {
+      print('Sem conexão — carregando do arquivo local');
+      final localData = await lerEstoqueLocal(widget.storeName);
+      if (localData != null) {
+        List<Product> localProducts = (localData['data'] as List)
+            .map((json) => Product.fromJson(json))
+            .toList();
+        setState(() {
+          products = Future.value(localProducts);
+          ultimaAtualizacao = localData['lastSynced'];
+        });
+      } else {
+        setState(() {
+          products = Future.error('Sem internet e sem dados locais');
+        });
+      }
+    } else {
+      print('Com conexão — carregando da API');
+      setState(() {
+        isSyncing = true;
+      });
 
-        if (result == ConnectivityResult.none) {
-            // SEM INTERNET → Carrega dados locais
-            final localData = await LocalDatabase.getProductsByStore(widget.storeName);
-            setState(() {
-                products = Future.value(localData);
-            });
-        } else {
-            // COM INTERNET → Busca da API, exibe na tela e depois salva localmente
-            try {
-                final fetched = await apiService.fetchProducts(widget.storeName);
+      try {
+        final fetched = await apiService.fetchProducts(widget.storeName);
+        final dataHoraAgora = DateTime.now().toIso8601String();
+        await salvarEstoqueLocal(widget.storeName, fetched, dataHoraAgora);
 
-                setState(() {
-                    products = Future.value(fetched); // Mostra dados da API imediatamente
-                });
-
-                await LocalDatabase.insertProducts(fetched, widget.storeName); // Salva no banco local em segundo plano
-            } catch (e) {
-                print('Erro ao buscar dados da API: $e');
-
-                // Em caso de erro na API, tenta mostrar dados locais como fallback
-                final localData = await LocalDatabase.getProductsByStore(widget.storeName);
-                setState(() {
-                    products = Future.value(localData);
-                });
-            }
-        }
+        setState(() {
+          products = Future.value(fetched);
+          ultimaAtualizacao = dataHoraAgora;
+          isSyncing = false;
+        });
+      } catch (e) {
+        print('Erro ao buscar da API: $e');
+        setState(() {
+          products = Future.error('Erro ao carregar da API');
+          isSyncing = false;
+        });
+      }
     }
+  }
 
-
- @override
+  @override
   void dispose() {
     searchController.dispose();
     super.dispose();
@@ -85,6 +99,23 @@ class _StorePageState extends State<StorePage> {
       ),
       body: Column(
         children: [
+          if (ultimaAtualizacao != null)
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Text(
+                'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ),
+          // ✅ 5. Exibe "Sincronizando" apenas se isSyncing for verdadeiro
+          if (isSyncing)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Sincronizando...',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -94,7 +125,7 @@ class _StorePageState extends State<StorePage> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.search),
               ),
-              onChanged: _filterProducts, // Filtra os produtos conforme o usuário digita
+              onChanged: _filterProducts,
             ),
           ),
           Expanded(
@@ -108,14 +139,14 @@ class _StorePageState extends State<StorePage> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(child: Text('No products available'));
                 } else {
-                  // Atualiza a lista filtrada com base na pesquisa
                   if (filteredProducts.isEmpty) {
                     filteredProducts = snapshot.data!;
                   }
-                  // Se houver algo digitado na barra de pesquisa, filtra
                   if (searchController.text.isNotEmpty) {
                     filteredProducts = snapshot.data!
-                        .where((product) => product.nome.toLowerCase().contains(searchController.text.toLowerCase()))
+                        .where((product) => product.nome
+                            .toLowerCase()
+                            .contains(searchController.text.toLowerCase()))
                         .toList();
                   }
                   return ListView.builder(
@@ -130,17 +161,19 @@ class _StorePageState extends State<StorePage> {
                             children: [
                               TextSpan(
                                   text: 'Estoque: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold)),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               TextSpan(text: '${product.estoque},  '),
                               TextSpan(
                                   text: 'Disponível: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold)),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               TextSpan(text: '${product.disponivel}'),
                             ],
                           ),
                         ),
                         trailing: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start, 
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             RichText(
                               text: TextSpan(
@@ -148,7 +181,8 @@ class _StorePageState extends State<StorePage> {
                                 children: [
                                   TextSpan(
                                       text: 'Preço 1: ',
-                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                   TextSpan(text: '${product.preco1Formatado}'),
                                 ],
                               ),
@@ -159,7 +193,8 @@ class _StorePageState extends State<StorePage> {
                                 children: [
                                   TextSpan(
                                       text: 'Preço 2: ',
-                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                   TextSpan(text: '${product.preco2Formatado}'),
                                 ],
                               ),
@@ -177,7 +212,7 @@ class _StorePageState extends State<StorePage> {
       ),
     );
   }
-  // Função para filtrar os produtos com base no texto da pesquisa
+
   void _filterProducts(String query) {
     setState(() {
       filteredProducts = filteredProducts
@@ -186,4 +221,11 @@ class _StorePageState extends State<StorePage> {
           .toList();
     });
   }
+
+  String _formatarData(String dataIso) {
+    final dt = DateTime.parse(dataIso).toLocal();
+    return '${_doisDigitos(dt.day)}/${_doisDigitos(dt.month)}/${dt.year} às ${_doisDigitos(dt.hour)}:${_doisDigitos(dt.minute)}';
+  }
+
+  String _doisDigitos(int n) => n.toString().padLeft(2, '0');
 }

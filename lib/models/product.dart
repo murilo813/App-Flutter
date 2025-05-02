@@ -25,7 +25,16 @@ class Product {
     );
   }
 
-  // Para exibição formatada (R$ com vírgula)
+  Map<String, dynamic> toJson() {
+    return {
+      'nome': nome,
+      'estoque': estoque,
+      'disponivel': disponivel,
+      'preco1': preco1,
+      'preco2': preco2,
+    };
+  }
+
   String formatarPreco(double preco) {
     final formatter = NumberFormat.currency(
       locale: 'pt_BR',
@@ -37,21 +46,4 @@ class Product {
 
   String get preco1Formatado => formatarPreco(preco1);
   String get preco2Formatado => formatarPreco(preco2);
-
-  // Para salvar no banco local
-  Map<String, dynamic> toMap() => {
-        'nome': nome,
-        'estoque': estoque,
-        'disponivel': disponivel,
-        'preco1': preco1,
-        'preco2': preco2,
-      };
-
-  factory Product.fromMap(Map<String, dynamic> map) => Product(
-        nome: map['nome'] ?? '',
-        estoque: map['estoque'] ?? '',
-        disponivel: map['disponivel'] ?? '',
-        preco1: (map['preco1'] as num).toDouble(),
-        preco2: (map['preco2'] as num).toDouble(),
-      );
 }
