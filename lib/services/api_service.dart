@@ -5,7 +5,7 @@ import '../models/product.dart';
 class ApiService {
   final String baseUrl;
 
-  ApiService({this.baseUrl = 'http://192.168.2.25:5000/'}); 
+  ApiService({this.baseUrl = 'http://192.168.2.27:5000/'}); 
 
   Future<List<Product>> fetchProducts(String store) async {
     final url = '$baseUrl/estoque/$store';
