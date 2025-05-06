@@ -8,7 +8,7 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == tarefaSync) {
       print("Executando sincronização em segundo plano");
-      await syncEstoqueDeTodasLojas();
+      await syncEstoqueGeral();
     }
     return Future.value(true);
   });

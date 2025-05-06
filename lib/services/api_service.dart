@@ -7,8 +7,8 @@ class ApiService {
 
   ApiService({this.baseUrl = 'http://192.168.2.27:5000/'}); 
 
-  Future<List<Product>> fetchProducts(String store) async {
-    final url = '$baseUrl/estoque/$store';
+  Future<List<Product>> fetchProducts() async {
+    final url = '$baseUrl/estoque/geral';
     print('Fazendo requisição para: $url');
     try {
       final response = await http.get(Uri.parse(url));

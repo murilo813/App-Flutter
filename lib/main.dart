@@ -11,22 +11,25 @@ const tarefaSync = "sync_estoque";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Workmanager().initialize(
-    callbackDispatcher, 
-    isInDebugMode: true,
-  );
+  try {
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: true,
+    );
 
-  await Workmanager().registerPeriodicTask(
-    "1",
-    tarefaSync,
-    frequency: Duration(minutes: 15),
-    initialDelay: Duration(seconds: 10),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
-  );
+    await Workmanager().registerPeriodicTask(
+      "1",
+      tarefaSync,
+      frequency: Duration(minutes: 15),
+      initialDelay: Duration(seconds: 10),
+      constraints: Constraints(networkType: NetworkType.connected),
+    );
 
-  await syncEstoqueDeTodasLojas();
+    await syncEstoqueGeral();
+  } catch (e, stack) {
+    print('Erro na inicialização do app: $e');
+    print(stack);
+  }
 
   runApp(MyApp());
 }

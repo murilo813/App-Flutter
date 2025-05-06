@@ -4,13 +4,6 @@ import 'store_page.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  final Map<String, String> stores = const {
-    'aurora': 'Aurora',
-    'imbuia': 'Imbuia',
-    'vilanova': 'Vila Nova',
-    'belavista': 'Bela Vista',
-  };
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,18 +22,14 @@ class HomePage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            ...stores.entries.map((entry) {
-              final storeKey = entry.key;
-              final storeLabel = entry.value;
-              return _buildStoreButton(context, storeKey, storeLabel);
-            }).toList(),
+            _buildEstoqueButton(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStoreButton(BuildContext context, String storeKey, String label) {
+  Widget _buildEstoqueButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SizedBox(
@@ -50,7 +39,7 @@ class HomePage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => StorePage(storeName: storeKey),
+                builder: (_) => StorePage(storeName: 'Estoques'), 
               ),
             );
           },
@@ -61,7 +50,7 @@ class HomePage extends StatelessWidget {
             foregroundColor: Colors.white,
             textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          child: Text(label),
+          child: const Text('Estoque'),
         ),
       ),
     );

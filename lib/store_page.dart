@@ -19,7 +19,7 @@ class _StorePageState extends State<StorePage> {
   late TextEditingController searchController;
   final ApiService apiService = ApiService();
   String? ultimaAtualizacao;
-  bool isSyncing = false;  
+  bool isSyncing = false;
 
   final Map<String, String> storeLabels = {
     'aurora': 'Aurora',
@@ -39,18 +39,19 @@ class _StorePageState extends State<StorePage> {
 
   void checkConnectionAndLoadData() async {
     final connectivityResult = await Connectivity().checkConnectivity();
-    
+
     if (connectivityResult == ConnectivityResult.none) {
       print('Sem conexão — carregando do arquivo local');
-      final localData = await lerEstoqueLocal(widget.storeName);
+      final localData = await lerEstoqueLocalGeral();
       if (localData != null) {
         List<Product> localProducts = (localData['data'] as List)
             .map((json) => Product.fromJson(json))
             .toList();
         setState(() {
           products = Future.value(localProducts);
-          ultimaAtualizacao = localData['lastSynced'];
+          ultimaAtualizacao = localData['lastSynced']; 
         });
+        print('Dados locais carregados: $localData');
       } else {
         setState(() {
           products = Future.error('Sem internet e sem dados locais');
@@ -59,16 +60,17 @@ class _StorePageState extends State<StorePage> {
     } else {
       print('Com conexão — carregando da API');
       setState(() {
-        isSyncing = true;
+        isSyncing = true; 
       });
 
       try {
-        final fetched = await apiService.fetchProducts(widget.storeName);
+        final fetched = await apiService.fetchProducts();
         final dataHoraAgora = DateTime.now().toIso8601String();
-        await salvarEstoqueLocal(widget.storeName, fetched, dataHoraAgora);
+
+        await salvarEstoqueLocal(fetched, dataHoraAgora);
 
         setState(() {
-          products = Future.value(fetched);
+          products = Future.value(fetched);  
           ultimaAtualizacao = dataHoraAgora;
           isSyncing = false;
         });
@@ -120,7 +122,7 @@ class _StorePageState extends State<StorePage> {
             child: TextField(
               controller: searchController,
               decoration: InputDecoration(
-                labelText: 'Search',
+                labelText: 'Pesquisar',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.search),
               ),
@@ -134,13 +136,12 @@ class _StorePageState extends State<StorePage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('Erro: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No products available'));
+                  return Center(child: Text('Nenhum produto disponível'));
                 } else {
-                  if (filteredProducts.isEmpty) {
-                    filteredProducts = snapshot.data!;
-                  }
+                  // Aplica o filtro de busca
+                  filteredProducts = snapshot.data!;
                   if (searchController.text.isNotEmpty) {
                     filteredProducts = snapshot.data!
                         .where((product) => product.nome
@@ -148,56 +149,56 @@ class _StorePageState extends State<StorePage> {
                             .contains(searchController.text.toLowerCase()))
                         .toList();
                   }
-                  return ListView.builder(
+
+                  if (filteredProducts.isEmpty) {
+                    return Center(child: Text('Nenhum produto encontrado'));
+                  }
+
+                  return ListView.separated(
                     itemCount: filteredProducts.length,
+                    separatorBuilder: (context, index) => Divider(height: 20, thickness: 1),
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
                       return ListTile(
-                        title: Text(product.nome),
-                        subtitle: RichText(
-                          text: TextSpan(
-                            style: DefaultTextStyle.of(context).style,
-                            children: [
-                              TextSpan(
-                                  text: 'Estoque: ',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              TextSpan(text: '${product.estoque},  '),
-                              TextSpan(
-                                  text: 'Disponível: ',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              TextSpan(text: '${product.disponivel}'),
-                            ],
-                          ),
+                        title: Text(
+                          product.nome,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        trailing: Column(
+                        subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            RichText(
-                              text: TextSpan(
-                                style: DefaultTextStyle.of(context).style,
-                                children: [
-                                  TextSpan(
-                                      text: 'Preço 1: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  TextSpan(text: '${product.preco1Formatado}'),
-                                ],
-                              ),
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    style: DefaultTextStyle.of(context).style,
+                                    children: [
+                                      TextSpan(
+                                        text: 'Preço 1: ',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(text: '${product.preco1Formatado}'),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 22),
+                                RichText(
+                                  text: TextSpan(
+                                    style: DefaultTextStyle.of(context).style,
+                                    children: [
+                                      TextSpan(
+                                        text: 'Preço 2: ',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(text: '${product.preco2Formatado}'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            RichText(
-                              text: TextSpan(
-                                style: DefaultTextStyle.of(context).style,
-                                children: [
-                                  TextSpan(
-                                      text: 'Preço 2: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  TextSpan(text: '${product.preco2Formatado}'),
-                                ],
-                              ),
-                            ),
+                            SizedBox(height: 4),
+                            _buildEstoqueTable(product),
                           ],
                         ),
                       );
@@ -211,6 +212,70 @@ class _StorePageState extends State<StorePage> {
       ),
     );
   }
+
+
+  Widget _buildEstoqueDisponivelRow(String store, int estoque, int disponivel) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start, 
+      children: [
+        Text(
+          'Estoque $store:',
+          style: TextStyle(fontWeight: FontWeight.bold), 
+        ),
+        SizedBox(width: 5), 
+        Text('$estoque'), 
+        SizedBox(width: 26), 
+        Text(
+          'Disponível $store:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        SizedBox(width: 5), 
+        Text('$disponivel'),
+      ],
+    );
+  }
+
+  Widget _buildEstoqueTable(Product product) {
+    final List<List<String>> rows = [
+      ['Aurora', '${product.estoqueAurora}', '${product.disponivelAurora}'],
+      ['Imbuia', '${product.estoqueImbuia}', '${product.disponivelImbuia}'],
+      ['Vila Nova', '${product.estoqueVilanova}', '${product.disponivelVilanova}'],
+      ['Bela Vista', '${product.estoqueBelavista}', '${product.disponivelBelavista}'],
+    ];
+
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const {
+        0: FixedColumnWidth(120), 
+        1: FixedColumnWidth(40),  
+        2: FixedColumnWidth(140), 
+        3: FixedColumnWidth(40),  
+      },
+      children: rows.map((row) {
+        return TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text('Estoque ${row[0]}:', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(row[1]),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text('Disponível ${row[0]}:', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(row[2]),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
 
   void _filterProducts(String query) {
     setState(() {
