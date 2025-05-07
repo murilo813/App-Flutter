@@ -140,7 +140,6 @@ class _StorePageState extends State<StorePage> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(child: Text('Nenhum produto disponível'));
                 } else {
-                  // Aplica o filtro de busca
                   filteredProducts = snapshot.data!;
                   if (searchController.text.isNotEmpty) {
                     filteredProducts = snapshot.data!

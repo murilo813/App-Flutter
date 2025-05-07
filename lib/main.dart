@@ -5,6 +5,7 @@ import 'package:workmanager/workmanager.dart';
 import 'services/sync_service.dart';
 import 'background/background_task.dart'; 
 import 'home_page.dart';
+import 'login.screen.dart';
 
 const tarefaSync = "sync_estoque";
 
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AgroZecão',
-      home: HomePage(),
+      home: LoginScreen(),
       supportedLocales: const [
         Locale('pt', 'BR'),
       ],
