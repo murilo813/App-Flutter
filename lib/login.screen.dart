@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 import 'home_page.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       String username = _usernameController.text.trim();
       String password = _passwordController.text.trim();
+      String? androidId = await getAndroidId();
 
       try {
         final response = await http.post(
@@ -52,6 +54,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (response.statusCode == 200) {
           await saveLogin(username);
+
+          if (androidId != null) {
+            await http.post(
+              Uri.parse('$baseUrl/registrar_dispositivo'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'nome': username,
+                'android_id': androidId,
+              }),
+            );
+          }
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
@@ -65,6 +79,15 @@ class _LoginScreenState extends State<LoginScreen> {
         _showError('Erro de conexão: $e');
       }
     }
+  }
+
+  Future<String?> getAndroidId() async {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id;
+    }
+    return null;
   }
 
   void _showError(String message) {

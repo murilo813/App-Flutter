@@ -3,6 +3,7 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:io';
 
 class StorePage extends StatefulWidget {
   final String storeName;
@@ -36,11 +37,19 @@ class _StorePageState extends State<StorePage> {
     products = Future.value([]);
     checkConnectionAndLoadData();
   }
+  Future<bool> hasInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com'); 
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 
   void checkConnectionAndLoadData() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
+    final temInternet = await hasInternetConnection();
 
-    if (connectivityResult == ConnectivityResult.none) {
+    if (!temInternet) {
       print('Sem conexão — carregando do arquivo local');
       final localData = await lerEstoqueLocalGeral();
       if (localData != null) {

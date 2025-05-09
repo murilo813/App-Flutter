@@ -64,6 +64,3 @@ Future<void> syncAllStores() async {
     print('Erro ao sincronizar todas as lojas: $e');
   }
 }
-
-
-
