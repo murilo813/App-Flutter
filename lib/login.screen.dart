@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'home_page.dart';
+import 'package:android_id/android_id.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final String baseUrl = 'http://192.168.2.27:5000';
+  final String baseUrl = 'https://backendapp-production-0884.up.railway.app/';
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -82,12 +83,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<String?> getAndroidId() async {
-    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      final androidInfo = await deviceInfo.androidInfo;
-      return androidInfo.id;
+    final androidIdPlugin = AndroidId();
+    try {
+      String? androidId = await androidIdPlugin.getId();
+      return androidId;
+    } catch (e) {
+      print('Erro ao obter Android ID: $e');
+      return null;
     }
-    return null;
   }
 
   void _showError(String message) {

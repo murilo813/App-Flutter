@@ -58,7 +58,7 @@ class _StorePageState extends State<StorePage> {
             .toList();
         setState(() {
           products = Future.value(localProducts);
-          ultimaAtualizacao = localData['lastSynced']; 
+          ultimaAtualizacao = localData['lastSynced'];
         });
         print('Dados locais carregados: $localData');
       } else {
@@ -69,7 +69,7 @@ class _StorePageState extends State<StorePage> {
     } else {
       print('Com conexão — carregando da API');
       setState(() {
-        isSyncing = true; 
+        isSyncing = true;
       });
 
       try {
@@ -79,14 +79,32 @@ class _StorePageState extends State<StorePage> {
         await salvarEstoqueLocal(fetched, dataHoraAgora);
 
         setState(() {
-          products = Future.value(fetched);  
+          products = Future.value(fetched);
           ultimaAtualizacao = dataHoraAgora;
           isSyncing = false;
         });
       } catch (e) {
         print('Erro ao buscar da API: $e');
         setState(() {
-          products = Future.error('Erro ao carregar da API');
+          products = Future.error('Erro ao carregar da API. Tentando dados locais...');
+        });
+
+        final localData = await lerEstoqueLocalGeral();
+        if (localData != null) {
+          List<Product> localProducts = (localData['data'] as List)
+              .map((json) => Product.fromJson(json))
+              .toList();
+          setState(() {
+            products = Future.value(localProducts);
+            ultimaAtualizacao = localData['lastSynced'];
+          });
+        } else {
+          setState(() {
+            products = Future.error('Sem dados locais disponíveis');
+          });
+        }
+
+        setState(() {
           isSyncing = false;
         });
       }

@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'store_page.dart';
 import 'package:flutter/services.dart';
+import 'package:device_info_plus/device_info_plus.dart'; 
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,14 +43,14 @@ class _HomePageState extends State<HomePage> {
     if (connectivityResult == ConnectivityResult.none) return;
 
     try {
-      final response = await http.get(Uri.parse('http://192.168.2.27:5000/versao-atual'));
+      final response = await http.get(Uri.parse('https://backendapp-production-0884.up.railway.app/versao-atual'));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         print('Resposta da versão: $json');
         final latestVersion = json['version'];
 
-        const currentVersion = '1.0.1'; 
+        const currentVersion = '1.0.3'; 
 
         if (latestVersion != currentVersion && mounted) {
           showDialog(
