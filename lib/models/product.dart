@@ -10,6 +10,7 @@ class Product {
   final int disponivelImbuia;
   final int disponivelVilanova;
   final int disponivelBelavista;
+  final String marca;
   final double preco1;
   final double preco2;
 
@@ -23,6 +24,7 @@ class Product {
     required this.disponivelImbuia,
     required this.disponivelVilanova,
     required this.disponivelBelavista,
+    required this.marca,
     required this.preco1,
     required this.preco2,
   });
@@ -30,14 +32,15 @@ class Product {
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       nome: json['nome'] ?? '',  
-      estoqueAurora: int.tryParse(json['estoque_aurora']?.toString() ?? '0') ?? 0,
-      estoqueImbuia: int.tryParse(json['estoque_imbuia']?.toString() ?? '0') ?? 0,
-      estoqueVilanova: int.tryParse(json['estoque_vilanova']?.toString() ?? '0') ?? 0,
-      estoqueBelavista: int.tryParse(json['estoque_belavista']?.toString() ?? '0') ?? 0,
-      disponivelAurora: int.tryParse(json['disponivel_aurora']?.toString() ?? '0') ?? 0,
-      disponivelImbuia: int.tryParse(json['disponivel_imbuia']?.toString() ?? '0') ?? 0,
-      disponivelVilanova: int.tryParse(json['disponivel_vilanova']?.toString() ?? '0') ?? 0,
-      disponivelBelavista: int.tryParse(json['disponivel_belavista']?.toString() ?? '0') ?? 0,
+      estoqueAurora: (double.tryParse(json['estoque_aurora']?.toString() ?? '0') ?? 0).toInt(),
+      estoqueImbuia: (double.tryParse(json['estoque_imbuia']?.toString() ?? '0') ?? 0).toInt(),
+      estoqueVilanova: (double.tryParse(json['estoque_vilanova']?.toString() ?? '0') ?? 0).toInt(),
+      estoqueBelavista: (double.tryParse(json['estoque_belavista']?.toString() ?? '0') ?? 0).toInt(),
+      disponivelAurora: (double.tryParse(json['disponivel_aurora']?.toString() ?? '0') ?? 0).toInt(),
+      disponivelImbuia: (double.tryParse(json['disponivel_imbuia']?.toString() ?? '0') ?? 0).toInt(),
+      disponivelVilanova: (double.tryParse(json['disponivel_vilanova']?.toString() ?? '0') ?? 0).toInt(),
+      disponivelBelavista: (double.tryParse(json['disponivel_belavista']?.toString() ?? '0') ?? 0).toInt(),
+      marca: json['marca'] ?? '',
       preco1: double.tryParse(json['preco1']?.toString() ?? '0.0') ?? 0.0,
       preco2: double.tryParse(json['preco2']?.toString() ?? '0.0') ?? 0.0,
     );
@@ -54,6 +57,7 @@ class Product {
       'disponivel_imbuia': disponivelImbuia,
       'disponivel_vilanova': disponivelVilanova,
       'disponivel_belavista': disponivelBelavista,
+      'marca': marca,
       'preco1': preco1,
       'preco2': preco2,
     };

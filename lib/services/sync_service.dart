@@ -1,66 +1,125 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/clientes.dart';
 import '../models/product.dart';
-import 'api_service.dart';
+import '../secrets.dart';
+import '../local_log.dart';
 
-Future<void> syncEstoqueGeral() async {
-  try {
-    final api = ApiService();
-    final produtos = await api.fetchProducts();
+class SyncService {
+  final String baseUrl;
 
-    final now = DateTime.now().toIso8601String();
-    final jsonData = {
-      'lastSynced': now,
-      'data': produtos.map((p) => p.toJson()).toList(),
-    };
+  SyncService({this.baseUrl = backendUrl});
 
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/estoque_geral.json');
-    await file.writeAsString(json.encode(jsonData));
+// ESTOQUE
+  Future<List<Product>> syncEstoqueGeral() async {
+    final url = '$baseUrl/estoque/geral';
+    print('Fazendo requisição para: $url');
 
-    print('Estoque geral sincronizado localmente em $now');
-  } catch (e) {
-    print('Erro ao sincronizar estoque geral: $e');
-  }
-}
+    try {
+      final response = await http.get(Uri.parse(url));
 
-Future<void> salvarEstoqueLocal(List<Product> produtos, String dataHora) async {
-  try {
-    final jsonData = {
-      'lastSynced': dataHora,
-      'data': produtos.map((p) => p.toJson()).toList(),
-    };
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        final produtos = data.map((json) => Product.fromJson(json)).toList();
 
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/estoque_geral.json');
-    await file.writeAsString(json.encode(jsonData));
+        final now = DateTime.now().toIso8601String();
+        final jsonData = {
+          'lastSynced': now,
+          'data': data,
+        };
 
-    print('Estoque salvo localmente em $dataHora');
-  } catch (e) {
-    print('Erro ao salvar estoque localmente: $e');
-  }
-}
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/estoque_geral.json');
+        await file.writeAsString(json.encode(jsonData));
+        print('Estoque geral sincronizado localmente em $now');
 
-Future<Map<String, dynamic>?> lerEstoqueLocalGeral() async {
-  try {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/estoque_geral.json');
-
-    if (await file.exists()) {
-      final content = await file.readAsString();
-      return json.decode(content);
+        return produtos;
+      } else {
+        print('Erro ao carregar produtos (status ${response.statusCode})');
+        return [];
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no syncEstoqueGeral: $e\nStackTrace: $stack');
+      print('Erro ao sincronizar estoque: $e');
+      return [];
     }
-  } catch (e) {
-    print('Erro ao ler estoque_geral.json: $e');
   }
-  return null;
-}
-Future<void> syncAllStores() async {
-  try {
-    await syncEstoqueGeral();
-    print('Todas as lojas foram sincronizadas');
-  } catch (e) {
-    print('Erro ao sincronizar todas as lojas: $e');
+
+  Future<Map<String, dynamic>?> lerEstoqueLocalGeral() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/estoque_geral.json');
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        return json.decode(content);
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no lerEstoqueLocalGeral: $e\nStackTrace: $stack');
+      print('Erro ao ler estoque_geral.json: $e');
+    }
+    return null;
+  }
+
+// CLIENTES
+  Future<List<Cliente>> syncClientes() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int? idVendedor = prefs.getInt('id_vendedor');
+
+      if (idVendedor == null) {
+        final msg = 'id_vendedor não encontrado no SharedPreferences';
+        await LocalLogger.log('Erro no syncClientes: $msg');
+        return [];
+      }
+
+      final url = Uri.parse('$baseUrl/clientes?id_vendedor=$idVendedor');
+      print('Fazendo requisição GET para: $url');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        final now = DateTime.now().toIso8601String();
+        final jsonData = {
+          'lastSynced': now,
+          'data': data, 
+        };
+
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/clientes.json');
+        await file.writeAsString(json.encode(jsonData));
+        print('Clientes sincronizados localmente em $now');
+
+        return data.map<Cliente>((json) => Cliente.fromJson(json)).toList();
+      } else {
+        final msg = 'Erro ao carregar clientes (status ${response.statusCode})';
+        await LocalLogger.log('Erro no syncClientes: $msg');
+        return [];
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no syncClientes: $e\nStackTrace: $stack');
+      print('Erro ao sincronizar clientes: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> lerClientesLocal() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/clientes.json');
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        return json.decode(content);
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no lerClientesLocal: $e\nStackTrace: $stack');
+      print('Erro ao ler clientes.json: $e');
+    }
+    return null;
   }
 }

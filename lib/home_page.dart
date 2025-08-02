@@ -6,9 +6,12 @@ import 'login.screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'store_page.dart';
+import 'carteira.dart';
 import 'package:flutter/services.dart';
 import 'package:device_info_plus/device_info_plus.dart'; 
 import 'dart:io';
+import 'secrets.dart';
+import 'local_log.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,8 +30,9 @@ class _HomePageState extends State<HomePage> {
   Future<void> checkLoginStatus(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
+    int? idVendedor = prefs.getInt('id_vendedor');
 
-    if (!loggedIn) {
+    if (!loggedIn || idVendedor == null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -43,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     if (connectivityResult == ConnectivityResult.none) return;
 
     try {
-      final response = await http.get(Uri.parse('https://backendapp-production-0884.up.railway.app/versao-atual'));
+      final response = await http.get(Uri.parse('${backendUrl}versao-atual'));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -81,7 +85,8 @@ class _HomePageState extends State<HomePage> {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await LocalLogger.log('Erro na checagem de versão: $e\nStackTrace: $stack');
       print('Erro ao verificar versão: $e');
     }
   }
@@ -119,14 +124,28 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            _buildEstoqueButton(context),
+            _buildHomeButton(
+              context: context,
+              label: 'Estoque',
+              page: StorePage(storeName: 'Estoques'),
+            ),
+            _buildHomeButton(
+              context: context,
+              label: 'Meus Clientes',
+              page: CarteiraPage(),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEstoqueButton(BuildContext context) {
+  Widget _buildHomeButton({
+    required BuildContext context,
+    required String label,
+    required Widget page,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SizedBox(
@@ -135,19 +154,17 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => StorePage(storeName: 'Estoques'),
-              ),
+              MaterialPageRoute(builder: (_) => page),
             );
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: Colors.green[700],
+            backgroundColor: color ?? Colors.green[700],
             foregroundColor: Colors.white,
             textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          child: const Text('Estoque'),
+          child: Text(label),
         ),
       ),
     );

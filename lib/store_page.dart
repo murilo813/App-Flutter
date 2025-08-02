@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
-import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:io';
+import 'local_log.dart';
 
 class StorePage extends StatefulWidget {
   final String storeName;
@@ -17,8 +17,9 @@ class StorePage extends StatefulWidget {
 class _StorePageState extends State<StorePage> {
   late Future<List<Product>> products;
   late List<Product> filteredProducts;
+  late List<Product> allProducts = [];
   late TextEditingController searchController;
-  final ApiService apiService = ApiService();
+  final SyncService syncService = SyncService();
   String? ultimaAtualizacao;
   bool isSyncing = false;
 
@@ -49,47 +50,9 @@ class _StorePageState extends State<StorePage> {
   void checkConnectionAndLoadData() async {
     final temInternet = await hasInternetConnection();
 
-    if (!temInternet) {
-      print('Sem conexão — carregando do arquivo local');
-      final localData = await lerEstoqueLocalGeral();
-      if (localData != null) {
-        List<Product> localProducts = (localData['data'] as List)
-            .map((json) => Product.fromJson(json))
-            .toList();
-        setState(() {
-          products = Future.value(localProducts);
-          ultimaAtualizacao = localData['lastSynced'];
-        });
-        print('Dados locais carregados: $localData');
-      } else {
-        setState(() {
-          products = Future.error('Sem internet e sem dados locais');
-        });
-      }
-    } else {
-      print('Com conexão — carregando da API');
-      setState(() {
-        isSyncing = true;
-      });
-
+    Future<void> carregarDadosLocais() async {
       try {
-        final fetched = await apiService.fetchProducts();
-        final dataHoraAgora = DateTime.now().toIso8601String();
-
-        await salvarEstoqueLocal(fetched, dataHoraAgora);
-
-        setState(() {
-          products = Future.value(fetched);
-          ultimaAtualizacao = dataHoraAgora;
-          isSyncing = false;
-        });
-      } catch (e) {
-        print('Erro ao buscar da API: $e');
-        setState(() {
-          products = Future.error('Erro ao carregar da API. Tentando dados locais...');
-        });
-
-        final localData = await lerEstoqueLocalGeral();
+        final localData = await syncService.lerEstoqueLocalGeral();
         if (localData != null) {
           List<Product> localProducts = (localData['data'] as List)
               .map((json) => Product.fromJson(json))
@@ -99,15 +62,40 @@ class _StorePageState extends State<StorePage> {
             ultimaAtualizacao = localData['lastSynced'];
           });
         } else {
+          await LocalLogger.log('Erro crítico: dados locais vazios');
           setState(() {
             products = Future.error('Sem dados locais disponíveis');
           });
         }
-
+      } catch (e, stack) {
+        await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
         setState(() {
-          isSyncing = false;
+          products = Future.error('Erro ao carregar dados locais');
         });
       }
+    }
+
+    if (!temInternet) {
+      print('Sem conexão — carregando do arquivo local');
+      await carregarDadosLocais();
+    } else {
+      print('Com conexão — sincronizando com a API');
+      setState(() {
+        isSyncing = true;
+      });
+
+      try {
+        await syncService.syncEstoqueGeral();
+      } catch (e, stack) {
+        print('Erro ao sincronizar estoque: $e');
+        await LocalLogger.log('Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack');
+      }
+
+      await carregarDadosLocais();
+
+      setState(() {
+        isSyncing = false;
+      });
     }
   }
 
@@ -168,12 +156,13 @@ class _StorePageState extends State<StorePage> {
                   return Center(child: Text('Nenhum produto disponível'));
                 } else {
                   filteredProducts = snapshot.data!;
+                  allProducts = snapshot.data!;
                   if (searchController.text.isNotEmpty) {
                     filteredProducts = snapshot.data!
-                        .where((product) => product.nome
-                            .toLowerCase()
-                            .contains(searchController.text.toLowerCase()))
-                        .toList();
+                      .where((product) => 
+                        product.nome.toLowerCase().contains(searchController.text.toLowerCase()) ||
+                        product.marca.toLowerCase().contains(searchController.text.toLowerCase()))
+                      .toList();
                   }
 
                   if (filteredProducts.isEmpty) {
@@ -200,27 +189,11 @@ class _StorePageState extends State<StorePage> {
                                   text: TextSpan(
                                     style: DefaultTextStyle.of(context).style,
                                     children: [
-                                      TextSpan(
-                                        text: 'Preço 1: ',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: '${product.preco1Formatado}'),
+                                      TextSpan(text: '${product.marca}'),
                                     ],
                                   ),
                                 ),
                                 SizedBox(width: 22),
-                                RichText(
-                                  text: TextSpan(
-                                    style: DefaultTextStyle.of(context).style,
-                                    children: [
-                                      TextSpan(
-                                        text: 'Preço 2: ',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: '${product.preco2Formatado}'),
-                                    ],
-                                  ),
-                                ),
                               ],
                             ),
                             SizedBox(height: 4),
@@ -239,7 +212,6 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-
   Widget _buildEstoqueDisponivelRow(String store, int estoque, int disponivel) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start, 
@@ -252,7 +224,7 @@ class _StorePageState extends State<StorePage> {
         Text('$estoque'), 
         SizedBox(width: 26), 
         Text(
-          'Disponível $store:',
+          'Disponível:',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         SizedBox(width: 5), 
@@ -272,43 +244,121 @@ class _StorePageState extends State<StorePage> {
     return Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       columnWidths: const {
-        0: FixedColumnWidth(120), 
-        1: FixedColumnWidth(40),  
-        2: FixedColumnWidth(140), 
-        3: FixedColumnWidth(40),  
+        0: FlexColumnWidth(), // nome da loja
+        1: FixedColumnWidth(60),  // QTD
+        2: FixedColumnWidth(60),  // DISP
       },
-      children: rows.map((row) {
-        return TableRow(
+      border: TableBorder.symmetric(
+        inside: BorderSide(width: 1, color: Colors.grey.shade300),
+      ),
+      children: [
+        // Cabeçalho
+        TableRow(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text('Estoque ${row[0]}:', style: const TextStyle(fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Preço 1 
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(fontSize: 13, color: Colors.black),
+                      children: [
+                        TextSpan(
+                          text: 'Preço 1: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: '${product.preco1Formatado}',
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Preço 2 
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(fontSize: 13, color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: 'Preço 2: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '${product.preco2Formatado}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Center(
+                child: Text(
+                  'Qtd', 
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(row[1]),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text('Disponível ${row[0]}:', style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(row[2]),
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Center(
+                child: Text(
+                  'Disp', 
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
             ),
           ],
-        );
-      }).toList(),
+        ),
+        // Dados das lojas
+        ...rows.map((row) {
+          return TableRow(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  row[0],
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(row[1], textAlign: TextAlign.center),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(row[2], textAlign: TextAlign.center),
+              ),
+            ],
+          );
+        }).toList(),
+      ],
     );
   }
 
-
   void _filterProducts(String query) {
     setState(() {
-      filteredProducts = filteredProducts
-          .where((product) =>
-              product.nome.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      filteredProducts = allProducts
+        .where((product) =>
+          product.nome.toLowerCase().contains(query.toLowerCase()) ||
+          product.marca.toLowerCase().contains(query.toLowerCase()))
+      .toList();
     });
   }
 

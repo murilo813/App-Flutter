@@ -6,6 +6,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'home_page.dart';
 import 'package:android_id/android_id.dart';
+import 'secrets.dart';
+import 'background/pendents.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,18 +18,52 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
-  final String baseUrl = 'https://backendapp-production-0884.up.railway.app/';
+  final String baseUrl = backendUrl;
+  bool _checkingLogin = true;
+
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus();
+  }
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
+    int? idVendedor = prefs.getInt('id_vendedor');
+    String? username = prefs.getString('username');
 
-    if (loggedIn) {
+    if (loggedIn && username != null && idVendedor != null) {
+      final now = DateTime.now().toIso8601String();
+      final payload = {
+        'nome': username,
+        'hora_acesso': now,
+      };
+
+      try {
+        await http.post(
+          Uri.parse('$baseUrl/uso'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        );
+      } catch (e) {
+        await OfflineQueue.addToQueue({
+          'url': '/uso',
+          'method': 'POST',
+          'body': payload,
+        });
+      }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );
+    } else {
+      setState(() {
+        _checkingLogin = false;
+      });
     }
   }
 
@@ -39,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> login() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => isLoading = true);
       String username = _usernameController.text.trim();
       String password = _passwordController.text.trim();
       String? androidId = await getAndroidId();
@@ -52,9 +89,21 @@ class _LoginScreenState extends State<LoginScreen> {
             'senha': password,
           }),
         );
+        print('Corpo enviado: ${jsonEncode({
+          'nome': username,
+          'senha': password,
+        })}');
 
         if (response.statusCode == 200) {
-          await saveLogin(username);
+          print('Resposta bruta: ${response.body}');
+          final data = jsonDecode(response.body);
+          print('id_vendedor: ${data['id_vendedor']} (${data['id_vendedor'].runtimeType})');
+          int idVendedor = data['id_vendedor'];
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setString('username', username);
+          await prefs.setInt('id_vendedor', idVendedor);
 
           if (androidId != null) {
             await http.post(
@@ -73,11 +122,15 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         } else if (response.statusCode == 401) {
           _showError('Usuário ou senha inválidos');
+        } else if (response.statusCode == 429) {
+          _showError('Muitas tentativas de login. Tente novamente em 5 minutos.');
         } else {
           _showError('Erro no servidor: ${response.body}');
         }
       } catch (e) {
         _showError('Erro de conexão: $e');
+      } finally {
+        setState(() => isLoading = false);
       }
     }
   }
@@ -110,13 +163,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    checkLoginStatus();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (_checkingLogin) {
+      return Scaffold(
+        backgroundColor: Color(0xFF2E2E2E),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.greenAccent[700]),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Color(0xFF2E2E2E),
       body: Center(
@@ -179,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: login,
+                      onPressed: isLoading ? null : login, 
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[600],
                         padding: EdgeInsets.symmetric(vertical: 16),
@@ -187,10 +242,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child: Text(
-                        'ENTRAR',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
+                      child: isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'ENTRAR',
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
                     ),
                   ),
                 ],

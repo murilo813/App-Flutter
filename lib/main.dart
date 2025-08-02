@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:workmanager/workmanager.dart';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'services/sync_service.dart';
-import 'background/background_task.dart'; 
+import 'background/background_task.dart';
+import 'background/pendents.dart';
 import 'home_page.dart';
 import 'login.screen.dart';
+import 'local_log.dart';
+import 'secrets.dart';
 
 const tarefaSync = "sync_estoque";
 
@@ -23,13 +26,15 @@ void main() async {
       tarefaSync,
       frequency: Duration(minutes: 15),
       initialDelay: Duration(seconds: 10),
-      constraints: Constraints(networkType: NetworkType.connected),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
+      ),
     );
-
-    await syncEstoqueGeral();
+    OfflineQueue.startSyncWhenOnline(backendUrl);
   } catch (e, stack) {
-    print('Erro na inicialização do app: $e');
-    print(stack);
+    await LocalLogger.log('Erro na inicialização do app: $e\nStackTrace: $stack');
   }
 
   runApp(MyApp());
