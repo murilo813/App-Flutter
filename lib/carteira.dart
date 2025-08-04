@@ -160,7 +160,10 @@ class _CarteiraPageState extends State<CarteiraPage> {
                           cliente.nomeCliente,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text('Limite crédito: R\$ ${cliente.limite.toStringAsFixed(2)}'),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _buildLimitesTable(cliente),
+                        ),
                       );
                     },
                   );
@@ -170,6 +173,85 @@ class _CarteiraPageState extends State<CarteiraPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLimitesTable(Cliente cliente) {
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const {
+        0: FlexColumnWidth(2),  // Limite (BM)
+        1: FlexColumnWidth(2),  // Saldo (BM)
+        2: FlexColumnWidth(2),  // Limite C
+        3: FlexColumnWidth(2),  // Saldo C
+      },
+      border: TableBorder.all(color: Colors.grey.shade300),
+      children: [
+        // Cabeçalho
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey.shade200),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Text(
+                  'Limite (BM)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Text(
+                  'Saldo (BM)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Text(
+                  'Limite C',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Text(
+                  'Saldo C',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Linha de valores
+        TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: Text(cliente.limite.toString())),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: Text(cliente.saldo_limite.toString())),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: Text(cliente.limite_calculado.toString())),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: Text(cliente.saldo_limite_calculado.toString())),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

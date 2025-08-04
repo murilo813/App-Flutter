@@ -87,7 +87,7 @@ class _StorePageState extends State<StorePage> {
       try {
         await syncService.syncEstoqueGeral();
       } catch (e, stack) {
-        print('Erro ao sincronizar estoque: $e');
+        print('Erro ao sincronizar estoque (storepage): $e');
         await LocalLogger.log('Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack');
       }
 

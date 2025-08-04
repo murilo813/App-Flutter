@@ -29,9 +29,10 @@ class Product {
     required this.preco2,
   });
 
+  // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      nome: json['nome'] ?? '',  
+      nome: json['nome'],  
       estoqueAurora: (double.tryParse(json['estoque_aurora']?.toString() ?? '0') ?? 0).toInt(),
       estoqueImbuia: (double.tryParse(json['estoque_imbuia']?.toString() ?? '0') ?? 0).toInt(),
       estoqueVilanova: (double.tryParse(json['estoque_vilanova']?.toString() ?? '0') ?? 0).toInt(),
@@ -40,9 +41,9 @@ class Product {
       disponivelImbuia: (double.tryParse(json['disponivel_imbuia']?.toString() ?? '0') ?? 0).toInt(),
       disponivelVilanova: (double.tryParse(json['disponivel_vilanova']?.toString() ?? '0') ?? 0).toInt(),
       disponivelBelavista: (double.tryParse(json['disponivel_belavista']?.toString() ?? '0') ?? 0).toInt(),
-      marca: json['marca'] ?? '',
-      preco1: double.tryParse(json['preco1']?.toString() ?? '0.0') ?? 0.0,
-      preco2: double.tryParse(json['preco2']?.toString() ?? '0.0') ?? 0.0,
+      marca: json['marca'],
+      preco1: json['preco1'],
+      preco2: json['preco2'],
     );
   }
 

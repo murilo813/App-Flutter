@@ -43,7 +43,7 @@ class SyncService {
       }
     } catch (e, stack) {
       await LocalLogger.log('Erro no syncEstoqueGeral: $e\nStackTrace: $stack');
-      print('Erro ao sincronizar estoque: $e');
+      print('Erro ao sincronizar estoque (sync): $e');
       return [];
     }
   }
@@ -102,7 +102,7 @@ class SyncService {
       }
     } catch (e, stack) {
       await LocalLogger.log('Erro no syncClientes: $e\nStackTrace: $stack');
-      print('Erro ao sincronizar clientes: $e');
+      print('Erro ao sincronizar clientes (sync): $e');
       return [];
     }
   }
