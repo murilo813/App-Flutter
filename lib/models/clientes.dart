@@ -21,7 +21,7 @@ class Cliente {
   factory Cliente.fromJson(Map<String, dynamic> json) {
       return Cliente(
           nomeCliente: json['nome_cliente'],
-          responsavel: json['responsavel'],
+          responsavel: json['responsavel'] ?? "",
           limite: json['limite'],
           saldo_limite: json['saldo_limite'],
           limite_calculado: json ['limite_calculado'],

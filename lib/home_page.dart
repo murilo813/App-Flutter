@@ -12,6 +12,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'secrets.dart';
 import 'local_log.dart';
+import 'log_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _titleTapCount = 0;
+  
   @override
   void initState() {
     super.initState();
@@ -54,7 +57,8 @@ class _HomePageState extends State<HomePage> {
         print('Resposta da versão: $json');
         final latestVersion = json['version'];
 
-        const currentVersion = '1.0.3'; 
+        final prefs = await SharedPreferences.getInstance();
+        final currentVersion = prefs.getString('versao_app');
 
         if (latestVersion != currentVersion && mounted) {
           showDialog(
@@ -109,33 +113,81 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 60),
-            const Text(
-              'AgroZecão',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 60),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _titleTapCount++;
+                      if (_titleTapCount >= 6) {
+                        _titleTapCount = 0;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => LogViewerPage()),
+                        );
+                      }
+                    });
+                  },
+                  child: const Text(
+                    'AgroZecão',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                _buildHomeButton(
+                  context: context,
+                  label: 'Estoque',
+                  page: StorePage(storeName: 'Estoques'),
+                ),
+                _buildHomeButton(
+                  context: context,
+                  label: 'Meus Clientes',
+                  page: CarteiraPage(),
+                ),
+              ],
+            ),
+          ),
+
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear(); // apaga o shared preferences
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Sair'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
-            _buildHomeButton(
-              context: context,
-              label: 'Estoque',
-              page: StorePage(storeName: 'Estoques'),
-            ),
-            _buildHomeButton(
-              context: context,
-              label: 'Meus Clientes',
-              page: CarteiraPage(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

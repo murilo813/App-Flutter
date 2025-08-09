@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'home_page.dart';
 import 'package:android_id/android_id.dart';
@@ -10,6 +11,7 @@ import 'secrets.dart';
 import 'background/pendents.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -26,7 +28,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    checkLoginStatus();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    await _verificarAtualizacaoApp();
+    await checkLoginStatus();
   }
 
   Future<void> checkLoginStatus() async {
@@ -34,28 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
     bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
     int? idVendedor = prefs.getInt('id_vendedor');
     String? username = prefs.getString('username');
+    String? appVersion = prefs.getString('app_version');
 
     if (loggedIn && username != null && idVendedor != null) {
-      final now = DateTime.now().toIso8601String();
-      final payload = {
-        'nome': username,
-        'hora_acesso': now,
-      };
-
-      try {
-        await http.post(
-          Uri.parse('$baseUrl/uso'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        );
-      } catch (e) {
-        await OfflineQueue.addToQueue({
-          'url': '/uso',
-          'method': 'POST',
-          'body': payload,
-        });
-      }
-
+      await registrarUso();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
@@ -63,6 +52,35 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       setState(() {
         _checkingLogin = false;
+      });
+    }
+  }
+
+  Future<void> registrarUso() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString('username');
+    String? appVersion = prefs.getString('app_version') ?? 'desconhecida';
+
+    if (username == null) return;
+
+    final now = DateTime.now().toIso8601String();
+    final payload = {
+      'nome': username,
+      'hora_acesso': now,
+      'versao_app': appVersion,
+    };
+
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/uso'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+    } catch (e) {
+      await OfflineQueue.addToQueue({
+        'url': '/uso',
+        'method': 'POST',
+        'body': payload,
       });
     }
   }
@@ -116,6 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           }
 
+          await registrarUso();
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
@@ -160,6 +179,26 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _verificarAtualizacaoApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final packageInfo = await PackageInfo.fromPlatform();
+
+    final versaoAtual = packageInfo.version;
+    final versaoSalva = prefs.getString('versao_app');
+    print(versaoAtual);
+    print(versaoSalva);
+
+    if (versaoSalva == null || versaoSalva != versaoAtual) {
+      print('App atualizado: limpando SharedPreferences...');
+      
+      await prefs.clear(); 
+      
+      await prefs.setString('versao_app', versaoAtual);
+    } else {
+      print('App não foi atualizado. SharedPreferences mantido.');
+    }
   }
 
   @override

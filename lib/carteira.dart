@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/sync_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import '../services/sync_service.dart';
 import '../models/clientes.dart';
 import 'local_log.dart';
 
@@ -25,6 +26,7 @@ class _CarteiraPageState extends State<CarteiraPage> {
     filteredClientes = [];
     clientes = Future.value([]);
     checkConnectionAndLoadData();
+    _verificarAvisoInicial();
   }
 
   Future<bool> hasInternetConnection() async {
@@ -87,7 +89,6 @@ class _CarteiraPageState extends State<CarteiraPage> {
       });
     }
   }
-
 
   @override
   void dispose() {
@@ -156,9 +157,22 @@ class _CarteiraPageState extends State<CarteiraPage> {
                     itemBuilder: (context, index) {
                       final cliente = filteredClientes[index];
                       return ListTile(
-                        title: Text(
-                          cliente.nomeCliente,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cliente.nomeCliente,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            if (cliente.responsavel.isNotEmpty)
+                              Text(
+                                'Responsável: ${cliente.responsavel}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                          ],
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 8),
@@ -177,93 +191,106 @@ class _CarteiraPageState extends State<CarteiraPage> {
   }
 
   Widget _buildLimitesTable(Cliente cliente) {
-    return Table(
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      columnWidths: const {
-        0: FlexColumnWidth(2),  // Limite (BM)
-        1: FlexColumnWidth(2),  // Saldo (BM)
-        2: FlexColumnWidth(2),  // Limite C
-        3: FlexColumnWidth(2),  // Saldo C
-      },
-      border: TableBorder.all(color: Colors.grey.shade300),
+    return Row(
       children: [
-        // Cabeçalho
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey.shade200),
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Text(
-                  'Limite (BM)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Text(
-                  'Saldo (BM)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Text(
-                  'Limite C',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Text(
-                  'Saldo C',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // Linha de valores
-        TableRow(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(child: Text(cliente.limite.toString())),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(child: Text(cliente.saldo_limite.toString())),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(child: Text(cliente.limite_calculado.toString())),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(child: Text(cliente.saldo_limite_calculado.toString())),
-            ),
-          ],
-        ),
+        _buildColunaLimiteComLinhaInterna("Limite BM", cliente.limiteFormatado, cliente.limite, true),
+        _buildColunaLimiteComLinhaInterna("Saldo BM", cliente.saldoFormatado, cliente.saldo_limite, true),
+        _buildColunaLimiteComLinhaInterna("Limite C", cliente.limiteCFormatado, cliente.limite_calculado, true),
+        _buildColunaLimiteComLinhaInterna("Saldo C", cliente.saldoCFormatado, cliente.saldo_limite_calculado, false),
       ],
+    );
+  }
+
+  Widget _buildColunaLimiteComLinhaInterna(String titulo, String valorFormatado, double valorOriginal, bool temLinhaDireita) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            right: temLinhaDireita
+                ? BorderSide(color: Colors.grey.shade300, width: 1)
+                : BorderSide.none,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                titulo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            Container(
+              height: 1,
+              color: Colors.grey.shade300,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                valorFormatado,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: valorOriginal < 0 ? Colors.red : Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.toLowerCase();
-    return allClientes.where((c) => c.nomeCliente.toLowerCase().contains(query)).toList();
+    return allClientes.where((c) => 
+      c.nomeCliente.toLowerCase().contains(query) ||
+      c.responsavel.toLowerCase().contains(query)
+    ).toList();
   }
 
   void _filterClientes(String query) {
     setState(() {
       filteredClientes = _getFilteredClientes();
     });
+  }
+
+  void _mostrarAvisoInicial() {
+    Future.delayed(Duration(milliseconds: 500), () {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Aviso importante'),
+          content: Text(
+            'Lembrando:\n\n'
+            '• Limite e Saldo BM são os limites cadastrados no sistema.\n'
+            '• Limite e Saldo C são calculados com base no último ano de compras do cliente.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Entendi'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _verificarAvisoInicial() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jaMostrou = prefs.getBool('aviso_mostrado') ?? false;
+
+    if (!jaMostrou) {
+      _mostrarAvisoInicial();
+
+      await prefs.setBool('aviso_mostrado', true);
+    }
   }
 
   String _formatarData(String dataIso) {
