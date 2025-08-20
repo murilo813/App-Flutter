@@ -175,9 +175,22 @@ class _StorePageState extends State<StorePage> {
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
                       return ListTile(
-                        title: Text(
-                          product.nome,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${product.id}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                fontSize: 12,               
+                                color: Colors.black,        
+                              ),
+                            ),
+                            Text(
+                              product.nome,
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ],
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

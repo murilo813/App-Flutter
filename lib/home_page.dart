@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
         final latestVersion = json['version'];
 
         final prefs = await SharedPreferences.getInstance();
-        final currentVersion = prefs.getString('versao_app');
+        final currentVersion = prefs.getString('app_version');
 
         if (latestVersion != currentVersion && mounted) {
           showDialog(

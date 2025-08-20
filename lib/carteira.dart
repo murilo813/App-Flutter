@@ -4,6 +4,7 @@ import 'dart:io';
 import '../services/sync_service.dart';
 import '../models/clientes.dart';
 import 'local_log.dart';
+import 'package:intl/intl.dart';
 
 class CarteiraPage extends StatefulWidget {
   @override
@@ -50,6 +51,8 @@ class _CarteiraPageState extends State<CarteiraPage> {
               .toList();
           setState(() {
             clientes = Future.value(localClientes);
+            allClientes = localClientes;
+            filteredClientes = localClientes; 
             ultimaAtualizacao = localData['lastSynced'];
           });
         } else {
@@ -103,87 +106,97 @@ class _CarteiraPageState extends State<CarteiraPage> {
         title: Text('Meus Clientes'),
         centerTitle: true,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          if (ultimaAtualizacao != null)
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+          Column(
+            children: [
+              if (ultimaAtualizacao != null)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              if (isSyncing)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Sincronizando...',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    labelText: 'Pesquisar cliente',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: _filterClientes,
+                ),
               ),
-            ),
-          if (isSyncing)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Sincronizando...',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                labelText: 'Pesquisar cliente',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: _filterClientes,
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Cliente>>(
-              future: clientes,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Erro: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('Nenhum cliente disponível'));
-                } else {
-                  allClientes = snapshot.data!;
-                  filteredClientes = _getFilteredClientes();
+              Expanded(
+                child: FutureBuilder<List<Cliente>>(
+                  future: clientes,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Erro: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('Nenhum cliente disponível'));
+                    } else {
+                      allClientes = snapshot.data!;
+                      filteredClientes = _getFilteredClientes();
 
-                  if (filteredClientes.isEmpty) {
-                    return Center(child: Text('Nenhum cliente encontrado'));
-                  }
+                      if (filteredClientes.isEmpty) {
+                        return Center(child: Text('Nenhum cliente encontrado'));
+                      }
 
-                  return ListView.separated(
-                    itemCount: filteredClientes.length,
-                    separatorBuilder: (_, __) => Divider(),
-                    itemBuilder: (context, index) {
-                      final cliente = filteredClientes[index];
-                      return ListTile(
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              cliente.nomeCliente,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            if (cliente.responsavel.isNotEmpty)
-                              Text(
-                                'Responsável: ${cliente.responsavel}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[700],
+                      return ListView.separated(
+                        itemCount: filteredClientes.length,
+                        separatorBuilder: (_, __) => Divider(),
+                        itemBuilder: (context, index) {
+                          final cliente = filteredClientes[index];
+                          return ListTile(
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  cliente.nomeCliente,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                              ),
-                          ],
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: _buildLimitesTable(cliente),
-                        ),
+                                if (cliente.responsavel.isNotEmpty)
+                                  Text(
+                                    'Responsável: ${cliente.responsavel}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: _buildLimitesTable(cliente),
+                            ),
+                          );
+                        },
                       );
-                    },
-                  );
-                }
-              },
-            ),
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: _buildTotaisFlutuantes(),
           ),
         ],
       ),
@@ -246,6 +259,60 @@ class _CarteiraPageState extends State<CarteiraPage> {
     );
   }
 
+  Widget _buildTotaisFlutuantes() {
+    final clientesParaTotais = filteredClientes.isNotEmpty ? filteredClientes : allClientes;
+
+    double totalLimiteBM = clientesParaTotais.fold(0, (sum, c) => sum + c.limite);
+    double totalSaldoBM = clientesParaTotais.fold(0, (sum, c) => sum + c.saldo_limite);
+    double totalLimiteC = clientesParaTotais.fold(0, (sum, c) => sum + c.limite_calculado);
+    double totalSaldoC = clientesParaTotais.fold(0, (sum, c) => sum + c.saldo_limite_calculado);
+
+    return Container(
+      width: double.infinity, 
+      margin: EdgeInsets.all(4), 
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            child: Text(
+              "Totais",
+              style: TextStyle(
+                fontSize: 12, 
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildColunaLimiteComLinhaInterna("Limite BM", formatarValor(totalLimiteBM), totalLimiteBM, true),
+                _buildColunaLimiteComLinhaInterna("Saldo BM", formatarValor(totalSaldoBM), totalSaldoBM, true),
+                _buildColunaLimiteComLinhaInterna("Limite C", formatarValor(totalLimiteC), totalLimiteC, true),
+                _buildColunaLimiteComLinhaInterna("Saldo C", formatarValor(totalSaldoC), totalSaldoC, false),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.toLowerCase();
     return allClientes.where((c) => 
@@ -255,9 +322,18 @@ class _CarteiraPageState extends State<CarteiraPage> {
   }
 
   void _filterClientes(String query) {
-    setState(() {
-      filteredClientes = _getFilteredClientes();
+    setState(() {    
+      filteredClientes = _getFilteredClientes(); 
     });
+  }
+
+  String formatarValor(double valor) {
+    final formatter = NumberFormat.currency(
+      locale: 'pt_BR',  
+      symbol: '',       
+      decimalDigits: 2,
+    );
+    return formatter.format(valor).trim();
   }
 
   void _mostrarAvisoInicial() {

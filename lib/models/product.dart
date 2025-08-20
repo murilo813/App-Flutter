@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 class Product {
+  final int id;
   final String nome;
   final int estoqueAurora;
   final int estoqueImbuia;
@@ -15,6 +16,7 @@ class Product {
   final double preco2;
 
   Product({
+    required this.id,
     required this.nome,
     required this.estoqueAurora,
     required this.estoqueImbuia,
@@ -32,6 +34,7 @@ class Product {
   // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
+      id: json['id'],
       nome: json['nome'],  
       estoqueAurora: (double.tryParse(json['estoque_aurora']?.toString() ?? '0') ?? 0).toInt(),
       estoqueImbuia: (double.tryParse(json['estoque_imbuia']?.toString() ?? '0') ?? 0).toInt(),
@@ -49,6 +52,7 @@ class Product {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nome': nome,
       'estoque_aurora': estoqueAurora,
       'estoque_imbuia': estoqueImbuia,

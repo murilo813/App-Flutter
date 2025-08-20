@@ -186,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final packageInfo = await PackageInfo.fromPlatform();
 
     final versaoAtual = packageInfo.version;
-    final versaoSalva = prefs.getString('versao_app');
+    final versaoSalva = prefs.getString('app_version');
     print(versaoAtual);
     print(versaoSalva);
 
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
       
       await prefs.clear(); 
       
-      await prefs.setString('versao_app', versaoAtual);
+      await prefs.setString('app_version', versaoAtual);
     } else {
       print('App não foi atualizado. SharedPreferences mantido.');
     }
