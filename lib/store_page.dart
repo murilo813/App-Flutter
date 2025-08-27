@@ -38,9 +38,12 @@ class _StorePageState extends State<StorePage> {
     products = Future.value([]);
     checkConnectionAndLoadData();
   }
+  
   Future<bool> hasInternetConnection() async {
     try {
-      final result = await InternetAddress.lookup('google.com'); 
+      final result = await InternetAddress
+        .lookup('google.com')
+        .timeout(const Duration(seconds: 10)); 
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
     } catch (_) {
       return false;

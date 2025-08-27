@@ -50,7 +50,9 @@ class _HomePageState extends State<HomePage> {
     if (connectivityResult == ConnectivityResult.none) return;
 
     try {
-      final response = await http.get(Uri.parse('${backendUrl}versao-atual'));
+      final response = await http
+        .get(Uri.parse('${backendUrl}versao-atual'))
+        .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
