@@ -161,11 +161,15 @@ class _StorePageState extends State<StorePage> {
                   filteredProducts = snapshot.data!;
                   allProducts = snapshot.data!;
                   if (searchController.text.isNotEmpty) {
-                    filteredProducts = snapshot.data!
-                      .where((product) => 
-                        product.nome.toLowerCase().contains(searchController.text.toLowerCase()) ||
-                        product.marca.toLowerCase().contains(searchController.text.toLowerCase()))
-                      .toList();
+                    final query = searchController.text.toLowerCase();
+
+                    filteredProducts = snapshot.data!.where((product) {
+                      final matchesName = product.nome.toLowerCase().contains(query);
+                      final matchesMarca = product.marca.toLowerCase().contains(query);
+                      final matchesId = product.id.toString().contains(query);
+                      final matchesAplicacao = product.aplicacao.toLowerCase().contains(query);
+                      return matchesName || matchesMarca || matchesId || matchesAplicacao;
+                    }).toList();
                   }
 
                   if (filteredProducts.isEmpty) {
@@ -199,17 +203,18 @@ class _StorePageState extends State<StorePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(height: 4),
-                            Row(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                RichText(
-                                  text: TextSpan(
-                                    style: DefaultTextStyle.of(context).style,
-                                    children: [
-                                      TextSpan(text: '${product.marca}'),
-                                    ],
-                                  ),
+                                Text(
+                                  product.marca,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(width: 22),
+                                if (product.aplicacao.isNotEmpty)
+                                  Text(
+                                    product.aplicacao,
+                                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                  ),
                               ],
                             ),
                             SizedBox(height: 4),
@@ -370,13 +375,18 @@ class _StorePageState extends State<StorePage> {
 
   void _filterProducts(String query) {
     setState(() {
-      filteredProducts = allProducts
-        .where((product) =>
-          product.nome.toLowerCase().contains(query.toLowerCase()) ||
-          product.marca.toLowerCase().contains(query.toLowerCase()))
-      .toList();
+      final lowerQuery = query.toLowerCase();
+
+      filteredProducts = allProducts.where((product) {
+        final matchesName = product.nome.toLowerCase().contains(lowerQuery);
+        final matchesMarca = product.marca.toLowerCase().contains(lowerQuery);
+        final matchesId = product.id.toString().contains(lowerQuery);
+        final matchesAplicacao = product.aplicacao.toLowerCase().contains(lowerQuery);
+        return matchesName || matchesMarca || matchesId || matchesAplicacao;
+      }).toList();
     });
   }
+
 
   String _formatarData(String dataIso) {
     final dt = DateTime.parse(dataIso).toLocal();

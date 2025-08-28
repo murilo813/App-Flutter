@@ -14,6 +14,8 @@ class Product {
   final String marca;
   final double preco1;
   final double preco2;
+  final double preco_minimo;
+  final String aplicacao;
 
   Product({
     required this.id,
@@ -29,6 +31,8 @@ class Product {
     required this.marca,
     required this.preco1,
     required this.preco2,
+    required this.preco_minimo,
+    required this.aplicacao,
   });
 
   // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
@@ -47,6 +51,8 @@ class Product {
       marca: json['marca'],
       preco1: json['preco1'],
       preco2: json['preco2'],
+      preco_minimo: (json['preco_minimo'] ?? 0).toDouble(),
+      aplicacao: json['aplicacao'] ?? '',
     );
   }
 
@@ -65,6 +71,8 @@ class Product {
       'marca': marca,
       'preco1': preco1,
       'preco2': preco2,
+      'preco_minimo': preco_minimo,
+      'aplicacao': aplicacao,
     };
   }
 
@@ -79,4 +87,5 @@ class Product {
 
   String get preco1Formatado => formatarPreco(preco1);
   String get preco2Formatado => formatarPreco(preco2);
+  String get precomFormatado => formatarPreco(preco_minimo);
 }

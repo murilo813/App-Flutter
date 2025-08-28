@@ -159,6 +159,7 @@ class _CarteiraPageState extends State<CarteiraPage> {
                       }
 
                       return ListView.separated(
+                        padding: EdgeInsets.only(bottom: 140), 
                         itemCount: filteredClientes.length,
                         separatorBuilder: (_, __) => Divider(),
                         itemBuilder: (context, index) {
