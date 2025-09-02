@@ -1,89 +1,61 @@
 import 'dart:convert';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'sync_service.dart';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/clientes.dart';
 import '../local_log.dart';
 
 class AnniversaryService {
-  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  /// Inicializa o plugin e o timezone
-  static Future<void> initNotifications() async {
-    // timezone
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
-
-    // configura plugin
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
-    const settings = InitializationSettings(android: android, iOS: ios);
-    await _notificationsPlugin.initialize(settings);
-  }
-
-  /// Agendar notificação para as 8h da manhã
-  static Future<void> agendarNotificacaoDiaria8AM(String mensagem) async {
-    await _notificationsPlugin.zonedSchedule(
-      0,
-      'Aniversário',
-      mensagem,
-      _nextInstanceOf8AM(),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_channel_id',
-          'Notificações Diárias',
-          channelDescription: 'Notificações de aniversários todos os dias às 8h',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time, // repete todo dia
-    );
-  }
-
-  /// Calcula próxima ocorrência das 8h
-  static tz.TZDateTime _nextInstanceOf8AM() {
-    final now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduled =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, 8);
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
-    }
-    return scheduled;
-  }
-
-  /// Verifica aniversariantes do dia e dispara notificação
-  static Future<void> verificarAniversariantes() async {
+  static Future<void> checkAndNotify() async {
     try {
-      final dataHoje = DateTime.now();
-      final clientesJson = await SyncService().lerClientesLocal();
-      if (clientesJson == null) return;
+      final prefs = await SharedPreferences.getInstance();
+      final hojeStr = DateTime.now().toIso8601String().substring(0, 10); 
+      final ultimoEnvio = prefs.getString('ultimo_aniversario') ?? '';
 
-      final aniversariantes = (clientesJson['data'] as List)
-          .where((c) =>
-              c['data_nasc'] != null &&
-              DateTime.parse(c['data_nasc']).day == dataHoje.day &&
-              DateTime.parse(c['data_nasc']).month == dataHoje.month)
+      if (ultimoEnvio == hojeStr) return;
+
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/clientes.json');
+      if (!(await file.exists())) return;
+
+      final content = await file.readAsString();
+      final jsonMap = json.decode(content);
+
+      if (jsonMap['data'] is! List) return;
+
+      final clientes = jsonMap['data']
+          .map<Cliente>((e) => Cliente.fromJson(e))
           .toList();
+
+      final hoje = DateTime.now();
+      final aniversariantes = clientes.where((c) =>
+        c.data_nasc != null &&
+        c.data_nasc!.day == hoje.day &&
+        c.data_nasc!.month == hoje.month
+      ).toList();
 
       if (aniversariantes.isEmpty) return;
 
-      String mensagem;
-      if (aniversariantes.length == 1) {
-        mensagem = '${aniversariantes.first['nomeCliente']} está de aniversário hoje!';
-      } else {
-        mensagem =
-            'Você tem ${aniversariantes.length} clientes aniversariantes hoje!';
+      for (var cliente in aniversariantes) {
+        await AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+            channelKey: 'birthday_channel',
+            title: '🎉 Hoje é aniversário de ${cliente.nomeCliente}!',
+            body: 'Não esqueça de mandar os parabéns 🎂',
+            notificationLayout: NotificationLayout.Default,
+          ),
+        );
       }
 
-      await agendarNotificacaoDiaria8AM(mensagem);
+      await prefs.setString('ultimo_aniversario', hojeStr);
+
     } catch (e, stack) {
-      await LocalLogger.log(
-          'Erro ao verificar aniversariantes: $e\nStackTrace: $stack');
+      await LocalLogger.log("Erro em AnniversaryService.checkAndNotify: $e\n$stack");
     }
   }
 }

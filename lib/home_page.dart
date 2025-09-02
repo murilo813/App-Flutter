@@ -1,18 +1,25 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'login.screen.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+
+import 'login.screen.dart';
 import 'store_page.dart';
 import 'carteira.dart';
-import 'package:flutter/services.dart';
-import 'package:device_info_plus/device_info_plus.dart'; 
-import 'dart:io';
 import 'secrets.dart';
 import 'local_log.dart';
 import 'log_page.dart';
+import 'services/anniversary.dart';
+import 'models/clientes.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,7 +34,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    checkLoginStatus(context); 
+
+    (() async {
+      bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+
+      if (!isAllowed) {
+        isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+
+      if (isAllowed) {
+        await AnniversaryService.checkAndNotify();
+      }
+
+      await anniversaryModal();
+    })();
   }
 
   Future<void> checkLoginStatus(BuildContext context) async {
@@ -42,6 +62,73 @@ class _HomePageState extends State<HomePage> {
       );
     } else {
       await checkAppVersion();
+    }
+  }
+
+  Future<void> anniversaryModal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hojeStr = DateTime.now().toIso8601String().substring(0, 10);
+
+    final jaExibido = prefs.getBool('aniversario_ja_exibido') ?? false;
+    if (jaExibido) return;
+
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/clientes.json');
+
+      if (!await file.exists()) return;
+
+      final content = await file.readAsString();
+      final jsonMap = json.decode(content);
+
+      if (jsonMap['data'] is! List) return;
+
+      final clientes = jsonMap['data']
+          .map<Cliente>((e) => Cliente.fromJson(e))
+          .toList();
+
+      final hoje = DateTime.now();
+      final aniversariantes = clientes.where((c) =>
+        c.data_nasc != null &&
+        c.data_nasc!.day == hoje.day &&
+        c.data_nasc!.month == hoje.month
+      ).toList();
+
+      if (aniversariantes.isEmpty) return; 
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Aniversariantes de hoje 🎉'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: aniversariantes.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.cake, color: Colors.pink),
+                    title: Text(aniversariantes[index].nomeCliente),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Fechar'),
+              ),
+            ],
+          );
+        },
+      );
+
+      await prefs.setBool('aniversario_ja_exibido', true);
+    } catch (e, stack) {
+      print('Erro ao exibir aniversariantes: $e\n$stack');
     }
   }
 

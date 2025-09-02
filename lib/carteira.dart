@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
+import 'package:intl/intl.dart';
+
 import '../services/sync_service.dart';
 import '../models/clientes.dart';
 import 'local_log.dart';
-import 'package:intl/intl.dart';
 
 class CarteiraPage extends StatefulWidget {
   @override

@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 import '../models/product.dart';
 import '../services/sync_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'dart:io';
 import 'local_log.dart';
 
 class StorePage extends StatefulWidget {

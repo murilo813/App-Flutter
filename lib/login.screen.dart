@@ -1,12 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'dart:io';
-import 'home_page.dart';
 import 'package:android_id/android_id.dart';
+
+import 'home_page.dart';
 import 'secrets.dart';
 import 'background/pendents.dart';
 
