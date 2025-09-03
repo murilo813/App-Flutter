@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.novo_app"
+    namespace = "com.alembro"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.novo_app"
+        applicationId = "com.alembro"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -59,7 +59,7 @@ android {
 android.applicationVariants.all {
     outputs.all {
         (this as com.android.build.gradle.internal.api.ApkVariantOutputImpl).outputFileName =
-            "agrozecaoapp.apk"
+            "Alembro.apk"
     }
 }
 

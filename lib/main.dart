@@ -39,7 +39,7 @@ void main() async {
   try {
     await Workmanager().initialize(
       callbackDispatcher,
-      isInDebugMode: true,
+      isInDebugMode: true, // DESATIVAR PARA NAO MOSTRAR NOTIFICACAO DO WORKMANAGER
     );
 
     // sincroniza estoques
@@ -62,7 +62,8 @@ void main() async {
       frequency: Duration(days: 1),
       initialDelay: Duration(seconds: 10),
       constraints: Constraints(
-        networkType: NetworkType.not_required,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
       ),
     );
 

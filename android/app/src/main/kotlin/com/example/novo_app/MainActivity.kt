@@ -1,4 +1,4 @@
-package com.example.novo_app  
+package com.alembro 
 
 import android.content.Intent
 import android.net.Uri

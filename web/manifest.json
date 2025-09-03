@@ -1,6 +1,6 @@
 {
-    "name": "novo_app",
-    "short_name": "novo_app",
+    "name": "alembro",
+    "short_name": "alembro",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
