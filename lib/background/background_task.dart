@@ -20,19 +20,10 @@ void callbackDispatcher() {
         await syncService.syncEstoqueGeral();
         await syncService.syncClientes();
         await OfflineQueue.trySendQueue(backendUrl);
-
-        await AwesomeNotifications().createNotification(
-          content: NotificationContent(
-            id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-            channelKey: 'sync_channel', 
-            title: 'Dados Sincronizados',
-            body: '',
-            color: Color(0xFF00A300),
-          ),
-        );
-
-      } else if (task == tarefaAniversario) {
         await AnniversaryService.checkAndNotify();
+
+        final agora = DateTime.now().toIso8601String();
+        await LocalLogger.log("Dados sincronizados $agora");
       }
       return Future.value(true);
     } catch (e, stack) {

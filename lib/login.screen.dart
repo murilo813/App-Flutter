@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await registrarUso();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+       MaterialPageRoute(builder: (context) => HomePage()),
       );
     } else {
       setState(() {
@@ -148,6 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           _showError('Erro no servidor: ${response.body}');
         }
+      } on SocketException {
+        _showError('Sem conexão com a internet. Conecte-se a uma rede ou dados móveis e tente novamente.');   
       } catch (e) {
         _showError('Erro de conexão: $e');
       } finally {

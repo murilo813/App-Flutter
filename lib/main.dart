@@ -13,6 +13,9 @@ import 'login.screen.dart';
 import 'local_log.dart';
 import 'secrets.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<HomePageState> homeKey = GlobalKey<HomePageState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,20 +29,25 @@ void main() async {
         defaultColor: const Color(0xFF00A300),
         importance: NotificationImportance.High,
       ),
-      NotificationChannel(
-        channelKey: 'sync_channel',
-        channelName: 'Sincronização',
-        channelDescription: 'Notificações de sincronização de dados',
-        defaultColor: const Color(0xFF00A300),
-        importance: NotificationImportance.Low,
-      ),
     ],
+  );
+
+  AwesomeNotifications().setListeners(
+    onActionReceivedMethod: (ReceivedAction receivedNotification) async {
+      if (receivedNotification.channelKey == 'birthday_channel') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => HomePage(key: homeKey))
+        ).then((_) {
+          homeKey.currentState?.anniversaryModal(force: true);
+        });
+      }
+    },
   );
 
   try {
     await Workmanager().initialize(
       callbackDispatcher,
-      isInDebugMode: true, // DESATIVAR PARA NAO MOSTRAR NOTIFICACAO DO WORKMANAGER
+      isInDebugMode: false, // DESATIVAR PARA NAO MOSTRAR NOTIFICACAO DO WORKMANAGER
     );
 
     // sincroniza estoques
@@ -50,18 +58,6 @@ void main() async {
       initialDelay: Duration(seconds: 10),
       constraints: Constraints(
         networkType: NetworkType.connected,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-      ),
-    );
-
-    // verifica aniversários
-    await Workmanager().registerPeriodicTask(
-      "2",
-      tarefaAniversario,
-      frequency: Duration(days: 1),
-      initialDelay: Duration(seconds: 10),
-      constraints: Constraints(
         requiresBatteryNotLow: false,
         requiresCharging: false,
       ),

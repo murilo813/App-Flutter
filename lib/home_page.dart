@@ -18,17 +18,16 @@ import 'carteira.dart';
 import 'secrets.dart';
 import 'local_log.dart';
 import 'log_page.dart';
-import 'services/anniversary.dart';
 import 'models/clientes.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   int _titleTapCount = 0;
   
   @override
@@ -40,10 +39,6 @@ class _HomePageState extends State<HomePage> {
 
       if (!isAllowed) {
         isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-
-      if (isAllowed) {
-        await AnniversaryService.checkAndNotify();
       }
 
       await anniversaryModal();
@@ -65,12 +60,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> anniversaryModal() async {
+  Future<void> anniversaryModal({bool force = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final hojeStr = DateTime.now().toIso8601String().substring(0, 10);
 
     final jaExibido = prefs.getBool('aniversario_ja_exibido') ?? false;
-    if (jaExibido) return;
+    if (jaExibido && !force) return;
 
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -100,7 +95,20 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Aniversariantes de hoje 🎉'),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Aniversariantes de hoje 🎉'),
+                const SizedBox(height: 8),
+                const Text(
+                  'Por favor, verifique se é realmente o aniversário do cliente',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
             content: SizedBox(
               width: double.maxFinite,
               child: ListView.builder(

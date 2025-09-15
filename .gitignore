@@ -34,5 +34,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 key.properties
-android/app/keys/agrozecao-release-key.jks
 lib/secrets.dart

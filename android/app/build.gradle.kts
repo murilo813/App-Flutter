@@ -29,7 +29,8 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("keys/agrozecao-release-key.jks")
+            val storeFilePath = keyProperties["storeFile"] as String
+            storeFile = file(storeFilePath)
             storePassword = keyProperties["storePassword"] as String
             keyAlias = keyProperties["keyAlias"] as String
             keyPassword = keyProperties["keyPassword"] as String
