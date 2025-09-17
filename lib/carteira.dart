@@ -160,28 +160,48 @@ class _CarteiraPageState extends State<CarteiraPage> {
                         return Center(child: Text('Nenhum cliente encontrado'));
                       }
 
+                      final hoje = DateTime.now();
+
                       return ListView.separated(
                         padding: EdgeInsets.only(bottom: 140), 
                         itemCount: filteredClientes.length,
                         separatorBuilder: (_, __) => Divider(),
                         itemBuilder: (context, index) {
                           final cliente = filteredClientes[index];
+                          final isAniversariante = cliente.data_nasc != null &&
+                            cliente.data_nasc!.day == hoje.day &&
+                            cliente.data_nasc!.month == hoje.month;
+
                           return ListTile(
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            title: Row(
                               children: [
-                                Text(
-                                  cliente.nomeCliente,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                if (cliente.responsavel.isNotEmpty)
-                                  Text(
-                                    'Responsável: ${cliente.responsavel}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              cliente.nomeCliente,
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                          if (isAniversariante)
+                                            const Icon(Icons.cake, color: Colors.pink, size: 18),
+                                        ],
+                                      ),
+                                      if (cliente.responsavel.isNotEmpty)
+                                        Text(
+                                          'Responsável: ${cliente.responsavel}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                    ],
                                   ),
+                                ),
                               ],
                             ),
                             subtitle: Padding(
@@ -319,12 +339,40 @@ class _CarteiraPageState extends State<CarteiraPage> {
   }
 
   List<Cliente> _getFilteredClientes() {
-    final query = searchController.text.toLowerCase();
-    return allClientes.where((c) => 
-      c.nomeCliente.toLowerCase().contains(query) ||
-      c.responsavel.toLowerCase().contains(query)
-    ).toList();
+    final query = searchController.text.trim().toLowerCase();
+    final hoje = DateTime.now();
+
+    final filtrados = allClientes.where((c) {
+      final nome = c.nomeCliente.toLowerCase();
+      final resp = c.responsavel.toLowerCase();
+      return nome.contains(query) || resp.contains(query);
+    }).toList();
+
+    filtrados.sort((a, b) {
+      final aAniversario = a.data_nasc != null &&
+          a.data_nasc!.day == hoje.day &&
+          a.data_nasc!.month == hoje.month;
+      final bAniversario = b.data_nasc != null &&
+          b.data_nasc!.day == hoje.day &&
+          b.data_nasc!.month == hoje.month;
+
+      // 1) aniversariantes do dia primeiro
+      if (aAniversario && !bAniversario) return -1;
+      if (!aAniversario && bAniversario) return 1;
+
+      // 2) quem tem data_nasc vem antes de quem não tem (evita nulls no topo)
+      final aHasDate = a.data_nasc != null;
+      final bHasDate = b.data_nasc != null;
+      if (aHasDate && !bHasDate) return -1;
+      if (!aHasDate && bHasDate) return 1;
+
+      // 3) por fim, ordem alfabética (case-insensitive)
+      return a.nomeCliente.toLowerCase().compareTo(b.nomeCliente.toLowerCase());
+    });
+
+    return filtrados;
   }
+
 
   void _filterClientes(String query) {
     setState(() {    
