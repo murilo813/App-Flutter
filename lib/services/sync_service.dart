@@ -5,33 +5,34 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/clientes.dart';
+import '../models/client.dart';
 import '../models/product.dart';
+import '../models/user.dart';
 import '../secrets.dart';
-import '../local_log.dart';
+import '../background/local_log.dart';
+import '../services/http_client.dart';
+
+final client = HttpClient();
 
 class SyncService {
   final String baseUrl;
+  final HttpClient client;
 
-  SyncService({this.baseUrl = backendUrl});
+  SyncService({this.baseUrl = backendUrl}) : client = HttpClient(baseUrl: backendUrl);
 
-// ESTOQUE
+  // ESTOQUE
   Future<List<Product>> syncEstoqueGeral() async {
-    final url = '$baseUrl/estoque/geral';
-    print('Fazendo requisição para: $url');
+    print('Fazendo requisição para: $baseUrl/estoque/geral');
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await client.get('/estoque/geral');
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         final produtos = data.map((json) => Product.fromJson(json)).toList();
 
         final now = DateTime.now().toIso8601String();
-        final jsonData = {
-          'lastSynced': now,
-          'data': data,
-        };
+        final jsonData = {'lastSynced': now, 'data': data};
 
         final dir = await getApplicationDocumentsDirectory();
         final file = File('${dir.path}/estoque_geral.json');
@@ -66,7 +67,7 @@ class SyncService {
     return null;
   }
 
-// CLIENTES
+  // CLIENTES
   Future<List<Cliente>> syncClientes() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -78,9 +79,7 @@ class SyncService {
         return [];
       }
 
-      final url = Uri.parse('$baseUrl/clientes?id_vendedor=$idVendedor');
-      print('Fazendo requisição GET para: $url');
-      final response = await http.get(url);
+      final response = await client.get('/clientes?id_vendedor=$idVendedor');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -121,6 +120,57 @@ class SyncService {
     } catch (e, stack) {
       await LocalLogger.log('Erro no lerClientesLocal: $e\nStackTrace: $stack');
       print('Erro ao ler clientes.json: $e');
+    }
+    return null;
+  }
+
+  // USERS
+  Future<List<User>> syncUsers() async {
+    try {
+      final response = await client.get('/Usuarios');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        final now = DateTime.now().toIso8601String();
+        final jsonData = {
+          'lastSynced': now,
+          'data': data,
+        };
+
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/users.json');
+        await file.writeAsString(json.encode(jsonData));
+        print('Usuários sincronizados localmente em $now');
+
+        return data.map<User>((json) => User.fromJson(json)).toList();
+      } else if (response.statusCode == 403) {
+        print('Acesso negado pelo servidor. Nenhum dado foi sincronizado.');
+        return [];
+      } else {
+        final msg = 'Erro ao carregar usuários (status ${response.statusCode})';
+        await LocalLogger.log('Erro no syncUsers: $msg');
+        return [];
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no syncUsers: $e\nStackTrace: $stack');
+      print('Erro ao sincronizar usuários (sync): $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> lerUsersLocal() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/users.json');
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        return json.decode(content);
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no lerUsersLocal: $e\nStackTrace: $stack');
+      print('Erro ao ler users.json: $e');
     }
     return null;
   }

@@ -6,8 +6,8 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/clientes.dart';
-import '../local_log.dart';
+import '../models/client.dart';
+import '../background/local_log.dart';
 
 class AnniversaryService {
   static Future<void> checkAndNotify() async {

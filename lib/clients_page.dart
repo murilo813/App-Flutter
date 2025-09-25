@@ -3,17 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 import '../services/sync_service.dart';
-import '../models/clientes.dart';
-import 'local_log.dart';
+import '../models/client.dart';
+import 'background/local_log.dart';
+import 'secrets.dart';
 
-class CarteiraPage extends StatefulWidget {
+class ClientsPage extends StatefulWidget {
   @override
-  _CarteiraPageState createState() => _CarteiraPageState();
+  _ClientsPageState createState() => _ClientsPageState();
 }
 
-class _CarteiraPageState extends State<CarteiraPage> {
+class _ClientsPageState extends State<ClientsPage> {
   late Future<List<Cliente>> clientes;
   late List<Cliente> filteredClientes;
   late List<Cliente> allClientes = [];
@@ -34,16 +36,16 @@ class _CarteiraPageState extends State<CarteiraPage> {
 
   Future<bool> hasInternetConnection() async {
     try {
-      final result = await InternetAddress
-        .lookup('google.com')
-        .timeout(const Duration(seconds: 10)); 
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      final response = await http
+          .get(Uri.parse('$backendUrl/ping'))
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
     } catch (_) {
       return false;
     }
   }
 
-  void checkConnectionAndLoadData() async {
+  Future<void> checkConnectionAndLoadData() async {
     final temInternet = await hasInternetConnection();
 
     Future<void> carregarDadosLocais() async {

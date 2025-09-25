@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http;
 
-import '../local_log.dart';
+import 'local_log.dart';
+import '../services/http_client.dart';
 
 class OfflineQueue {
   static const _key = 'offline_queue';
@@ -34,21 +34,17 @@ class OfflineQueue {
         if (queue.isEmpty) return;
 
         List<Map<String, dynamic>> failed = [];
+        final httpClient = HttpClient(baseUrl: backendUrl);
 
         for (final item in queue) {
-            try {
-                final String url = item['url'];
-                final dynamic body = item['body'];
-                final uri = Uri.parse('$backendUrl$url');
+          try {
+            final String url = item['url'];
+            final dynamic body = item['body'];
 
-                await http.post(
-                    uri,
-                    headers: {'Content-Type': 'application/json'},
-                    body: jsonEncode(body),
-                );
-            } catch (e) {
-                failed.add(item);
-            }
+            await httpClient.post(url, body); 
+          } catch (e) {
+            failed.add(item);
+          }
         }
 
         final prefs = await SharedPreferences.getInstance();
@@ -57,30 +53,27 @@ class OfflineQueue {
       }
     });
   }
-    static Future<void> trySendQueue(String backendUrl) async {
+
+  static Future<void> trySendQueue(String backendUrl) async {
     final queue = await getQueue();
     if (queue.isEmpty) return;
 
     List<Map<String, dynamic>> failed = [];
+    final httpClient = HttpClient(baseUrl: backendUrl);
 
     for (final item in queue) {
-        try {
+      try {
         final String url = item['url'];
         final dynamic body = item['body'];
-        final uri = Uri.parse('$backendUrl$url');
 
-        await http.post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(body),
-        );
-        } catch (_) {
+        await httpClient.post(url, body); 
+      } catch (_) {
         failed.add(item);
-        }
+      }
     }
 
     final prefs = await SharedPreferences.getInstance();
     final updatedQueue = failed.map((e) => jsonEncode(e)).toList();
     await prefs.setStringList(_key, updatedQueue);
-    }
+  }
 }

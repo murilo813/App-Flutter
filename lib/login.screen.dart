@@ -11,6 +11,7 @@ import 'package:android_id/android_id.dart';
 import 'home_page.dart';
 import 'secrets.dart';
 import 'background/pendents.dart';
+import 'services/http_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,7 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
     String? username = prefs.getString('username');
     String? appVersion = prefs.getString('app_version') ?? 'desconhecida';
 
-    if (username == null) return;
+    if (username == null) {
+      return;
+    }
 
     final now = DateTime.now().toIso8601String();
     final payload = {
@@ -72,12 +75,10 @@ class _LoginScreenState extends State<LoginScreen> {
       'versao_app': appVersion,
     };
 
+
     try {
-      await http.post(
-        Uri.parse('$baseUrl/uso'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
+      final httpClient = HttpClient();
+      final response = await httpClient.post('/uso', payload);
     } catch (e) {
       await OfflineQueue.addToQueue({
         'url': '/uso',
@@ -98,26 +99,20 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = true);
       String username = _usernameController.text.trim();
       String password = _passwordController.text.trim();
-      String? androidId = await getAndroidId();
 
       try {
-        final response = await http.post(
-          Uri.parse('$baseUrl/login'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'nome': username,
-            'senha': password,
-          }),
-        );
-        print('Corpo enviado: ${jsonEncode({
+        final body = {
           'nome': username,
           'senha': password,
-        })}');
+        };
+
+        final httpClient = HttpClient();
+
+        final response = await httpClient.post('/login', body);
 
         if (response.statusCode == 200) {
-          print('Resposta bruta: ${response.body}');
           final data = jsonDecode(response.body);
-          print('id_vendedor: ${data['id_vendedor']} (${data['id_vendedor'].runtimeType})');
+
           int idVendedor = data['id_vendedor'];
 
           final prefs = await SharedPreferences.getInstance();
@@ -125,49 +120,38 @@ class _LoginScreenState extends State<LoginScreen> {
           await prefs.setString('username', username);
           await prefs.setInt('id_vendedor', idVendedor);
 
-          if (androidId != null) {
-            await http.post(
-              Uri.parse('$baseUrl/registrar_dispositivo'),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'nome': username,
-                'android_id': androidId,
-              }),
-            );
-          }
-
           await registrarUso();
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
           );
         } else if (response.statusCode == 401) {
+          print('Login falhou: senha incorreta');
           _showError('Usuário ou senha inválidos');
         } else if (response.statusCode == 429) {
+          print('Login bloqueado: muitas tentativas');
           _showError('Muitas tentativas de login. Tente novamente em 5 minutos.');
         } else {
+          print('Erro inesperado: ${response.statusCode}');
           _showError('Erro no servidor: ${response.body}');
         }
-      } on SocketException {
-        _showError('Sem conexão com a internet. Conecte-se a uma rede ou dados móveis e tente novamente.');   
-      } catch (e) {
+      } on SocketException catch (e) {
+        print('SocketException: $e');
+        _showError('Sem conexão com a internet.');
+      } catch (e, stack) {
+        print('Exceção capturada no login: $e');
+        print('Stacktrace:\n$stack');
         _showError('Erro de conexão: $e');
       } finally {
+        print('==== LOGIN FINALIZADO ====');
         setState(() => isLoading = false);
       }
+    } else {
+      print('Formulário inválido, não tentando login.');
     }
   }
 
-  Future<String?> getAndroidId() async {
-    final androidIdPlugin = AndroidId();
-    try {
-      String? androidId = await androidIdPlugin.getId();
-      return androidId;
-    } catch (e) {
-      print('Erro ao obter Android ID: $e');
-      return null;
-    }
-  }
 
   void _showError(String message) {
     showDialog(

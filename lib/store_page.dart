@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/product.dart';
 import '../services/sync_service.dart';
-import 'local_log.dart';
+import 'background/local_log.dart';
+import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
   final String storeName;
@@ -43,16 +45,16 @@ class _StorePageState extends State<StorePage> {
   
   Future<bool> hasInternetConnection() async {
     try {
-      final result = await InternetAddress
-        .lookup('google.com')
-        .timeout(const Duration(seconds: 10)); 
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      final response = await http
+          .get(Uri.parse('$backendUrl/ping'))
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
     } catch (_) {
       return false;
     }
   }
 
-  void checkConnectionAndLoadData() async {
+  Future<void> checkConnectionAndLoadData() async {
     final temInternet = await hasInternetConnection();
 
     Future<void> carregarDadosLocais() async {

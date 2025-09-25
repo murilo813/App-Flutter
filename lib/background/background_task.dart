@@ -5,7 +5,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import '../services/sync_service.dart';
 import '../services/anniversary.dart'; 
 import '../secrets.dart';
-import '../local_log.dart';
+import 'local_log.dart';
 import 'pendents.dart';
 
 const tarefaSync = "sync_estoque";

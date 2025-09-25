@@ -8,13 +8,45 @@ import 'services/sync_service.dart';
 import 'services/anniversary.dart'; 
 import 'background/background_task.dart';
 import 'background/pendents.dart';
+import 'background/local_log.dart';
 import 'home_page.dart';
 import 'login.screen.dart';
-import 'local_log.dart';
 import 'secrets.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<HomePageState> homeKey = GlobalKey<HomePageState>();
+
+// LISTENERS GLOBAIS
+
+// Quando o usuário toca na notificação
+@pragma("vm:entry-point")
+Future<void> onActionReceivedMethod(ReceivedAction receivedNotification) async {
+  if (receivedNotification.channelKey == 'birthday_channel') {
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => HomePage(key: homeKey)),
+    ).then((_) {
+      homeKey.currentState?.anniversaryModal(force: true);
+    });
+  }
+}
+
+// Quando a notificação é criada
+@pragma("vm:entry-point")
+Future<void> onNotificationCreatedMethod(ReceivedNotification notification) async {
+  print("Notificação criada: ${notification.id}");
+}
+
+// Quando a notificação é exibida na barra
+@pragma("vm:entry-point")
+Future<void> onNotificationDisplayedMethod(ReceivedNotification notification) async {
+  print("Notificação exibida: ${notification.id}");
+}
+
+// Quando o usuário descarta a notificação
+@pragma("vm:entry-point")
+Future<void> onDismissActionReceivedMethod(ReceivedAction action) async {
+  print("Notificação descartada: ${action.id}");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,15 +65,10 @@ void main() async {
   );
 
   AwesomeNotifications().setListeners(
-    onActionReceivedMethod: (ReceivedAction receivedNotification) async {
-      if (receivedNotification.channelKey == 'birthday_channel') {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(builder: (_) => HomePage(key: homeKey))
-        ).then((_) {
-          homeKey.currentState?.anniversaryModal(force: true);
-        });
-      }
-    },
+    onActionReceivedMethod: onActionReceivedMethod,
+    onNotificationCreatedMethod: onNotificationCreatedMethod,
+    onNotificationDisplayedMethod: onNotificationDisplayedMethod,
+    onDismissActionReceivedMethod: onDismissActionReceivedMethod,
   );
 
   try {
@@ -78,6 +105,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AgroZecão',
+      navigatorKey: navigatorKey,
       home: LoginScreen(),
       supportedLocales: const [
         Locale('pt', 'BR'),

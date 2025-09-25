@@ -14,11 +14,13 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'login.screen.dart';
 import 'store_page.dart';
-import 'carteira.dart';
+import 'clients_page.dart';
+import 'admin_page.dart';
 import 'secrets.dart';
-import 'local_log.dart';
+import 'background/local_log.dart';
 import 'log_page.dart';
-import 'models/clientes.dart';
+import 'models/client.dart';
+import 'services/http_client.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -145,9 +147,8 @@ class HomePageState extends State<HomePage> {
     if (connectivityResult == ConnectivityResult.none) return;
 
     try {
-      final response = await http
-        .get(Uri.parse('${backendUrl}versao-atual'))
-        .timeout(const Duration(seconds: 10));
+      final httpClient = HttpClient();
+      final response = await httpClient.get('/versao-atual').timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -249,7 +250,12 @@ class HomePageState extends State<HomePage> {
                 _buildHomeButton(
                   context: context,
                   label: 'Meus Clientes',
-                  page: CarteiraPage(),
+                  page: ClientsPage(),
+                ),
+                _buildHomeButton(
+                  context: context,
+                  label: 'Admin',
+                  page: AdminPage(),
                 ),
               ],
             ),
