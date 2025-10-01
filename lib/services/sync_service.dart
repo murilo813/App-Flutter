@@ -22,13 +22,15 @@ class SyncService {
 
   // ESTOQUE
   Future<List<Product>> syncEstoqueGeral() async {
-    print('Fazendo requisição para: $baseUrl/estoque/geral');
+    print('Fazendo requisição para: $baseUrl/estoque');
 
     try {
-      final response = await client.get('/estoque/geral');
+      final response = await client.get('/estoque');
 
       if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
+
         final produtos = data.map((json) => Product.fromJson(json)).toList();
 
         final now = DateTime.now().toIso8601String();
@@ -51,20 +53,22 @@ class SyncService {
     }
   }
 
-  Future<Map<String, dynamic>?> lerEstoqueLocalGeral() async {
+  Future<List<Product>> lerEstoqueLocalGeral() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/estoque_geral.json');
 
       if (await file.exists()) {
         final content = await file.readAsString();
-        return json.decode(content);
+        final Map<String, dynamic> jsonData = json.decode(content);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        return data.map((json) => Product.fromJson(json)).toList();
       }
     } catch (e, stack) {
       await LocalLogger.log('Erro no lerEstoqueLocalGeral: $e\nStackTrace: $stack');
       print('Erro ao ler estoque_geral.json: $e');
     }
-    return null;
+    return [];
   }
 
   // CLIENTES
@@ -82,7 +86,8 @@ class SyncService {
       final response = await client.get('/clientes?id_vendedor=$idVendedor');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
 
         final now = DateTime.now().toIso8601String();
         final jsonData = {
@@ -108,29 +113,32 @@ class SyncService {
     }
   }
 
-  Future<Map<String, dynamic>?> lerClientesLocal() async {
+  Future<List<Cliente>> lerClientesLocal() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/clientes.json');
 
       if (await file.exists()) {
         final content = await file.readAsString();
-        return json.decode(content);
+        final Map<String, dynamic> jsonData = json.decode(content);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        return data.map((json) => Cliente.fromJson(json)).toList();
       }
     } catch (e, stack) {
       await LocalLogger.log('Erro no lerClientesLocal: $e\nStackTrace: $stack');
       print('Erro ao ler clientes.json: $e');
     }
-    return null;
+    return [];
   }
 
   // USERS
   Future<List<User>> syncUsers() async {
     try {
-      final response = await client.get('/Usuarios');
+      final response = await client.get('/usuarios');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
 
         final now = DateTime.now().toIso8601String();
         final jsonData = {
@@ -159,19 +167,21 @@ class SyncService {
     }
   }
 
-  Future<Map<String, dynamic>?> lerUsersLocal() async {
+  Future<List<User>> lerUsersLocal() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/users.json');
 
       if (await file.exists()) {
         final content = await file.readAsString();
-        return json.decode(content);
+        final Map<String, dynamic> jsonData = json.decode(content);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        return data.map((json) => User.fromJson(json)).toList();
       }
     } catch (e, stack) {
       await LocalLogger.log('Erro no lerUsersLocal: $e\nStackTrace: $stack');
       print('Erro ao ler users.json: $e');
     }
-    return null;
+    return [];
   }
 }

@@ -1,12 +1,17 @@
-import 'dart:io';
+import 'dart:async';
+import 'dart:convert'; 
+import 'dart:io';  
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/product.dart';
-import '../services/sync_service.dart';
+import 'models/product.dart';
+import 'services/sync_service.dart';
+import 'services/http_client.dart';
 import 'background/local_log.dart';
+import 'background/pendents.dart';
 import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
@@ -18,7 +23,7 @@ class StorePage extends StatefulWidget {
   _StorePageState createState() => _StorePageState();
 }
 
-class _StorePageState extends State<StorePage> {
+class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
   late Future<List<Product>> products;
   late List<Product> filteredProducts;
   late List<Product> allProducts = [];
@@ -37,10 +42,34 @@ class _StorePageState extends State<StorePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     searchController = TextEditingController();
+
+    Timer? _debounce;
+
+    searchController.addListener(() {
+      if (_debounce?.isActive ?? false) _debounce!.cancel();
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        final termoAtual = searchController.text.trim();
+        if (termoAtual.isNotEmpty) {
+          _savePesquisa(termoAtual);
+        }
+      });
+    });
+
     filteredProducts = [];
     products = Future.value([]);
     checkConnectionAndLoadData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+
+    if (state == AppLifecycleState.paused || 
+        state == AppLifecycleState.inactive || 
+        state == AppLifecycleState.detached) {
+      _savePesquisa(searchController.text);
+    }
   }
   
   Future<bool> hasInternetConnection() async {
@@ -59,17 +88,25 @@ class _StorePageState extends State<StorePage> {
 
     Future<void> carregarDadosLocais() async {
       try {
-        final localData = await syncService.lerEstoqueLocalGeral();
-        if (localData != null) {
-          List<Product> localProducts = (localData['data'] as List)
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/estoque_geral.json');
+
+        if (await file.exists()) {
+          final content = await file.readAsString();
+          final Map<String, dynamic> jsonData = json.decode(content);
+
+          List<Product> localProducts = (jsonData['data'] as List)
               .map((json) => Product.fromJson(json))
               .toList();
+
+          String ultimaAtualizacao = jsonData['lastSynced'] ?? '';
+
           setState(() {
             products = Future.value(localProducts);
-            ultimaAtualizacao = localData['lastSynced'];
+            this.ultimaAtualizacao = ultimaAtualizacao;
           });
         } else {
-          await LocalLogger.log('Erro crítico: dados locais vazios');
+          await LocalLogger.log('Erro crítico: arquivo estoque_geral.json não existe');
           setState(() {
             products = Future.error('Sem dados locais disponíveis');
           });
@@ -109,6 +146,7 @@ class _StorePageState extends State<StorePage> {
   @override
   void dispose() {
     searchController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -376,6 +414,42 @@ class _StorePageState extends State<StorePage> {
       ],
     );
   }
+
+  Future<void> _savePesquisa(String termo) async {
+    termo = termo.trim();
+    if (termo.isEmpty) return;
+
+    final queue = await OfflineQueue.getQueue() ?? [];
+
+    final outros = queue.where((item) => item['url'] != '/pesquisa').toList();
+
+    List<String> termosSalvos = [];
+    if (queue.isNotEmpty) {
+      final itemPesquisa = queue.firstWhere(
+        (item) => item['url'] == '/pesquisa',
+        orElse: () => {},
+      );
+      if (itemPesquisa.containsKey('body') && itemPesquisa['body'].containsKey('termos')) {
+        termosSalvos = List<String>.from(itemPesquisa['body']['termos']);
+      }
+    }
+
+    if (!termosSalvos.contains(termo)) {
+      termosSalvos.add(termo);
+    }
+
+    await OfflineQueue.clearQueue();
+    for (final item in outros) {
+      await OfflineQueue.addToQueue(item);
+    }
+
+    final data = {
+      'url': '/pesquisa',
+      'body': {'termos': termosSalvos},
+    };
+    await OfflineQueue.addToQueue(data);
+  }
+
 
   void _filterProducts(String query) {
     setState(() {

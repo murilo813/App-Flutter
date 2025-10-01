@@ -1,12 +1,14 @@
 import 'dart:io';
+import 'dart:convert'; 
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import '../services/sync_service.dart';
-import '../models/client.dart';
+import '/services/sync_service.dart';
+import '/models/client.dart';
 import 'background/local_log.dart';
 import 'secrets.dart';
 
@@ -48,32 +50,40 @@ class _ClientsPageState extends State<ClientsPage> {
   Future<void> checkConnectionAndLoadData() async {
     final temInternet = await hasInternetConnection();
 
-    Future<void> carregarDadosLocais() async {
-      try {
-        final localData = await syncService.lerClientesLocal();
-        if (localData != null) {
-          List<Cliente> localClientes = (localData['data'] as List)
-              .map((json) => Cliente.fromJson(json))
-              .toList();
-          setState(() {
-            clientes = Future.value(localClientes);
-            allClientes = localClientes;
-            filteredClientes = localClientes; 
-            ultimaAtualizacao = localData['lastSynced'];
-          });
-        } else {
-          await LocalLogger.log('Erro crítico: dados locais vazios');
-          setState(() {
-            clientes = Future.error('Sem dados locais disponíveis');
-          });
-        }
-      } catch (e, stack) {
-        await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
+  Future<void> carregarDadosLocais() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/clientes.json');
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final Map<String, dynamic> jsonData = json.decode(content);
+
+        List<Cliente> localClientes = (jsonData['data'] as List)
+            .map((json) => Cliente.fromJson(json))
+            .toList();
+
+        String ultimaAtualizacao = jsonData['lastSynced'] ?? '';
+
         setState(() {
-          clientes = Future.error('Erro ao carregar dados locais');
+          clientes = Future.value(localClientes);
+          allClientes = localClientes;
+          filteredClientes = localClientes;
+          this.ultimaAtualizacao = ultimaAtualizacao;
+        });
+      } else {
+        await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
+        setState(() {
+          clientes = Future.error('Sem dados locais disponíveis');
         });
       }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
+      setState(() {
+        clientes = Future.error('Erro ao carregar dados locais');
+      });
     }
+  }
 
     if (!temInternet) {
       print('Sem conexão — carregando clientes do local');
@@ -165,7 +175,7 @@ class _ClientsPageState extends State<ClientsPage> {
                       final hoje = DateTime.now();
 
                       return ListView.separated(
-                        padding: EdgeInsets.only(bottom: 140), 
+                        padding: EdgeInsets.only(bottom: 160), 
                         itemCount: filteredClientes.length,
                         separatorBuilder: (_, __) => Divider(),
                         itemBuilder: (context, index) {
@@ -294,51 +304,55 @@ class _ClientsPageState extends State<ClientsPage> {
     double totalLimiteC = clientesParaTotais.fold(0, (sum, c) => sum + c.limite_calculado);
     double totalSaldoC = clientesParaTotais.fold(0, (sum, c) => sum + c.saldo_limite_calculado);
 
-    return Container(
-      width: double.infinity, 
-      margin: EdgeInsets.all(4), 
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            child: Text(
-              "Totais",
-              style: TextStyle(
-                fontSize: 12, 
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
+    return SafeArea(
+      bottom: true, 
+      child: Container(
+        width: double.infinity, 
+        margin: const EdgeInsets.all(4), 
+        padding: const EdgeInsets.all(12), 
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            const Positioned(
+              top: 0,
+              left: 0,
+              child: Text(
+                "Totais",
+                style: TextStyle(
+                  fontSize: 12, 
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildColunaLimiteComLinhaInterna("Limite BM", formatarValor(totalLimiteBM), totalLimiteBM, true),
-                _buildColunaLimiteComLinhaInterna("Saldo BM", formatarValor(totalSaldoBM), totalSaldoBM, true),
-                _buildColunaLimiteComLinhaInterna("Limite C", formatarValor(totalLimiteC), totalLimiteC, true),
-                _buildColunaLimiteComLinhaInterna("Saldo C", formatarValor(totalSaldoC), totalSaldoC, false),
-              ],
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildColunaLimiteComLinhaInterna("Limite BM", formatarValor(totalLimiteBM), totalLimiteBM, true),
+                  _buildColunaLimiteComLinhaInterna("Saldo BM", formatarValor(totalSaldoBM), totalSaldoBM, true),
+                  _buildColunaLimiteComLinhaInterna("Limite C", formatarValor(totalLimiteC), totalLimiteC, true),
+                  _buildColunaLimiteComLinhaInterna("Saldo C", formatarValor(totalSaldoC), totalSaldoC, false),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
 
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.trim().toLowerCase();

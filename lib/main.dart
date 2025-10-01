@@ -16,9 +16,8 @@ import 'secrets.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<HomePageState> homeKey = GlobalKey<HomePageState>();
 
-// LISTENERS GLOBAIS
 
-// Quando o usuário toca na notificação
+// quando o usuario toca na notificacao
 @pragma("vm:entry-point")
 Future<void> onActionReceivedMethod(ReceivedAction receivedNotification) async {
   if (receivedNotification.channelKey == 'birthday_channel') {
@@ -30,19 +29,19 @@ Future<void> onActionReceivedMethod(ReceivedAction receivedNotification) async {
   }
 }
 
-// Quando a notificação é criada
+// quando a notificacao e criada
 @pragma("vm:entry-point")
 Future<void> onNotificationCreatedMethod(ReceivedNotification notification) async {
   print("Notificação criada: ${notification.id}");
 }
 
-// Quando a notificação é exibida na barra
+// quando a notificacao e exibida na barra
 @pragma("vm:entry-point")
 Future<void> onNotificationDisplayedMethod(ReceivedNotification notification) async {
   print("Notificação exibida: ${notification.id}");
 }
 
-// Quando o usuário descarta a notificação
+// quando o usuario descarta a notificacao
 @pragma("vm:entry-point")
 Future<void> onDismissActionReceivedMethod(ReceivedAction action) async {
   print("Notificação descartada: ${action.id}");
@@ -77,7 +76,7 @@ void main() async {
       isInDebugMode: false, // DESATIVAR PARA NAO MOSTRAR NOTIFICACAO DO WORKMANAGER
     );
 
-    // sincroniza estoques
+    // sincronizacao de dados
     await Workmanager().registerPeriodicTask(
       "1",
       tarefaSync,

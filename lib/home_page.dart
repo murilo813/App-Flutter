@@ -148,12 +148,12 @@ class HomePageState extends State<HomePage> {
 
     try {
       final httpClient = HttpClient();
-      final response = await httpClient.get('/versao-atual').timeout(const Duration(seconds: 10));
+      final response = await httpClient.get('/versao').timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         print('Resposta da versão: $json');
-        final latestVersion = json['version'];
+        final latestVersion = json['versao'];
 
         final prefs = await SharedPreferences.getInstance();
         final currentVersion = prefs.getString('app_version');
@@ -263,28 +263,31 @@ class HomePageState extends State<HomePage> {
 
           Align(
             alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear(); // apaga o shared preferences
-                  if (context.mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                    );
-                  }
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Sair'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            child: SafeArea(
+              bottom: true,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // <--- espaço mínimo
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Sair'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
