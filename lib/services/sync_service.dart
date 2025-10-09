@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/client.dart';
 import '../models/product.dart';
 import '../models/user.dart';
+import '../models/obs.dart';
 import '../secrets.dart';
 import '../background/local_log.dart';
 import '../services/http_client.dart';
@@ -181,6 +182,67 @@ class SyncService {
     } catch (e, stack) {
       await LocalLogger.log('Erro no lerUsersLocal: $e\nStackTrace: $stack');
       print('Erro ao ler users.json: $e');
+    }
+    return [];
+  }
+
+  // OBSERVAÇÕES
+  Future<List<Obs>> syncObservacoes() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int? idVendedor = prefs.getInt('id_vendedor');
+
+      if (idVendedor == null) {
+        final msg = 'id_vendedor não encontrado no SharedPreferences';
+        await LocalLogger.log('Erro no syncObservacoes: $msg');
+        return [];
+      }
+
+      final response = await client.get('/observacoes?id_vendedor=$idVendedor');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
+
+        final now = DateTime.now().toIso8601String();
+        final jsonData = {
+          'lastSynced': now,
+          'data': data,
+        };
+
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/observacoes.json');
+        await file.writeAsString(json.encode(jsonData));
+        print('Observações sincronizadas localmente em $now');
+
+        return data.map<Obs>((json) => Obs.fromJson(json)).toList();
+      } else {
+        final msg = 'Erro ao carregar observações (status ${response.statusCode})';
+        await LocalLogger.log('Erro no syncObservacoes: $msg');
+        return [];
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no syncObservacoes: $e\nStackTrace: $stack');
+      print('Erro ao sincronizar observações (sync): $e');
+      return [];
+    }
+  }
+
+
+  Future<List<Obs>> lerObservacoesLocal() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/observacoes.json');
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final Map<String, dynamic> jsonData = json.decode(content);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        return data.map((json) => Obs.fromJson(json)).toList();
+      }
+    } catch (e, stack) {
+      await LocalLogger.log('Erro no lerObservacoesLocal: $e\nStackTrace: $stack');
+      print('Erro ao ler observacoes.json: $e');
     }
     return [];
   }

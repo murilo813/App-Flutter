@@ -7,11 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:android_id/android_id.dart';
+import 'package:flutter/services.dart';
 
 import 'home_page.dart';
 import 'secrets.dart';
 import 'background/pendents.dart';
 import 'services/http_client.dart';
+import 'services/auth_headers.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,63 +97,66 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => isLoading = true);
-      String username = _usernameController.text.trim();
-      String password = _passwordController.text.trim();
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        final body = {
-          'nome': username,
-          'senha': password,
-        };
+    setState(() => isLoading = true);
 
-        final httpClient = HttpClient();
+    String username = _usernameController.text.trim();
+    String password = _passwordController.text.trim();
 
-        final response = await httpClient.post('/login', body);
+    try {
+      final androidIdPlugin = AndroidId();
+      final dispositivo = await androidIdPlugin.getId() ?? 'unknown';
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
+      const platform = MethodChannel('app_signature_channel');
+      final assinatura = await platform.invokeMethod<String>('getassinatura') ?? 'unknown';
 
-          int idVendedor = data['id_vendedor'];
+      final body = {
+        'nome': username,
+        'senha': password,
+        'dispositivo': dispositivo,
+        'assinatura': assinatura,
+      };
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('isLoggedIn', true);
-          await prefs.setString('username', username);
-          await prefs.setInt('id_vendedor', idVendedor);
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
 
-          await registrarUso();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        int idVendedor = data['id_vendedor'];
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else if (response.statusCode == 401) {
-          print('Login falhou: senha incorreta');
-          _showError('Usuário ou senha inválidos');
-        } else if (response.statusCode == 429) {
-          print('Login bloqueado: muitas tentativas');
-          _showError('Muitas tentativas de login. Tente novamente em 5 minutos.');
-        } else {
-          print('Erro inesperado: ${response.statusCode}');
-          _showError('Erro no servidor: ${response.body}');
-        }
-      } on SocketException catch (e) {
-        print('SocketException: $e');
-        _showError('Sem conexão com a internet.');
-      } catch (e, stack) {
-        print('Exceção capturada no login: $e');
-        print('Stacktrace:\n$stack');
-        _showError('Erro de conexão: $e');
-      } finally {
-        print('==== LOGIN FINALIZADO ====');
-        setState(() => isLoading = false);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('username', username);
+        await prefs.setInt('id_vendedor', idVendedor);
+        await prefs.setString('dispositivo', dispositivo);
+        await prefs.setString('assinatura', assinatura);
+
+        await registrarUso();
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else if (response.statusCode == 401) {
+        _showError('Usuário ou senha inválidos');
+      } else if (response.statusCode == 429) {
+        _showError('Muitas tentativas de login. Tente novamente em 5 minutos.');
+      } else {
+        _showError('Erro no servidor: ${response.body}');
       }
-    } else {
-      print('Formulário inválido, não tentando login.');
+    } on SocketException {
+      _showError('Sem conexão com a internet.');
+    } catch (e, stack) {
+      print('Exceção capturada no login: $e\nStackTrace: $stack');
+      _showError('Erro de conexão: $e');
+    } finally {
+      setState(() => isLoading = false);
     }
   }
-
 
   void _showError(String message) {
     showDialog(

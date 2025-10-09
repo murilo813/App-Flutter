@@ -276,6 +276,38 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  void _mostrarAvisoIdVendedor(String mensagem) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.4,
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              mensagem,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
   void _abrirDialogNovoUsuario() {
     TextEditingController idEmpresaController = TextEditingController();
     TextEditingController usuarioController = TextEditingController();
@@ -378,6 +410,11 @@ class _AdminPageState extends State<AdminPage> {
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                   labelText: "Id Vendedor",
                                 ),
+                                onTap: () {
+                                  _mostrarAvisoIdVendedor(
+                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes."
+                                  );
+                                },
                               ),
                             ),
                             // credito
@@ -661,6 +698,11 @@ class _AdminPageState extends State<AdminPage> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
+                                onTap: () {
+                                  _mostrarAvisoIdVendedor(
+                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes."
+                                  );
+                                },
                               ),
                             ),
                             // Novo dispositivo

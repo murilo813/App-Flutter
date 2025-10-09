@@ -8,6 +8,7 @@ class Cliente {
   final double limite_calculado;
   final double saldo_limite_calculado;
   final DateTime? data_nasc;
+  final int id; 
 
   Cliente({
     required this.nomeCliente,
@@ -17,20 +18,21 @@ class Cliente {
     required this.limite_calculado,
     required this.saldo_limite_calculado,
     this.data_nasc,
+    required this.id,
   });
 
-  // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
   factory Cliente.fromJson(Map<String, dynamic> json) {
     return Cliente(
       nomeCliente: json['nome_cliente'],
       responsavel: json['responsavel'] ?? "",
       limite: json['limite'],
       saldo_limite: json['saldo_limite'],
-      limite_calculado: json ['limite_calculado'],
-      saldo_limite_calculado: json ['saldo_limite_calculado'],
-      data_nasc: json ['data_nasc'] != null && json['data_nasc'] != ""
-        ? DateTime.parse(json['data_nasc'])
-        : null,
+      limite_calculado: json['limite_calculado'],
+      saldo_limite_calculado: json['saldo_limite_calculado'],
+      data_nasc: json['data_nasc'] != null && json['data_nasc'] != ""
+          ? DateTime.parse(json['data_nasc'])
+          : null,
+      id: json['id_cliente'], 
     );
   }
 
@@ -43,6 +45,7 @@ class Cliente {
       'limite_calculado': limite_calculado,
       'saldo_limite_calculado': saldo_limite_calculado,
       'data_nasc': data_nasc,
+      'id_cliente': id, 
     };
   }
 
