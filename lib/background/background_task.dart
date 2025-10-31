@@ -4,6 +4,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 
 import '../services/sync_service.dart';
 import '../services/anniversary.dart'; 
+import '../services/inactivity.dart';
 import '../secrets.dart';
 import 'local_log.dart';
 import 'pendents.dart';
@@ -19,8 +20,10 @@ void callbackDispatcher() {
         final syncService = SyncService();
         await syncService.syncEstoqueGeral();
         await syncService.syncClientes();
+        await syncService.syncObservacoes();
         await OfflineQueue.trySendQueue(backendUrl);
         await AnniversaryService.checkAndNotify();
+        await InactivityService.checkAndNotify();
 
         final agora = DateTime.now().toIso8601String();
         await LocalLogger.log("Dados sincronizados $agora");

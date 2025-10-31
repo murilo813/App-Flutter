@@ -182,6 +182,7 @@ class _AdminPageState extends State<AdminPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        color: u.ativo == 'N' ? Colors.grey.shade800 : null, 
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: Stack(
                           children: [
@@ -201,8 +202,7 @@ class _AdminPageState extends State<AdminPage> {
                                           : 'assets/icons/usericon.png',
                                       width: 24,
                                       height: 24,
-                                      errorBuilder: (_, __, ___) =>
-                                          Icon(Icons.person, color: Colors.grey),
+                                      errorBuilder: (_, __, ___) => Icon(Icons.person, color: Colors.grey),
                                     ),
                                   ),
                                   SizedBox(width: 12),
@@ -213,13 +213,22 @@ class _AdminPageState extends State<AdminPage> {
                                         Text(
                                           u.nomeclatura,
                                           style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: u.ativo == 'N' ? Colors.white70 : Colors.black,
+                                          ),
                                         ),
-                                        Text("${u.usuario} | ${'*' * 8}"),
+                                        Text(
+                                          "${u.usuario} | ${'*' * 8}",
+                                          style: TextStyle(
+                                            color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
+                                          ),
+                                        ),
                                         Text(
                                           "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
-                                          style: TextStyle(color: Colors.grey[700]),
+                                          style: TextStyle(
+                                            color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -227,15 +236,26 @@ class _AdminPageState extends State<AdminPage> {
                                 ],
                               ),
                             ),
+                            if (u.ativo == 'N') 
+                              Positioned.fill(
+                                child: Center(
+                                  child: Icon(
+                                    Icons.lock,
+                                    color: Colors.grey.shade600,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
                             Positioned(
                               top: 4,
                               left: 8,
                               child: Text(
                                 u.id.toString(),
                                 style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[600]),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[600],
+                                ),
                               ),
                             ),
                             Positioned(
@@ -244,7 +264,7 @@ class _AdminPageState extends State<AdminPage> {
                               child: IconButton(
                                 icon: Icon(Icons.edit,
                                     size: 18, color: Colors.grey[700]),
-                                onPressed: () => _abrirDialogEditarUsuario(u),
+                                onPressed: () => _abrirDialogEditarUsuario(u), 
                               ),
                             ),
                           ],
@@ -611,6 +631,10 @@ class _AdminPageState extends State<AdminPage> {
 
     String tipoUsuario = (u.tipo_usuario.toLowerCase() == "admin") ? "admin" : "user";
 
+    String ativoLocal = (u.ativo?.trim().toUpperCase() == 'S') ? 'S' : 'N';
+    
+    print('Usuário ${u.id} ativo: "${u.ativo}", ativoLocal inicial: $ativoLocal');
+
     showDialog(
       context: context,
       builder: (context) {
@@ -798,6 +822,61 @@ class _AdminPageState extends State<AdminPage> {
                                 ],
                               ),
                             ),
+
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setStateDialog(() => ativoLocal = 'S'), 
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 300),
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: ativoLocal == 'S' ? Colors.green.shade200 : Colors.transparent,
+                                          border: Border.all(color: Colors.grey.shade400),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "ATIVO",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: ativoLocal == 'S' ? Colors.green.shade800 : Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setStateDialog(() => ativoLocal = 'N'), 
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 300),
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: ativoLocal == 'N' ? Colors.red.shade200 : Colors.transparent,
+                                          border: Border.all(color: Colors.grey.shade400),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "INATIVO",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: ativoLocal == 'N' ? Colors.red.shade800 : Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -829,6 +908,8 @@ class _AdminPageState extends State<AdminPage> {
 
                             body['tipo_usuario'] = tipoUsuario; 
 
+                            body['ativo'] = ativoLocal;
+
                             if (body.isEmpty) {
                               Navigator.pop(context);
                               return;
@@ -853,6 +934,7 @@ class _AdminPageState extends State<AdminPage> {
                                         oldUser.registrar_novo_disp,
                                 tipo_usuario: tipoUsuario,
                                 nomeclatura: oldUser.nomeclatura,
+                                ativo: body['ativo'] ?? oldUser.ativo,
                               );
 
                               setState(() {

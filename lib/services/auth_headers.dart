@@ -4,16 +4,16 @@ class AuthHeaders {
   static Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final username = prefs.getString('username') ?? 'unknown';
+    final idUsuario = prefs.getString('id_usuario') ?? 'unknown';
     final dispositivo = prefs.getString('dispositivo') ?? 'unknown';
     final appSig = prefs.getString('assinatura') ?? 'unknown';
 
-    print("AuthHeaders -> dispositivo=$dispositivo, assinatura=$appSig, nome=$username");
+    print("AuthHeaders -> dispositivo=$dispositivo, assinatura=$appSig, id_usuario=$idUsuario");
 
     return {
       'dispositivo': dispositivo,
       'assinatura': appSig,
-      'nome': username,
+      'id_usuario': idUsuario.toString(),
       'Content-Type': 'application/json',
     };
   }

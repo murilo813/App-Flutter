@@ -8,6 +8,7 @@ class User {
   final int registrar_novo_disp;
   final String tipo_usuario;
   final String nomeclatura;
+  final String? ativo;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     required this.registrar_novo_disp,
     required this.tipo_usuario,
     required this.nomeclatura,
+    this.ativo,
   });
 
   // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
@@ -26,9 +28,10 @@ class User {
       id_empresa: json['id_empresa'],
       usuario: json['nome'],
       id_vendedor: json['id_vendedor'],
-      registrar_novo_disp: json ['registrar_novo_disp'],
-      tipo_usuario: json ['tipo_usuario'],
-      nomeclatura: json ['nomeclatura'],
+      registrar_novo_disp: json['registrar_novo_disp'],
+      tipo_usuario: json['tipo_usuario'],
+      nomeclatura: json['nomeclatura'],
+      ativo: json['ativo'],
     );
   }
 
@@ -41,6 +44,7 @@ class User {
       'registrar_novo_disp': registrar_novo_disp,
       'tipo_usuario': tipo_usuario,
       'nomeclatura': nomeclatura,
+      'ativo': ativo,
     };
   }
 }

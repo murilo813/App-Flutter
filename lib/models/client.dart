@@ -9,6 +9,7 @@ class Cliente {
   final double saldo_limite_calculado;
   final DateTime? data_nasc;
   final int id; 
+  final DateTime? ultima_compra;
 
   Cliente({
     required this.nomeCliente,
@@ -19,6 +20,7 @@ class Cliente {
     required this.saldo_limite_calculado,
     this.data_nasc,
     required this.id,
+    this.ultima_compra,
   });
 
   factory Cliente.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,9 @@ class Cliente {
           ? DateTime.parse(json['data_nasc'])
           : null,
       id: json['id_cliente'], 
+      ultima_compra: json['ultima_compra'] != null && json['ultima_compra'] != ""
+          ? DateTime.parse(json['ultima_compra'])
+          : null,
     );
   }
 
@@ -45,7 +50,8 @@ class Cliente {
       'limite_calculado': limite_calculado,
       'saldo_limite_calculado': saldo_limite_calculado,
       'data_nasc': data_nasc,
-      'id_cliente': id, 
+      'id_cliente': id,
+      'ultima_compra': ultima_compra,
     };
   }
 

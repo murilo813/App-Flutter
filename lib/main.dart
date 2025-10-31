@@ -60,6 +60,13 @@ void main() async {
         defaultColor: const Color(0xFF00A300),
         importance: NotificationImportance.High,
       ),
+      NotificationChannel(
+        channelKey: 'inactivity_channel',
+        channelName: 'Clientes Inativos',
+        channelDescription: 'Avisos de clientes sem compras recentes',
+        defaultColor: const Color(0xFFE67E22),
+        importance: NotificationImportance.High,
+      ),
     ],
   );
 

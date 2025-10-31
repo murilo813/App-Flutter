@@ -45,10 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
     int? idVendedor = prefs.getInt('id_vendedor');
-    String? username = prefs.getString('username');
+    String? idUsuario = prefs.getString('id_usuario');
     String? appVersion = prefs.getString('app_version');
 
-    if (loggedIn && username != null && idVendedor != null) {
+    if (loggedIn && idUsuario != null && idVendedor != null) {
       await registrarUso();
       Navigator.pushReplacement(
         context,
@@ -63,16 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> registrarUso() async {
     final prefs = await SharedPreferences.getInstance();
-    String? username = prefs.getString('username');
     String? appVersion = prefs.getString('app_version') ?? 'desconhecida';
-
-    if (username == null) {
-      return;
-    }
 
     final now = DateTime.now().toIso8601String();
     final payload = {
-      'nome': username,
       'hora_acesso': now,
       'versao_app': appVersion,
     };
@@ -88,12 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
         'body': payload,
       });
     }
-  }
-
-  Future<void> saveLogin(String username) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('username', username);
   }
 
   Future<void> login() async {
@@ -127,13 +115,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         int idVendedor = data['id_vendedor'];
+        final idUsuario = data['id_usuario'].toString();
+        final tipoUsuario = data['tipo'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('username', username);
+        await prefs.setString('id_usuario', idUsuario);
         await prefs.setInt('id_vendedor', idVendedor);
         await prefs.setString('dispositivo', dispositivo);
         await prefs.setString('assinatura', assinatura);
+        await prefs.setString('tipo_usuario', tipoUsuario);
 
         await registrarUso();
 

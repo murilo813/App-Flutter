@@ -27,10 +27,12 @@ class HomePage extends StatefulWidget {
 
   @override
   HomePageState createState() => HomePageState();
+
 }
 
 class HomePageState extends State<HomePage> {
   int _titleTapCount = 0;
+  String? _tipoUsuario;
   
   @override
   void initState() {
@@ -44,6 +46,11 @@ class HomePageState extends State<HomePage> {
       }
 
       await anniversaryModal();
+      await checkLoginStatus(context);
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _tipoUsuario = prefs.getString('tipo_usuario');
+      });
     })();
   }
 
@@ -153,10 +160,39 @@ class HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         print('Resposta da versão: $json');
+
         final latestVersion = json['versao'];
+        final status = json['status'];
 
         final prefs = await SharedPreferences.getInstance();
         final currentVersion = prefs.getString('app_version');
+
+        if (status == "INATIVO" && mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              title: const Text('Acesso Negado'),
+              content: const Text('Seu usuário foi desativado. Você não tem mais acesso a este aplicativo.'),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    await prefs.clear();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
 
         if (latestVersion != currentVersion && mounted) {
           showDialog(
@@ -252,11 +288,12 @@ class HomePageState extends State<HomePage> {
                   label: 'Meus Clientes',
                   page: ClientsPage(),
                 ),
-                _buildHomeButton(
-                  context: context,
-                  label: 'Admin',
-                  page: AdminPage(),
-                ),
+                if (_tipoUsuario == 'admin')
+                  _buildHomeButton(
+                    context: context,
+                    label: 'Admin',
+                    page: AdminPage(),
+                  ),
               ],
             ),
           ),

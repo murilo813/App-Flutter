@@ -1,1 +1,0 @@
-// futuramente separar a leitrura de dados locais das sincronizações

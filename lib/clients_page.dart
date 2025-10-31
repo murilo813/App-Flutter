@@ -146,6 +146,27 @@ class _ClientsPageState extends State<ClientsPage> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.green, size: 18),
+                    const SizedBox(width: 4),
+                    const Text('0–10 dias'),
+                    const SizedBox(width: 16),
+                    Icon(Icons.info_outline, color: Colors.orangeAccent, size: 18),
+                    const SizedBox(width: 4),
+                    const Text('11–25 dias'),
+                    const SizedBox(width: 16),
+                    Icon(Icons.info_outline, color: Colors.red, size: 18),
+                    const SizedBox(width: 4),
+                    const Text('+25 dias'),
+                  ],
+                ),
+              ),
+              
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
@@ -172,6 +193,22 @@ class _ClientsPageState extends State<ClientsPage> {
                       allClientes = snapshot.data!;
                       filteredClientes = _getFilteredClientes();
 
+                      filteredClientes.sort((a, b) {
+                        final now = DateTime.now();
+
+                        // Calcula dias desde a última compra de cada cliente
+                        final diasA = a.ultima_compra == null
+                            ? 99999 // clientes sem compra vão pro topo
+                            : now.difference(a.ultima_compra!).inDays;
+
+                        final diasB = b.ultima_compra == null
+                            ? 99999
+                            : now.difference(b.ultima_compra!).inDays;
+
+                        // Ordem decrescente (maior primeiro)
+                        return diasB.compareTo(diasA);
+                      });
+
                       if (filteredClientes.isEmpty) {
                         return Center(child: Text('Nenhum cliente encontrado'));
                       }
@@ -188,6 +225,19 @@ class _ClientsPageState extends State<ClientsPage> {
                             cliente.data_nasc!.day == hoje.day &&
                             cliente.data_nasc!.month == hoje.month;
 
+                          Color corIcone;
+                          if (cliente.ultima_compra == null) {
+                            corIcone = Colors.grey;
+                          } else {
+                            final diasSemCompra = DateTime.now().difference(cliente.ultima_compra!).inDays;
+                            if (diasSemCompra <= 10) {
+                              corIcone = Colors.green;
+                            } else if (diasSemCompra <= 25) {
+                              corIcone = Colors.orangeAccent;
+                            } else {
+                              corIcone = Colors.red;
+                            }
+                          }
                           return ListTile(
                             title: Row(
                               children: [
@@ -206,14 +256,15 @@ class _ClientsPageState extends State<ClientsPage> {
                                           if (isAniversariante)
                                             const Icon(Icons.cake, color: Colors.pink, size: 18),
                                           const SizedBox(width: 8),
+
                                           InkWell(
                                             borderRadius: BorderRadius.circular(20),
                                             onTap: () {
                                               _mostrarInfoCliente(context, cliente);
                                             },
-                                            child: const Icon(
+                                            child: Icon(
                                               Icons.info_outline,
-                                              color: Colors.blueAccent,
+                                              color: corIcone,
                                               size: 20,
                                             ),
                                           ),
@@ -373,32 +424,34 @@ class _ClientsPageState extends State<ClientsPage> {
               ),
               const SizedBox(height: 16),
               const Divider(),
-              if (clienteObs.isNotEmpty)
-                ...clienteObs.reversed.map((o) {
-                  final data = DateTime.parse(o['data']);
-                  final dataFormatada = '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
-                  final visitadoTexto = o['visitado'] == true ? 'Visitado' : 'Não visitado';
-                  final obsTexto = o['observacao'] ?? '';
-
-                  return Padding(
+              if (clienteObs.isNotEmpty) ...[
+                for (var o in (List<Map<String, dynamic>>.from(clienteObs)
+                    ..sort((a, b) {
+                      final dateA = DateTime.parse(a['data']);
+                      final dateB = DateTime.parse(b['data']);
+                      return dateB.compareTo(dateA); 
+                    })))
+                  Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$dataFormatada  •  $visitadoTexto',
+                          '${DateTime.parse(o['data']).day.toString().padLeft(2, '0')}/'
+                          '${DateTime.parse(o['data']).month.toString().padLeft(2, '0')}/'
+                          '${DateTime.parse(o['data']).year}  •  '
+                          '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        if (obsTexto.isNotEmpty)
+                        if ((o['observacao'] ?? '').isNotEmpty)
                           Text(
-                            obsTexto,
+                            o['observacao']!,
                             style: const TextStyle(height: 1.4),
                           ),
                       ],
                     ),
-                  );
-                }).toList()
-              else
+                  ),
+              ] else
                 const Text(
                   'Nenhuma observação registrada para este cliente.',
                   style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
@@ -616,7 +669,6 @@ class _ClientsPageState extends State<ClientsPage> {
       ),
     );
   }
-
 
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.trim().toLowerCase();
