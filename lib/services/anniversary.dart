@@ -14,6 +14,10 @@ class AnniversaryService {
     try {
       print("Função anniversary chamada");
       final prefs = await SharedPreferences.getInstance();
+      final idVendedor = prefs.getInt('id_vendedor');
+      if (idVendedor == 1 || idVendedor == 0) {
+        return; // para o admin nao receber essas notificacoes
+      }
       final hojeStr = DateTime.now().toIso8601String().substring(0, 10); 
       final ultimoEnvio = prefs.getString('ultimo_aniversario') ?? '';
 

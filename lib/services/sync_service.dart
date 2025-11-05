@@ -228,7 +228,6 @@ class SyncService {
     }
   }
 
-
   Future<List<Obs>> lerObservacoesLocal() async {
     try {
       final dir = await getApplicationDocumentsDirectory();

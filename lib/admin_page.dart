@@ -39,7 +39,7 @@ class _AdminPageState extends State<AdminPage> {
     try {
       final response = await http
           .get(Uri.parse('$backendUrl/ping'))
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 7));
       return response.statusCode == 200;
     } catch (_) {
       return false;

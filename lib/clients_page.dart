@@ -24,6 +24,7 @@ class _ClientsPageState extends State<ClientsPage> {
   late Future<List<Cliente>> clientes;
   late List<Cliente> filteredClientes;
   late List<Cliente> allClientes = [];
+  late List<Map<String, dynamic>> allObs = [];
   late TextEditingController searchController;
   String? ultimaAtualizacao;
   bool isSyncing = false;
@@ -43,7 +44,7 @@ class _ClientsPageState extends State<ClientsPage> {
     try {
       final response = await http
           .get(Uri.parse('$backendUrl/ping'))
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 7));
       return response.statusCode == 200;
     } catch (_) {
       return false;
@@ -74,6 +75,23 @@ class _ClientsPageState extends State<ClientsPage> {
             filteredClientes = localClientes;
             this.ultimaAtualizacao = ultimaAtualizacao;
           });
+
+          try {
+            final obsFile = File('${dir.path}/observacoes.json');
+            if (await obsFile.exists()) {
+              final obsContent = await obsFile.readAsString();
+              final Map<String, dynamic> obsData = json.decode(obsContent);
+              setState(() {
+                allObs = List<Map<String, dynamic>>.from(obsData['data'] ?? []);
+              });
+              print('Observações locais carregadas (${allObs.length})');
+            } else {
+              print('Arquivo de observações não encontrado localmente.');
+            }
+          } catch (e) {
+            print('Erro ao carregar observações locais: $e');
+          }
+
         } else {
           await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
           setState(() {
@@ -99,13 +117,14 @@ class _ClientsPageState extends State<ClientsPage> {
 
       try {
         await syncService.syncClientes();
-        await syncService.syncObservacoes(); 
+        await syncService.syncObservacoes();
+
+        await carregarDadosLocais();
       } catch (e, stack) {
         print('Erro ao sincronizar dados: $e');
         await LocalLogger.log('Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack');
+        await carregarDadosLocais();
       }
-
-      await carregarDadosLocais();
 
       setState(() {
         isSyncing = false;
@@ -194,19 +213,32 @@ class _ClientsPageState extends State<ClientsPage> {
                       filteredClientes = _getFilteredClientes();
 
                       filteredClientes.sort((a, b) {
-                        final now = DateTime.now();
+                        DateTime? refA;
+                        DateTime? refB;
 
-                        // Calcula dias desde a última compra de cada cliente
-                        final diasA = a.ultima_compra == null
-                            ? 99999 // clientes sem compra vão pro topo
-                            : now.difference(a.ultima_compra!).inDays;
+                        final obsA = allObs
+                            .where((o) => o['responsavel'] == a.responsavel)
+                            .toList();
+                        if (obsA.isNotEmpty) {
+                          obsA.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
+                          refA = DateTime.parse(obsA.first['data']);
+                        }
 
-                        final diasB = b.ultima_compra == null
-                            ? 99999
-                            : now.difference(b.ultima_compra!).inDays;
+                        final obsB = allObs
+                            .where((o) => o['responsavel'] == b.responsavel)
+                            .toList();
+                        if (obsB.isNotEmpty) {
+                          obsB.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
+                          refB = DateTime.parse(obsB.first['data']);
+                        }
 
-                        // Ordem decrescente (maior primeiro)
-                        return diasB.compareTo(diasA);
+                        final dataFinalA = _maisRecenteEntre(refA, a.ultima_compra);
+                        final dataFinalB = _maisRecenteEntre(refB, b.ultima_compra);
+
+                        if (dataFinalA == null && dataFinalB == null) return 0;
+                        if (dataFinalA == null) return -1;
+                        if (dataFinalB == null) return 1;
+                        return dataFinalA.compareTo(dataFinalB);
                       });
 
                       if (filteredClientes.isEmpty) {
@@ -225,10 +257,28 @@ class _ClientsPageState extends State<ClientsPage> {
                             cliente.data_nasc!.day == hoje.day &&
                             cliente.data_nasc!.month == hoje.month;
 
+                          final obsDoResponsavel = allObs
+                              .where((o) => o['responsavel'] == cliente.responsavel)
+                              .toList();
+
+                          DateTime? ultimaObs;
+                          if (obsDoResponsavel.isNotEmpty) {
+                            obsDoResponsavel.sort((a, b) =>
+                                DateTime.parse(b['data']).compareTo(DateTime.parse(a['data'])));
+                            ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
+                          }
+
                           Color corIcone;
-                          if (cliente.ultima_compra == null) {
-                            corIcone = Colors.grey;
-                          } else {
+                          if (ultimaObs != null) {
+                            final dias = DateTime.now().difference(ultimaObs).inDays;
+                            if (dias <= 10) {
+                              corIcone = Colors.green;
+                            } else if (dias <= 25) {
+                              corIcone = Colors.orangeAccent;
+                            } else {
+                              corIcone = Colors.red;
+                            }
+                          } else if (cliente.ultima_compra != null) {
                             final diasSemCompra = DateTime.now().difference(cliente.ultima_compra!).inDays;
                             if (diasSemCompra <= 10) {
                               corIcone = Colors.green;
@@ -237,7 +287,10 @@ class _ClientsPageState extends State<ClientsPage> {
                             } else {
                               corIcone = Colors.red;
                             }
+                          } else {
+                            corIcone = Colors.grey;
                           }
+
                           return ListTile(
                             title: Row(
                               children: [
@@ -307,6 +360,34 @@ class _ClientsPageState extends State<ClientsPage> {
     );
   }
 
+  DateTime? _maisRecenteEntre(DateTime? a, DateTime? b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.isAfter(b) ? a : b;
+  }
+  
+  Future<void> atualizarObservacoesLocais() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final obsFile = File('${dir.path}/observacoes.json');
+
+      if (await obsFile.exists()) {
+        final obsContent = await obsFile.readAsString();
+        final Map<String, dynamic> obsData = json.decode(obsContent);
+
+        setState(() {
+          allObs = List<Map<String, dynamic>>.from(obsData['data'] ?? []);
+        });
+
+        print('🔄 Observações recarregadas (${allObs.length})');
+      } else {
+        print('⚠️ Nenhum arquivo de observações encontrado.');
+      }
+    } catch (e) {
+      print('❌ Erro ao atualizar observações locais: $e');
+    }
+  }
+
   Future<void> _mostrarInfoCliente(BuildContext context, Cliente cliente) async {
     final hoje = DateTime.now();
     DateTime selectedDate = DateTime.now();
@@ -325,7 +406,7 @@ class _ClientsPageState extends State<ClientsPage> {
         final List<dynamic> allObs = jsonData['data'] ?? [];
 
         clienteObs = allObs
-            .where((o) => o['id_cliente'] == cliente.id)
+            .where((o) => o['responsavel'] == cliente.responsavel)
             .map((o) => Map<String, dynamic>.from(o))
             .toList();
       }
@@ -440,7 +521,8 @@ class _ClientsPageState extends State<ClientsPage> {
                           '${DateTime.parse(o['data']).day.toString().padLeft(2, '0')}/'
                           '${DateTime.parse(o['data']).month.toString().padLeft(2, '0')}/'
                           '${DateTime.parse(o['data']).year}  •  '
-                          '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}',
+                          '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}  •  '
+                          '${o['nome_cliente'] ?? ''}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         if ((o['observacao'] ?? '').isNotEmpty)
@@ -499,6 +581,8 @@ class _ClientsPageState extends State<ClientsPage> {
                 final List<dynamic> localData = jsonData['data'] ?? [];
                 localData.add({
                   'id_cliente': cliente.id,
+                  'nome_cliente': cliente.nomeCliente,
+                  'responsavel': cliente.responsavel,
                   'data': body['data'],
                   'visitado': body['visitado'],
                   'observacao': body['observacao'],
@@ -549,6 +633,7 @@ class _ClientsPageState extends State<ClientsPage> {
               }
 
               Navigator.pop(context);
+              await atualizarObservacoesLocais();
             },
             child: const Text('Salvar'),
           ),
