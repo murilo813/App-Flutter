@@ -117,6 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
         int idVendedor = data['id_vendedor'];
         final idUsuario = data['id_usuario'].toString();
         final tipoUsuario = data['tipo'];
+        final idEmpresa = data['id_empresa'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
@@ -125,6 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('dispositivo', dispositivo);
         await prefs.setString('assinatura', assinatura);
         await prefs.setString('tipo_usuario', tipoUsuario);
+        await prefs.setInt('id_empresa', idEmpresa);
 
         await registrarUso();
 

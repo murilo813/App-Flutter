@@ -34,22 +34,37 @@ class MainActivity: FlutterActivity() {
             }
         }
 
-        // Canal para obter assinatura do app
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_SIGNATURE).setMethodCallHandler { call, result ->
-            if (call.method == "getassinatura") {
-                try {
-                    val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
-                    val signatures = packageInfo.signingInfo!!.apkContentsSigners
-                    val md = MessageDigest.getInstance("SHA-256")
-                    val digest = md.digest(signatures[0].toByteArray())
-                    val sha256 = Base64.encodeToString(digest, Base64.NO_WRAP)
-                    result.success(sha256)
-                } catch (e: Exception) {
-                    result.error("ERROR", "Erro ao obter assinatura: ${e.message}", null)
+        // Canal para obter assinatura do app (compatível com Android 7+)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_SIGNATURE)
+            .setMethodCallHandler { call, result ->
+                if (call.method == "getassinatura") {
+                    try {
+                        val md = MessageDigest.getInstance("SHA-256")
+
+                        val signatures = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+                            packageInfo.signingInfo?.apkContentsSigners
+                        } else {
+                            @Suppress("DEPRECATION")
+                            val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+                            @Suppress("DEPRECATION")
+                            packageInfo.signatures
+                        }
+
+                        if (signatures != null && signatures.isNotEmpty()) {
+                            md.update(signatures[0].toByteArray())
+                            val sha256 = Base64.encodeToString(md.digest(), Base64.NO_WRAP)
+                            result.success(sha256)
+                        } else {
+                            result.error("NO_SIGNATURE", "Nenhuma assinatura encontrada", null)
+                        }
+
+                    } catch (e: Exception) {
+                        result.error("ERROR", "Erro ao obter assinatura: ${e.message}", null)
+                    }
+                } else {
+                    result.notImplemented()
                 }
-            } else {
-                result.notImplemented()
             }
-        }
     }
 }

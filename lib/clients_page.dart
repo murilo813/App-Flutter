@@ -16,6 +16,10 @@ import 'models/obs.dart';
 import 'secrets.dart';
 
 class ClientsPage extends StatefulWidget {
+  final bool modoSelecao;
+
+  ClientsPage({this.modoSelecao = false});
+
   @override
   _ClientsPageState createState() => _ClientsPageState();
 }
@@ -292,6 +296,10 @@ class _ClientsPageState extends State<ClientsPage> {
                           }
 
                           return ListTile(
+                            onTap: widget.modoSelecao
+                                ? () => Navigator.pop(context, cliente)
+                                : null,
+
                             title: Row(
                               children: [
                                 Expanded(
@@ -306,15 +314,14 @@ class _ClientsPageState extends State<ClientsPage> {
                                               style: const TextStyle(fontWeight: FontWeight.bold),
                                             ),
                                           ),
+
                                           if (isAniversariante)
                                             const Icon(Icons.cake, color: Colors.pink, size: 18),
+
                                           const SizedBox(width: 8),
 
-                                          InkWell(
-                                            borderRadius: BorderRadius.circular(20),
-                                            onTap: () {
-                                              _mostrarInfoCliente(context, cliente);
-                                            },
+                                          GestureDetector(
+                                            onTap: () => _mostrarInfoCliente(context, cliente),
                                             child: Icon(
                                               Icons.info_outline,
                                               color: corIcone,
@@ -323,6 +330,7 @@ class _ClientsPageState extends State<ClientsPage> {
                                           ),
                                         ],
                                       ),
+
                                       if (cliente.responsavel.isNotEmpty)
                                         Text(
                                           'Responsável: ${cliente.responsavel}',
@@ -336,6 +344,7 @@ class _ClientsPageState extends State<ClientsPage> {
                                 ),
                               ],
                             ),
+
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: _buildLimitesTable(cliente),

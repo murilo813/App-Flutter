@@ -15,6 +15,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'login.screen.dart';
 import 'store_page.dart';
 import 'clients_page.dart';
+import 'order_page.dart';
 import 'admin_page.dart';
 import 'secrets.dart';
 import 'background/local_log.dart';
@@ -281,12 +282,17 @@ class HomePageState extends State<HomePage> {
                 _buildHomeButton(
                   context: context,
                   label: 'Estoque',
-                  page: StorePage(storeName: 'Estoques'),
+                  page: StorePage(),
                 ),
                 _buildHomeButton(
                   context: context,
                   label: 'Meus Clientes',
                   page: ClientsPage(),
+                ),
+                _buildHomeButton(
+                  context: context,
+                  label: 'Pedidos',
+                  page: OrdersPage(),
                 ),
                 if (_tipoUsuario == 'admin')
                   _buildHomeButton(

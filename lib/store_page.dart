@@ -15,9 +15,11 @@ import 'background/pendents.dart';
 import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
-  final String storeName;
+  final bool modoSelecao;
 
-  StorePage({required this.storeName});
+  const StorePage({
+    this.modoSelecao = false,
+  });
 
   @override
   _StorePageState createState() => _StorePageState();
@@ -152,7 +154,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
   @override
   Widget build(BuildContext context) {
-    final tituloLoja = storeLabels[widget.storeName] ?? widget.storeName;
+    final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
     return Scaffold(
       appBar: AppBar(
@@ -220,49 +222,68 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
                   return ListView.separated(
                     itemCount: filteredProducts.length,
-                    separatorBuilder: (context, index) => Divider(height: 20, thickness: 1),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 20, thickness: 1),
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
+
                       return ListTile(
+                        onTap: widget.modoSelecao
+                            ? () => Navigator.pop(context, product)
+                            : null,
+
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        focusColor: Colors.transparent,
+
                         title: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               '${product.id}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold, 
-                                fontSize: 12,               
-                                color: Colors.black,        
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.black,
                               ),
                             ),
                             Text(
                               product.nome,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
+
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   product.marca,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 if (product.aplicacao.isNotEmpty)
                                   Text(
                                     product.aplicacao,
-                                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[700],
+                                    ),
                                   ),
                               ],
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             _buildEstoqueTable(product),
                           ],
                         ),
+
+                        trailing: null, // botao/icone futuro
                       );
                     },
                   );
