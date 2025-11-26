@@ -217,20 +217,28 @@ class _ClientsPageState extends State<ClientsPage> {
                       filteredClientes = _getFilteredClientes();
 
                       filteredClientes.sort((a, b) {
+                        final hoje = DateTime.now();
+
+                        final aAniversario = a.data_nasc != null &&
+                            a.data_nasc!.day == hoje.day &&
+                            a.data_nasc!.month == hoje.month;
+                        final bAniversario = b.data_nasc != null &&
+                            b.data_nasc!.day == hoje.day &&
+                            b.data_nasc!.month == hoje.month;
+
+                        if (aAniversario && !bAniversario) return -1;
+                        if (!aAniversario && bAniversario) return 1;
+
                         DateTime? refA;
                         DateTime? refB;
 
-                        final obsA = allObs
-                            .where((o) => o['responsavel'] == a.responsavel)
-                            .toList();
+                        final obsA = allObs.where((o) => o['responsavel'] == a.responsavel).toList();
                         if (obsA.isNotEmpty) {
                           obsA.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
                           refA = DateTime.parse(obsA.first['data']);
                         }
 
-                        final obsB = allObs
-                            .where((o) => o['responsavel'] == b.responsavel)
-                            .toList();
+                        final obsB = allObs.where((o) => o['responsavel'] == b.responsavel).toList();
                         if (obsB.isNotEmpty) {
                           obsB.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
                           refB = DateTime.parse(obsB.first['data']);
@@ -242,8 +250,11 @@ class _ClientsPageState extends State<ClientsPage> {
                         if (dataFinalA == null && dataFinalB == null) return 0;
                         if (dataFinalA == null) return -1;
                         if (dataFinalB == null) return 1;
+
+                        // ORDEM: aniversariantes, mais tempo sem movimento pro menos 
                         return dataFinalA.compareTo(dataFinalB);
                       });
+
 
                       if (filteredClientes.isEmpty) {
                         return Center(child: Text('Nenhum cliente encontrado'));
@@ -766,7 +777,6 @@ class _ClientsPageState extends State<ClientsPage> {
 
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.trim().toLowerCase();
-    final hoje = DateTime.now();
 
     final filtrados = allClientes.where((c) {
       final nome = c.nomeCliente.toLowerCase();
@@ -774,31 +784,8 @@ class _ClientsPageState extends State<ClientsPage> {
       return nome.contains(query) || resp.contains(query);
     }).toList();
 
-    filtrados.sort((a, b) {
-      final aAniversario = a.data_nasc != null &&
-          a.data_nasc!.day == hoje.day &&
-          a.data_nasc!.month == hoje.month;
-      final bAniversario = b.data_nasc != null &&
-          b.data_nasc!.day == hoje.day &&
-          b.data_nasc!.month == hoje.month;
-
-      // 1) aniversariantes do dia primeiro
-      if (aAniversario && !bAniversario) return -1;
-      if (!aAniversario && bAniversario) return 1;
-
-      // 2) quem tem data_nasc vem antes de quem não tem (evita nulls no topo)
-      final aHasDate = a.data_nasc != null;
-      final bHasDate = b.data_nasc != null;
-      if (aHasDate && !bHasDate) return -1;
-      if (!aHasDate && bHasDate) return 1;
-
-      // 3) por fim, ordem alfabética (case-insensitive)
-      return a.nomeCliente.toLowerCase().compareTo(b.nomeCliente.toLowerCase());
-    });
-
     return filtrados;
   }
-
 
   void _filterClientes(String query) {
     setState(() {    
