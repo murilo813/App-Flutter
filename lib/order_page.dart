@@ -30,7 +30,6 @@ class _OrdersPageState extends State<OrdersPage> {
   final SyncService sync = SyncService();
   Map<int, int> quantidades = {};
   Map<int, TextEditingController> controllers = {};
-  int _precoSelecionado = 1; 
 
   @override
   void initState() {
@@ -234,58 +233,6 @@ class _OrdersPageState extends State<OrdersPage> {
                     SizedBox(height: 10),
                   ],
 
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _precoSelecionado = 1),
-                              child: Container(
-                                height: 42,
-                                margin: EdgeInsets.only(right: 6),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _precoSelecionado == 1
-                                      ? Colors.grey.shade200
-                                      : Colors.grey.shade400,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade500),
-                                ),
-                                child: Text("Preço de Lista 1",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600, fontSize: 14)),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _precoSelecionado = 2),
-                              child: Container(
-                                height: 42,
-                                margin: EdgeInsets.only(left: 6),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _precoSelecionado == 2
-                                      ? Colors.grey.shade200
-                                      : Colors.grey.shade400,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade500),
-                                ),
-                                child: Text("Preço de Lista 2",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600, fontSize: 14)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                    ],
-                  ),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
@@ -470,9 +417,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
                                   Text(
                                     formatador.format(
-                                      _precoSelecionado == 1
-                                          ? (p.preco1 ?? 0.0)
-                                          : (p.preco2 ?? 0.0),
+                                      (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0
                                     ),
                                     style: TextStyle(
                                       fontSize: 20,
@@ -579,14 +524,11 @@ class _OrdersPageState extends State<OrdersPage> {
     for (var p in produtosSelecionados) {
       final qtd = quantidades[p.id] ?? 1;
 
-      final preco = _precoSelecionado == 1
-          ? (p.preco1 ?? 0.0)
-          : (p.preco2 ?? 0.0);
+      final preco = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
 
       total += preco * qtd;
     }
 
-    // aplicar juros se o usuário marcou "sim"
     if (aplicarJuros && jurosSelecionado > 0) {
       total = total + (total * (jurosSelecionado / 100));
     }
