@@ -2,15 +2,20 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'services/sync_service.dart';
 import 'background/local_log.dart';
+import 'background/pendents.dart';
 import 'models/client.dart';
 import 'models/product.dart';
+import 'widgets/loading.dart';
 import 'clients_page.dart';
 import 'store_page.dart';
+import 'resume_page.dart';
+import 'secrets.dart';
 
 class OrdersPage extends StatefulWidget {
   @override
@@ -18,9 +23,11 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  bool loading = true;
   Cliente? clienteSelecionado;
   Map<String, dynamic>? pagamentoSelecionado;
   List<Product> produtosSelecionados = [];
+  Map<int, TextEditingController> precoControllers = {};
 
   List<Cliente> clientes = [];
   List<Product> produtos = [];
@@ -30,12 +37,65 @@ class _OrdersPageState extends State<OrdersPage> {
   final SyncService sync = SyncService();
   Map<int, int> quantidades = {};
   Map<int, TextEditingController> controllers = {};
+  Map<int, double> precosEditados = {};
 
   @override
   void initState() {
     super.initState();
-    carregarClientes();
-    carregarProdutos();
+    Future.microtask(() async {
+      await sincronizarAoEntrar();
+    });
+  }
+
+  Future<void> sincronizarAoEntrar() async {
+    setState(() => loading = true);
+    print("🔄 [OrdersPage] Iniciando sync ao entrar na tela...");
+
+    final temInternet = await _hasInternet();
+    print("🌐 [OrdersPage] Internet? $temInternet");
+
+    if (temInternet) {
+      print("📡 Internet detectada — sincronizando com o backend...");
+      try {
+        await sync.syncClientes();
+        print("✔ Clientes sincronizados");
+
+        await sync.syncObservacoes();
+        print("✔ Observações sincronizadas");
+
+        await sync.syncEstoqueGeral();
+        print("✔ Estoque sincronizado");
+
+        await OfflineQueue.trySendQueue(backendUrl);
+        print("✔ Fila offline enviada");
+
+        await LocalLogger.log("Sync inicial no OrdersPage concluído");
+      } catch (e, stack) {
+        print("❌ Erro na sincronização: $e");
+        setState(() => loading = false);
+      }
+    }
+
+    print("📥 Carregando clientes locais...");
+    await carregarClientes();
+    print("✔ Clientes carregados");
+
+    print("📦 Carregando produtos locais...");
+    await carregarProdutos();
+    print("✔ Produtos carregados");
+
+    print("🏁 Sync + carregamento da OrdersPage finalizado!");
+    setState(() => loading = false);
+  }
+
+  Future<bool> _hasInternet() async {
+    try {
+      final resp = await http.get(Uri.parse("$backendUrl/ping"))
+        .timeout(const Duration(seconds: 6));
+      return resp.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> carregarClientes() async {
@@ -69,6 +129,14 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Loading(
+          icon: Icons.shopping_cart,
+          color: Colors.green,
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text("Pedidos"), centerTitle: true),
       body: Container(
@@ -415,16 +483,20 @@ class _OrdersPageState extends State<OrdersPage> {
                                     ],
                                   ),
 
-                                  Text(
-                                    formatador.format(
-                                      (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0
+                                  InkWell(
+                                    onTap: () => editarPrecoProduto(p),
+                                    child: Text(
+                                      formatador.format(
+                                        p.precoEditado ??
+                                        (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1)
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                      ),
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green.shade700,
-                                    ),
-                                  ),
+                                  )
                                 ],
                               ),
                             ],
@@ -474,12 +546,158 @@ class _OrdersPageState extends State<OrdersPage> {
                       ),
                     ),
                   ),
+                  if (clienteSelecionado != null &&
+                      pagamentoSelecionado != null &&
+                      produtosSelecionados.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ResumoPedidoPage(
+                              cliente: clienteSelecionado!,
+                              pagamento: pagamentoSelecionado!,
+                              produtos: produtosSelecionados,
+                              quantidades: quantidades,
+                              total: calcularTotal(),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade600,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              "Finalizar Pedido",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  double parsePreco(String input) {
+    input = input.trim();
+
+    if (input.isEmpty) return 0.0;
+
+    input = input.replaceAll(',', '.');
+
+    final dots = '.'.allMatches(input).length;
+
+    if (dots == 0) {
+      return double.tryParse(input) ?? 0.0;
+    }
+
+    if (dots == 1) {
+      int idx = input.indexOf('.');
+      int after = input.length - idx - 1;
+
+      if (after == 3) {
+        return double.tryParse(input.replaceAll('.', '')) ?? 0.0;
+      }
+
+      return double.tryParse(input) ?? 0.0;
+    }
+
+    int last = input.lastIndexOf('.');
+    String intPart = input.substring(0, last).replaceAll('.', '');
+    String decPart = input.substring(last + 1);
+    return double.tryParse("$intPart.$decPart") ?? 0.0;
+  }
+
+
+  void editarPrecoProduto(Product p) {
+    final precoPadrao = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+    final precoMinimo = p.preco_minimo ?? 0.0;
+
+    String precoInicial = (p.precoEditado ?? precoPadrao)
+        .toStringAsFixed(2)
+        .replaceAll('.', ',');
+
+    TextEditingController ctrl = TextEditingController(text: precoInicial)
+      ..selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: precoInicial.length,
+      );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+
+            double valorDigitado = parsePreco(ctrl.text);
+
+            bool valido = valorDigitado >= precoMinimo;
+
+            return AlertDialog(
+              title: Text("Preço"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!valido)
+                    Text(
+                      "Preço abaixo do mínimo permitido!",
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+
+                  TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: "Digite o preço",
+                      prefixText: "R\$ ",
+                    ),
+                    onChanged: (v) => setStateDialog(() {}),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: valido
+                      ? () {
+                          double novoPreco = parsePreco(ctrl.text);
+
+                          setState(() {
+                            p.precoEditado = novoPreco;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      : null,
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -524,7 +742,8 @@ class _OrdersPageState extends State<OrdersPage> {
     for (var p in produtosSelecionados) {
       final qtd = quantidades[p.id] ?? 1;
 
-      final preco = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+      final precoBase = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+      final preco = p.precoEditado ?? precoBase;
 
       total += preco * qtd;
     }
@@ -535,7 +754,6 @@ class _OrdersPageState extends State<OrdersPage> {
 
     return total;
   }
-
 
   Future<int> getEmpresa() async {
     final prefs = await SharedPreferences.getInstance();

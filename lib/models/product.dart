@@ -17,6 +17,8 @@ class Product {
   final double preco_minimo;
   final String aplicacao;
 
+  double? precoEditado;
+
   Product({
     required this.id,
     required this.nome,
@@ -33,6 +35,7 @@ class Product {
     required this.preco2,
     required this.preco_minimo,
     required this.aplicacao,
+    this.precoEditado,
   });
 
   // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes

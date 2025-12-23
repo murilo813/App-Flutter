@@ -9,6 +9,7 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
+  lottie: ^2.7.0
   android_id: ^0.4.0
   shared_preferences: ^2.2.2
   flutter:
@@ -49,3 +50,4 @@ flutter:
   assets:
     - assets/icons/adminicon.png
     - assets/icons/usericon.png
+    - assets/animations/success.json

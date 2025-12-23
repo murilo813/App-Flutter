@@ -10,7 +10,7 @@ class Cliente {
   final DateTime? data_nasc;
   final int id; 
   final DateTime? ultima_compra;
-  final int lista_preco;
+  final int? lista_preco;
 
   Cliente({
     required this.nomeCliente,
@@ -40,7 +40,7 @@ class Cliente {
       ultima_compra: json['ultima_compra'] != null && json['ultima_compra'] != ""
           ? DateTime.parse(json['ultima_compra'])
           : null,
-      lista_preco: json['lista_preco'],
+      lista_preco: json['lista_preco'] ?? 1,
     );
   }
 

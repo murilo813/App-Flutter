@@ -12,6 +12,7 @@ import 'services/sync_service.dart';
 import 'services/http_client.dart';
 import 'background/local_log.dart';
 import 'background/pendents.dart';
+import 'widgets/loading.dart';
 import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
@@ -26,13 +27,12 @@ class StorePage extends StatefulWidget {
 }
 
 class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
-  late Future<List<Product>> products;
   late List<Product> filteredProducts;
   late List<Product> allProducts = [];
   late TextEditingController searchController;
   final SyncService syncService = SyncService();
   String? ultimaAtualizacao;
-  bool isSyncing = false;
+  bool loading = true;
 
   final Map<String, String> storeLabels = {
     'aurora': 'Aurora',
@@ -60,7 +60,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     });
 
     filteredProducts = [];
-    products = Future.value([]);
+    allProducts = [];
     checkConnectionAndLoadData();
   }
 
@@ -104,30 +104,41 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
           String ultimaAtualizacao = jsonData['lastSynced'] ?? '';
 
           setState(() {
-            products = Future.value(localProducts);
+            allProducts = localProducts;
+            filteredProducts = localProducts;
             this.ultimaAtualizacao = ultimaAtualizacao;
           });
         } else {
           await LocalLogger.log('Erro crítico: arquivo estoque_geral.json não existe');
           setState(() {
-            products = Future.error('Sem dados locais disponíveis');
+            allProducts = [];
+            filteredProducts = [];
           });
         }
       } catch (e, stack) {
         await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
         setState(() {
-          products = Future.error('Erro ao carregar dados locais');
+          allProducts = [];
+          filteredProducts = [];
         });
       }
     }
 
+    if (widget.modoSelecao) {
+      print("Modo seleção ativo — carregando dados locais");
+      await carregarDadosLocais();
+      setState(() {
+        loading = false;
+      });
+      return;
+    }
     if (!temInternet) {
       print('Sem conexão — carregando do arquivo local');
       await carregarDadosLocais();
     } else {
       print('Com conexão — sincronizando com a API');
       setState(() {
-        isSyncing = true;
+        loading = true;
       });
 
       try {
@@ -140,7 +151,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
       await carregarDadosLocais();
 
       setState(() {
-        isSyncing = false;
+        loading = false;
       });
     }
   }
@@ -154,6 +165,15 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Loading(
+          icon: Icons.backpack,
+          color: Colors.green,
+        ),
+      );
+    }
+
     final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
     return Scaffold(
@@ -171,14 +191,6 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ),
-          if (isSyncing)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Sincronizando...',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -192,105 +204,85 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Product>>(
-              future: products,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Erro: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('Nenhum produto disponível'));
-                } else {
-                  filteredProducts = snapshot.data!;
-                  allProducts = snapshot.data!;
-                  if (searchController.text.isNotEmpty) {
-                    final query = searchController.text.toLowerCase();
-
-                    filteredProducts = snapshot.data!.where((product) {
-                      final matchesName = product.nome.toLowerCase().contains(query);
-                      final matchesMarca = product.marca.toLowerCase().contains(query);
-                      final matchesId = product.id.toString().contains(query);
-                      final matchesAplicacao = product.aplicacao.toLowerCase().contains(query);
-                      return matchesName || matchesMarca || matchesId || matchesAplicacao;
-                    }).toList();
-                  }
-
-                  if (filteredProducts.isEmpty) {
-                    return Center(child: Text('Nenhum produto encontrado'));
-                  }
-
-                  return ListView.separated(
-                    itemCount: filteredProducts.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 20, thickness: 1),
-                    itemBuilder: (context, index) {
-                      final product = filteredProducts[index];
-
-                      return ListTile(
-                        onTap: widget.modoSelecao
-                            ? () => Navigator.pop(context, product)
-                            : null,
-
-                        splashColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${product.id}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Text(
-                              product.nome,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+            child: loading
+                ? const Center(
+                    child: Loading(
+                      icon: Icons.inventory,
+                      color: Colors.green,
+                    ),
+                  )
+                : filteredProducts.isEmpty
+                    ? Center(
+                        child: Text(
+                          searchController.text.isEmpty
+                              ? 'Nenhum produto disponível'
+                              : 'Nenhum produto encontrado',
                         ),
+                      )
+                    : ListView.separated(
+                        itemCount: filteredProducts.length,
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 20, thickness: 1),
+                        itemBuilder: (context, index) {
+                          final product = filteredProducts[index];
 
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Column(
+                          return ListTile(
+                            onTap: widget.modoSelecao
+                                ? () => Navigator.pop(context, product)
+                                : null,
+                            splashColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            title: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  product.marca,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                if (product.aplicacao.isNotEmpty)
-                                  Text(
-                                    product.aplicacao,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
+                                  '${product.id}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: Colors.black,
                                   ),
+                                ),
+                                Text(
+                                  product.nome,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            _buildEstoqueTable(product),
-                          ],
-                        ),
-
-                        trailing: null, // botao/icone futuro
-                      );
-                    },
-                  );
-                }
-              },
-            ),
-          ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product.marca,
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    if (product.aplicacao.isNotEmpty)
+                                      Text(
+                                        product.aplicacao,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                _buildEstoqueTable(product),
+                              ],
+                            ),
+                            trailing: null, // botão/ícone futuro
+                          );
+                        },
+                      ),
+          )
         ],
       ),
     );

@@ -11,6 +11,7 @@ import '/services/sync_service.dart';
 import '/services/http_client.dart';
 import 'background/local_log.dart';
 import 'background/pendents.dart';
+import 'widgets/loading.dart';
 import 'models/client.dart'; 
 import 'models/obs.dart';
 import 'secrets.dart';
@@ -25,13 +26,13 @@ class ClientsPage extends StatefulWidget {
 }
 
 class _ClientsPageState extends State<ClientsPage> {
-  late Future<List<Cliente>> clientes;
+  List<Cliente> clientes = [];
   late List<Cliente> filteredClientes;
   late List<Cliente> allClientes = [];
   late List<Map<String, dynamic>> allObs = [];
   late TextEditingController searchController;
   String? ultimaAtualizacao;
-  bool isSyncing = false;
+  bool loading = true;
   final SyncService syncService = SyncService();
 
   @override
@@ -39,9 +40,7 @@ class _ClientsPageState extends State<ClientsPage> {
     super.initState();
     searchController = TextEditingController();
     filteredClientes = [];
-    clientes = Future.value([]);
     checkConnectionAndLoadData();
-    _verificarAvisoInicial();
   }
 
   Future<bool> hasInternetConnection() async {
@@ -58,65 +57,88 @@ class _ClientsPageState extends State<ClientsPage> {
   Future<void> checkConnectionAndLoadData() async {
     final temInternet = await hasInternetConnection();
 
-    Future<void> carregarDadosLocais() async {
-      try {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/clientes.json');
+  Future<void> carregarDadosLocais() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/clientes.json');
 
-        if (await file.exists()) {
-          final content = await file.readAsString();
-          final Map<String, dynamic> jsonData = json.decode(content);
-
-          List<Cliente> localClientes = (jsonData['data'] as List)
-              .map((json) => Cliente.fromJson(json))
-              .toList();
-
-          String ultimaAtualizacao = jsonData['lastSynced'] ?? '';
-
-          setState(() {
-            clientes = Future.value(localClientes);
-            allClientes = localClientes;
-            filteredClientes = localClientes;
-            this.ultimaAtualizacao = ultimaAtualizacao;
-          });
-
-          try {
-            final obsFile = File('${dir.path}/observacoes.json');
-            if (await obsFile.exists()) {
-              final obsContent = await obsFile.readAsString();
-              final Map<String, dynamic> obsData = json.decode(obsContent);
-              setState(() {
-                allObs = List<Map<String, dynamic>>.from(obsData['data'] ?? []);
-              });
-              print('Observações locais carregadas (${allObs.length})');
-            } else {
-              print('Arquivo de observações não encontrado localmente.');
-            }
-          } catch (e) {
-            print('Erro ao carregar observações locais: $e');
-          }
-
-        } else {
-          await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
-          setState(() {
-            clientes = Future.error('Sem dados locais disponíveis');
-          });
-        }
-      } catch (e, stack) {
-        await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
-        setState(() {
-          clientes = Future.error('Erro ao carregar dados locais');
-        });
+      if (!await file.exists()) {
+        await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
+        return;
       }
-    }
 
+      final content = await file.readAsString();
+      final Map<String, dynamic> jsonData = json.decode(content);
+
+      List<Cliente> localClientes = (jsonData['data'] as List)
+          .map((json) => Cliente.fromJson(json))
+          .toList();
+
+      final hoje = DateTime.now();
+      localClientes.sort((a, b) {
+        final aAniversario = a.data_nasc != null &&
+            a.data_nasc!.day == hoje.day &&
+            a.data_nasc!.month == hoje.month;
+        final bAniversario = b.data_nasc != null &&
+            b.data_nasc!.day == hoje.day &&
+            b.data_nasc!.month == hoje.month;
+        if (aAniversario && !bAniversario) return -1;
+        if (!aAniversario && bAniversario) return 1;
+
+        DateTime? refA = _maisRecenteEntre(
+          allObs.where((o) => o['responsavel'] == a.responsavel)
+                .map((o) => DateTime.parse(o['data']))
+                .toList()
+                .fold<DateTime?>(null, (prev, e) => prev == null || e.isAfter(prev) ? e : prev),
+          a.ultima_compra,
+        );
+
+        DateTime? refB = _maisRecenteEntre(
+          allObs.where((o) => o['responsavel'] == b.responsavel)
+                .map((o) => DateTime.parse(o['data']))
+                .toList()
+                .fold<DateTime?>(null, (prev, e) => prev == null || e.isAfter(prev) ? e : prev),
+          b.ultima_compra,
+        );
+
+        if (refA == null && refB == null) {
+          return a.nomeCliente.compareTo(b.nomeCliente);
+        }
+        if (refA == null) return 1;
+        if (refB == null) return -1;
+        return refA.compareTo(refB); 
+      });
+
+      setState(() {
+        clientes = localClientes;
+        allClientes = localClientes;
+        filteredClientes = _getFilteredClientes();
+        ultimaAtualizacao = jsonData['lastSynced'] ?? '';
+        loading = false;
+      });
+    } catch (e, stack) {
+      await LocalLogger.log('Erro ao carregar dados locais\nErro: $e\nStack: $stack');
+      setState(() {
+        loading = false;
+        clientes = [];
+      });
+    }
+  }
+
+
+    if (widget.modoSelecao) {
+      print("Modo seleção ativo — carregando dados locais");
+      await carregarDadosLocais();
+      return;
+    }
+    
     if (!temInternet) {
       print('Sem conexão — carregando clientes do local');
       await carregarDadosLocais();
     } else {
       print('Com conexão — sincronizando com a API');
       setState(() {
-        isSyncing = true;
+        loading = true;
       });
 
       try {
@@ -131,8 +153,9 @@ class _ClientsPageState extends State<ClientsPage> {
       }
 
       setState(() {
-        isSyncing = false;
+        loading = false;
       });
+      _verificarAvisoInicial();
     }
   }
 
@@ -144,6 +167,14 @@ class _ClientsPageState extends State<ClientsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Loading(
+          icon: Icons.people,
+          color: Colors.green,
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text('Meus Clientes'),
@@ -161,15 +192,6 @@ class _ClientsPageState extends State<ClientsPage> {
                     style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                   ),
                 ),
-              if (isSyncing)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Sincronizando...',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: Row(
@@ -203,169 +225,133 @@ class _ClientsPageState extends State<ClientsPage> {
                 ),
               ),
               Expanded(
-                child: FutureBuilder<List<Cliente>>(
-                  future: clientes,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Erro: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(child: Text('Nenhum cliente disponível'));
-                    } else {
-                      allClientes = snapshot.data!;
-                      filteredClientes = _getFilteredClientes();
+                child: clientes.isEmpty
+                    ? const Center(
+                        child: Text('Nenhum cliente disponível'),
+                      )
+                    : Builder(
+                        builder: (context) {
+                          // 🔹 aplica filtro (leve)
+                          filteredClientes = _getFilteredClientes();
 
-                      filteredClientes.sort((a, b) {
-                        final hoje = DateTime.now();
-
-                        final aAniversario = a.data_nasc != null &&
-                            a.data_nasc!.day == hoje.day &&
-                            a.data_nasc!.month == hoje.month;
-                        final bAniversario = b.data_nasc != null &&
-                            b.data_nasc!.day == hoje.day &&
-                            b.data_nasc!.month == hoje.month;
-
-                        if (aAniversario && !bAniversario) return -1;
-                        if (!aAniversario && bAniversario) return 1;
-
-                        DateTime? refA;
-                        DateTime? refB;
-
-                        final obsA = allObs.where((o) => o['responsavel'] == a.responsavel).toList();
-                        if (obsA.isNotEmpty) {
-                          obsA.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
-                          refA = DateTime.parse(obsA.first['data']);
-                        }
-
-                        final obsB = allObs.where((o) => o['responsavel'] == b.responsavel).toList();
-                        if (obsB.isNotEmpty) {
-                          obsB.sort((x, y) => DateTime.parse(y['data']).compareTo(DateTime.parse(x['data'])));
-                          refB = DateTime.parse(obsB.first['data']);
-                        }
-
-                        final dataFinalA = _maisRecenteEntre(refA, a.ultima_compra);
-                        final dataFinalB = _maisRecenteEntre(refB, b.ultima_compra);
-
-                        if (dataFinalA == null && dataFinalB == null) return 0;
-                        if (dataFinalA == null) return -1;
-                        if (dataFinalB == null) return 1;
-
-                        // ORDEM: aniversariantes, mais tempo sem movimento pro menos 
-                        return dataFinalA.compareTo(dataFinalB);
-                      });
-
-
-                      if (filteredClientes.isEmpty) {
-                        return Center(child: Text('Nenhum cliente encontrado'));
-                      }
-
-                      final hoje = DateTime.now();
-
-                      return ListView.separated(
-                        padding: EdgeInsets.only(bottom: 160), 
-                        itemCount: filteredClientes.length,
-                        separatorBuilder: (_, __) => Divider(),
-                        itemBuilder: (context, index) {
-                          final cliente = filteredClientes[index];
-                          final isAniversariante = cliente.data_nasc != null &&
-                            cliente.data_nasc!.day == hoje.day &&
-                            cliente.data_nasc!.month == hoje.month;
-
-                          final obsDoResponsavel = allObs
-                              .where((o) => o['responsavel'] == cliente.responsavel)
-                              .toList();
-
-                          DateTime? ultimaObs;
-                          if (obsDoResponsavel.isNotEmpty) {
-                            obsDoResponsavel.sort((a, b) =>
-                                DateTime.parse(b['data']).compareTo(DateTime.parse(a['data'])));
-                            ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
+                          if (filteredClientes.isEmpty) {
+                            return const Center(
+                              child: Text('Nenhum cliente encontrado'),
+                            );
                           }
 
-                          Color corIcone;
-                          if (ultimaObs != null) {
-                            final dias = DateTime.now().difference(ultimaObs).inDays;
-                            if (dias <= 10) {
-                              corIcone = Colors.green;
-                            } else if (dias <= 25) {
-                              corIcone = Colors.orangeAccent;
-                            } else {
-                              corIcone = Colors.red;
-                            }
-                          } else if (cliente.ultima_compra != null) {
-                            final diasSemCompra = DateTime.now().difference(cliente.ultima_compra!).inDays;
-                            if (diasSemCompra <= 10) {
-                              corIcone = Colors.green;
-                            } else if (diasSemCompra <= 25) {
-                              corIcone = Colors.orangeAccent;
-                            } else {
-                              corIcone = Colors.red;
-                            }
-                          } else {
-                            corIcone = Colors.grey;
-                          }
+                          final hoje = DateTime.now();
 
-                          return ListTile(
-                            onTap: widget.modoSelecao
-                                ? () => Navigator.pop(context, cliente)
-                                : null,
+                          return ListView.separated(
+                            padding: const EdgeInsets.only(bottom: 160),
+                            itemCount: filteredClientes.length,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final cliente = filteredClientes[index];
 
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                              final isAniversariante =
+                                  cliente.data_nasc != null &&
+                                  cliente.data_nasc!.day == hoje.day &&
+                                  cliente.data_nasc!.month == hoje.month;
+
+                              final obsDoResponsavel = allObs
+                                  .where((o) => o['responsavel'] == cliente.responsavel)
+                                  .toList();
+
+                              DateTime? ultimaObs;
+                              if (obsDoResponsavel.isNotEmpty) {
+                                obsDoResponsavel.sort(
+                                  (a, b) => DateTime.parse(b['data'])
+                                      .compareTo(DateTime.parse(a['data'])),
+                                );
+                                ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
+                              }
+
+                              Color corIcone;
+                              if (ultimaObs != null) {
+                                final dias =
+                                    DateTime.now().difference(ultimaObs).inDays;
+                                if (dias <= 10) {
+                                  corIcone = Colors.green;
+                                } else if (dias <= 25) {
+                                  corIcone = Colors.orangeAccent;
+                                } else {
+                                  corIcone = Colors.red;
+                                }
+                              } else if (cliente.ultima_compra != null) {
+                                final diasSemCompra =
+                                    DateTime.now().difference(cliente.ultima_compra!).inDays;
+                                if (diasSemCompra <= 10) {
+                                  corIcone = Colors.green;
+                                } else if (diasSemCompra <= 25) {
+                                  corIcone = Colors.orangeAccent;
+                                } else {
+                                  corIcone = Colors.red;
+                                }
+                              } else {
+                                corIcone = Colors.grey;
+                              }
+
+                              return ListTile(
+                                onTap: widget.modoSelecao
+                                    ? () => Navigator.pop(context, cliente)
+                                    : null,
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Text(
-                                              cliente.nomeCliente,
-                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                            ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  cliente.nomeCliente,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (isAniversariante)
+                                                const Icon(
+                                                  Icons.cake,
+                                                  color: Colors.pink,
+                                                  size: 18,
+                                                ),
+                                              const SizedBox(width: 8),
+                                              GestureDetector(
+                                                onTap: () =>
+                                                    _mostrarInfoCliente(context, cliente),
+                                                child: Icon(
+                                                  Icons.info_outline,
+                                                  color: corIcone,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-
-                                          if (isAniversariante)
-                                            const Icon(Icons.cake, color: Colors.pink, size: 18),
-
-                                          const SizedBox(width: 8),
-
-                                          GestureDetector(
-                                            onTap: () => _mostrarInfoCliente(context, cliente),
-                                            child: Icon(
-                                              Icons.info_outline,
-                                              color: corIcone,
-                                              size: 20,
+                                          if (cliente.responsavel.isNotEmpty)
+                                            Text(
+                                              'Responsável: ${cliente.responsavel}',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[700],
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
-
-                                      if (cliente.responsavel.isNotEmpty)
-                                        Text(
-                                          'Responsável: ${cliente.responsavel}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: _buildLimitesTable(cliente),
-                            ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: _buildLimitesTable(cliente),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    }
-                  },
-                ),
+                      ),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'services/sync_service.dart';
 import 'services/http_client.dart';
 import 'background/pendents.dart';
 import 'background/local_log.dart';
+import 'widgets/loading.dart';
 import 'models/user.dart';
 import 'secrets.dart';
 
@@ -22,7 +23,7 @@ class _AdminPageState extends State<AdminPage> {
   late List<User> allUsuarios;
   late List<User> filteredUsuarios;
   late TextEditingController searchController;
-  bool isSyncing = false;
+  bool loading = true;
   final SyncService syncService = SyncService();
 
   @override
@@ -83,10 +84,10 @@ class _AdminPageState extends State<AdminPage> {
     if (!temInternet) {
       await carregarDadosLocais();
     } else {
-      setState(() => isSyncing = true);
+      setState(() => loading = true);
       await syncService.syncUsers();
       await carregarDadosLocais();
-      setState(() => isSyncing = false);
+      setState(() => loading = false);
     }
   }
 
@@ -98,16 +99,18 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Loading(
+          icon: Icons.admin_panel_settings,
+          color: Colors.deepPurple,
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text("Administração"), centerTitle: true),
       body: Column(
         children: [
-          if (isSyncing)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Sincronizando...",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -129,153 +132,139 @@ class _AdminPageState extends State<AdminPage> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<User>>(
-              future: usuarios,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return Center(child: CircularProgressIndicator());
-                if (snapshot.hasError)
-                  return Center(child: Text("Erro: ${snapshot.error}"));
-                if (!snapshot.hasData || snapshot.data!.isEmpty)
-                  return Center(child: Text("Nenhum usuário disponível"));
-
-                final data = filteredUsuarios.isNotEmpty
-                    ? filteredUsuarios
-                    : snapshot.data!;
-
-                return SafeArea(
-                  bottom: true, 
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: data.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == data.length) {
-                        return GestureDetector(
-                          onTap: () => _abrirDialogNovoUsuario(),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade400,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Novo Usuário",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      final u = data[index];
-                      return Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: u.ativo == 'N' ? Colors.grey.shade800 : null, 
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(12.0),
+            child: filteredUsuarios.isEmpty
+                ? Center(child: Text("Nenhum usuário disponível"))
+                : SafeArea(
+                    bottom: true,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: filteredUsuarios.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == filteredUsuarios.length) {
+                          return GestureDetector(
+                            onTap: () => _abrirDialogNovoUsuario(),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade400,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor:
-                                        u.tipo_usuario.toLowerCase() == 'admin'
-                                            ? Colors.green.shade100
-                                            : Colors.blue.shade50,
-                                    child: Image.asset(
-                                      u.tipo_usuario.toLowerCase() == 'admin'
-                                          ? 'assets/icons/adminicon.png'
-                                          : 'assets/icons/usericon.png',
-                                      width: 24,
-                                      height: 24,
-                                      errorBuilder: (_, __, ___) => Icon(Icons.person, color: Colors.grey),
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          u.nomeclatura,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: u.ativo == 'N' ? Colors.white70 : Colors.black,
-                                          ),
-                                        ),
-                                        Text(
-                                          "${u.usuario} | ${'*' * 8}",
-                                          style: TextStyle(
-                                            color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
-                                          ),
-                                        ),
-                                        Text(
-                                          "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
-                                          style: TextStyle(
-                                            color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  Icon(Icons.add, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Novo Usuário",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
                             ),
-                            if (u.ativo == 'N') 
-                              Positioned.fill(
-                                child: Center(
-                                  child: Icon(
-                                    Icons.lock,
-                                    color: Colors.grey.shade600,
-                                    size: 40,
+                          );
+                        }
+
+                        final u = filteredUsuarios[index];
+                        return Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: u.ativo == 'N' ? Colors.grey.shade800 : null, 
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor:
+                                          u.tipo_usuario.toLowerCase() == 'admin'
+                                              ? Colors.green.shade100
+                                              : Colors.blue.shade50,
+                                      child: Image.asset(
+                                        u.tipo_usuario.toLowerCase() == 'admin'
+                                            ? 'assets/icons/adminicon.png'
+                                            : 'assets/icons/usericon.png',
+                                        width: 24,
+                                        height: 24,
+                                        errorBuilder: (_, __, ___) => Icon(Icons.person, color: Colors.grey),
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            u.nomeclatura,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: u.ativo == 'N' ? Colors.white70 : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${u.usuario} | ${'*' * 8}",
+                                            style: TextStyle(
+                                              color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
+                                            style: TextStyle(
+                                              color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (u.ativo == 'N') 
+                                Positioned.fill(
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.lock,
+                                      color: Colors.grey.shade600,
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                              Positioned(
+                                top: 4,
+                                left: 8,
+                                child: Text(
+                                  u.id.toString(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                               ),
-                            Positioned(
-                              top: 4,
-                              left: 8,
-                              child: Text(
-                                u.id.toString(),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[600],
+                              Positioned(
+                                top: 4,
+                                right: 8,
+                                child: IconButton(
+                                  icon: Icon(Icons.edit,
+                                      size: 18, color: Colors.grey[700]),
+                                  onPressed: () => _abrirDialogEditarUsuario(u), 
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              right: 8,
-                              child: IconButton(
-                                icon: Icon(Icons.edit,
-                                    size: 18, color: Colors.grey[700]),
-                                onPressed: () => _abrirDialogEditarUsuario(u), 
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
-            ),
-          ),
+          )
         ],
       ),
     );

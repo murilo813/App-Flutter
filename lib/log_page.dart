@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'widgets/loading.dart';
+
 class LogViewerPage extends StatefulWidget {
   const LogViewerPage({super.key});
 
@@ -98,7 +100,7 @@ class _LogViewerPageState extends State<LogViewerPage> {
       final file = await _getLogFile();
       final exists = await file.exists();
       if (exists) {
-        await file.writeAsString(''); // limpa o arquivo
+        await file.writeAsString('');
       }
       await _loadLog();
     } catch (e) {
@@ -112,11 +114,11 @@ class _LogViewerPageState extends State<LogViewerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Visualizador de Log'),
+        title: const Text('Logs'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadLog,
+            onPressed: _loading ? null : _loadLog,
             tooltip: 'Atualizar',
           ),
           IconButton(
@@ -142,7 +144,12 @@ class _LogViewerPageState extends State<LogViewerPage> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: Loading(
+                icon: Icons.article, 
+                color: Colors.green,
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: SelectableText(
@@ -152,8 +159,9 @@ class _LogViewerPageState extends State<LogViewerPage> {
                   fontSize: 14,
                   height: 1.4,
                 ),
-              )
+              ),
             ),
+
     );
   }
 }
