@@ -12,7 +12,13 @@ class OfflineQueue {
   static Future<void> addToQueue(Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getStringList(_key) ?? [];
-    existing.add(jsonEncode(data));
+
+    final payload = {
+      ...data,
+      "created_at": DateTime.now().toIso8601String(),
+    };
+
+    existing.add(jsonEncode(payload));
     await prefs.setStringList(_key, existing);
   }
 

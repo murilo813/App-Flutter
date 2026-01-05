@@ -7,11 +7,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import '/services/sync_service.dart';
-import '/services/http_client.dart';
+import 'services/sync_service.dart';
+import 'services/http_client.dart';
 import 'background/local_log.dart';
 import 'background/pendents.dart';
 import 'widgets/loading.dart';
+import 'widgets/error.dart';
 import 'models/client.dart'; 
 import 'models/obs.dart';
 import 'secrets.dart';
@@ -33,6 +34,7 @@ class _ClientsPageState extends State<ClientsPage> {
   late TextEditingController searchController;
   String? ultimaAtualizacao;
   bool loading = true;
+    bool erroCritico = false;
   final SyncService syncService = SyncService();
 
   @override
@@ -54,108 +56,103 @@ class _ClientsPageState extends State<ClientsPage> {
     }
   }
 
-  Future<void> checkConnectionAndLoadData() async {
-    final temInternet = await hasInternetConnection();
-
   Future<void> carregarDadosLocais() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/clientes.json');
 
       if (!await file.exists()) {
-        await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
+        await LocalLogger.log(
+          'Offline e sem cache: clientes.json não encontrado',
+        );
+
+        setState(() {
+          clientes = [];
+          allClientes = [];
+          filteredClientes = [];
+          ultimaAtualizacao = null;
+        });
         return;
       }
 
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      List<Cliente> localClientes = (jsonData['data'] as List)
-          .map((json) => Cliente.fromJson(json))
+      final List<Cliente> localClientes = (jsonData['data'] as List)
+          .map((e) => Cliente.fromJson(e))
           .toList();
-
-      final hoje = DateTime.now();
-      localClientes.sort((a, b) {
-        final aAniversario = a.data_nasc != null &&
-            a.data_nasc!.day == hoje.day &&
-            a.data_nasc!.month == hoje.month;
-        final bAniversario = b.data_nasc != null &&
-            b.data_nasc!.day == hoje.day &&
-            b.data_nasc!.month == hoje.month;
-        if (aAniversario && !bAniversario) return -1;
-        if (!aAniversario && bAniversario) return 1;
-
-        DateTime? refA = _maisRecenteEntre(
-          allObs.where((o) => o['responsavel'] == a.responsavel)
-                .map((o) => DateTime.parse(o['data']))
-                .toList()
-                .fold<DateTime?>(null, (prev, e) => prev == null || e.isAfter(prev) ? e : prev),
-          a.ultima_compra,
-        );
-
-        DateTime? refB = _maisRecenteEntre(
-          allObs.where((o) => o['responsavel'] == b.responsavel)
-                .map((o) => DateTime.parse(o['data']))
-                .toList()
-                .fold<DateTime?>(null, (prev, e) => prev == null || e.isAfter(prev) ? e : prev),
-          b.ultima_compra,
-        );
-
-        if (refA == null && refB == null) {
-          return a.nomeCliente.compareTo(b.nomeCliente);
-        }
-        if (refA == null) return 1;
-        if (refB == null) return -1;
-        return refA.compareTo(refB); 
-      });
 
       setState(() {
         clientes = localClientes;
         allClientes = localClientes;
         filteredClientes = _getFilteredClientes();
-        ultimaAtualizacao = jsonData['lastSynced'] ?? '';
-        loading = false;
+        ultimaAtualizacao = jsonData['lastSynced'];
       });
     } catch (e, stack) {
-      await LocalLogger.log('Erro ao carregar dados locais\nErro: $e\nStack: $stack');
+      await LocalLogger.log(
+        'Erro ao carregar clientes locais\nErro: $e\nStack: $stack',
+      );
+
       setState(() {
-        loading = false;
         clientes = [];
+        allClientes = [];
+        filteredClientes = [];
+        ultimaAtualizacao = null;
       });
     }
   }
 
+  Future<void> checkConnectionAndLoadData() async {
+    setState(() {
+      loading = true;
+      erroCritico = false;
+    });
 
-    if (widget.modoSelecao) {
-      print("Modo seleção ativo — carregando dados locais");
-      await carregarDadosLocais();
-      return;
-    }
-    
-    if (!temInternet) {
-      print('Sem conexão — carregando clientes do local');
-      await carregarDadosLocais();
-    } else {
-      print('Com conexão — sincronizando com a API');
-      setState(() {
-        loading = true;
-      });
+    try {
+      final temInternet = await hasInternetConnection();
 
-      try {
-        await syncService.syncClientes();
-        await syncService.syncObservacoes();
-
+      if (widget.modoSelecao) {
         await carregarDadosLocais();
-      } catch (e, stack) {
-        print('Erro ao sincronizar dados: $e');
-        await LocalLogger.log('Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack');
-        await carregarDadosLocais();
+        return;
       }
 
+      if (!temInternet) {
+        print('Sem conexão — carregando clientes do cache');
+        await carregarDadosLocais();
+
+        if (allClientes.isEmpty) {
+          setState(() {
+            erroCritico = true;
+          });
+        }
+      } else {
+        print('Com conexão — sincronizando clientes');
+        try {
+          await syncService.syncClientes();
+          await syncService.syncObservacoes();
+        } catch (e, stack) {
+          await LocalLogger.log(
+            'Erro na sincronização de clientes\nErro: $e\nStack: $stack',
+          );
+        }
+
+        await carregarDadosLocais();
+
+        if (allClientes.isEmpty) {
+          setState(() {
+            erroCritico = true; 
+          });
+        }
+      }
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro crítico em checkConnectionAndLoadData (clientes)\nErro: $e\nStack: $stack',
+      );
       setState(() {
-        loading = false;
+        erroCritico = true;
       });
-      _verificarAvisoInicial();
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -173,6 +170,11 @@ class _ClientsPageState extends State<ClientsPage> {
           icon: Icons.people,
           color: Colors.green,
         ),
+      );
+    }
+    if (erroCritico) {
+      return ErrorScreen(
+        onRetry: checkConnectionAndLoadData, 
       );
     }
     return Scaffold(
@@ -231,7 +233,6 @@ class _ClientsPageState extends State<ClientsPage> {
                       )
                     : Builder(
                         builder: (context) {
-                          // 🔹 aplica filtro (leve)
                           filteredClientes = _getFilteredClientes();
 
                           if (filteredClientes.isEmpty) {

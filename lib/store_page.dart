@@ -13,6 +13,7 @@ import 'services/http_client.dart';
 import 'background/local_log.dart';
 import 'background/pendents.dart';
 import 'widgets/loading.dart';
+import 'widgets/error.dart';
 import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
@@ -33,6 +34,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
   final SyncService syncService = SyncService();
   String? ultimaAtualizacao;
   bool loading = true;
+    bool erroCritico = false;
 
   final Map<String, String> storeLabels = {
     'aurora': 'Aurora',
@@ -85,74 +87,91 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     }
   }
 
-  Future<void> checkConnectionAndLoadData() async {
-    final temInternet = await hasInternetConnection();
+  Future<void> carregarDadosLocais() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/estoque_geral.json');
 
-    Future<void> carregarDadosLocais() async {
-      try {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/estoque_geral.json');
+      if (!await file.exists()) {
+        await LocalLogger.log(
+          'Offline e sem cache: estoque_geral.json não encontrado',
+        );
 
-        if (await file.exists()) {
-          final content = await file.readAsString();
-          final Map<String, dynamic> jsonData = json.decode(content);
-
-          List<Product> localProducts = (jsonData['data'] as List)
-              .map((json) => Product.fromJson(json))
-              .toList();
-
-          String ultimaAtualizacao = jsonData['lastSynced'] ?? '';
-
-          setState(() {
-            allProducts = localProducts;
-            filteredProducts = localProducts;
-            this.ultimaAtualizacao = ultimaAtualizacao;
-          });
-        } else {
-          await LocalLogger.log('Erro crítico: arquivo estoque_geral.json não existe');
-          setState(() {
-            allProducts = [];
-            filteredProducts = [];
-          });
-        }
-      } catch (e, stack) {
-        await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
         setState(() {
           allProducts = [];
           filteredProducts = [];
+          ultimaAtualizacao = null;
+        });
+        return;
+      }
+
+      final content = await file.readAsString();
+      final Map<String, dynamic> jsonData = json.decode(content);
+
+      final List<Product> localProducts = (jsonData['data'] as List)
+          .map((e) => Product.fromJson(e))
+          .toList();
+
+      setState(() {
+        allProducts = localProducts;
+        filteredProducts = localProducts;
+        ultimaAtualizacao = jsonData['lastSynced'];
+      });
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro ao carregar dados locais\nErro: $e\nStack: $stack',
+      );
+
+      setState(() {
+        allProducts = [];
+        filteredProducts = [];
+        ultimaAtualizacao = null;
+      });
+    }
+  }
+
+  Future<void> checkConnectionAndLoadData() async {
+    setState(() {
+      loading = true;
+    });
+
+    try {
+      final temInternet = await hasInternetConnection();
+
+      if (widget.modoSelecao) {
+        await carregarDadosLocais();
+        return;
+      }
+
+      if (!temInternet) {
+        print('Sem conexão — carregando do arquivo local');
+        await carregarDadosLocais();
+      } else {
+        print('Com conexão — sincronizando com a API');
+        try {
+          await syncService.syncEstoqueGeral();
+        } catch (e, stack) {
+          await LocalLogger.log(
+            'Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack',
+          );
+        }
+        await carregarDadosLocais();
+      }
+
+      if (allProducts.isEmpty) {
+        setState(() {
+          erroCritico = true; 
         });
       }
-    }
-
-    if (widget.modoSelecao) {
-      print("Modo seleção ativo — carregando dados locais");
-      await carregarDadosLocais();
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack',
+      );
       setState(() {
-        loading = false;
+        erroCritico = true; 
       });
-      return;
-    }
-    if (!temInternet) {
-      print('Sem conexão — carregando do arquivo local');
-      await carregarDadosLocais();
-    } else {
-      print('Com conexão — sincronizando com a API');
-      setState(() {
-        loading = true;
-      });
-
-      try {
-        await syncService.syncEstoqueGeral();
-      } catch (e, stack) {
-        print('Erro ao sincronizar estoque (storepage): $e');
-        await LocalLogger.log('Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack');
-      }
-
-      await carregarDadosLocais();
-
-      setState(() {
-        loading = false;
-      });
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -173,7 +192,11 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
         ),
       );
     }
-
+    if (erroCritico) {
+      return ErrorScreen(
+        onRetry: checkConnectionAndLoadData, 
+      );
+    }
     final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
     return Scaffold(

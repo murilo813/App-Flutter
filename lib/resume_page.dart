@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'services/http_client.dart';
+import 'background/pendents.dart';
+import 'background/local_log.dart';
 import 'models/client.dart';
 import 'models/product.dart';
 import 'pedido_confirmado_page.dart';
+import 'secrets.dart';
 
 class ResumoPedidoPage extends StatefulWidget {
+  final int clienteId;
   final Cliente cliente;
+  final int pagamentoId;
   final Map<String, dynamic> pagamento;
   final List<Product> produtos;
   final Map<int, int> quantidades;
   final double total;
 
   const ResumoPedidoPage({
+    required this.clienteId,
     required this.cliente,
+    required this.pagamentoId,
     required this.pagamento,
     required this.produtos,
     required this.quantidades,
@@ -36,15 +47,27 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
     double totalProdutos = 0;
     for (var p in widget.produtos) {
       final qtd = widget.quantidades[p.id] ?? 1;
-      final preco = (p.precoEditado ?? p.preco1);
-      totalProdutos += preco * qtd;
+      totalProdutos += precoProduto(p) * qtd;
     }
 
     juros = widget.total - totalProdutos;
   }
 
+  Future<bool> hasInternetConnection() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$backendUrl/ping'))
+          .timeout(const Duration(seconds: 7));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(widget.clienteId);
+    print(widget.pagamentoId);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -63,7 +86,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
           children: [
 
             Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(widget.cliente.responsavel, style: TextStyle(fontSize: 18)),
+            Text(widget.cliente.nomeCliente, style: TextStyle(fontSize: 18)),
             SizedBox(height: 12),
 
             Text("Forma de Pagamento:", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -96,7 +119,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                 itemBuilder: (_, i) {
                   final p = widget.produtos[i];
                   final qtd = widget.quantidades[p.id] ?? 1;
-                  final preco = (p.precoEditado ?? p.preco1);
+                  final preco = precoProduto(p);
                   final totalProduto = preco * qtd;
 
                   return Column(
@@ -169,11 +192,8 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
                 for (var p in widget.produtos) {
                   final qtd = widget.quantidades[p.id] ?? 1;
-                  final preco = (p.precoEditado ?? p.preco1);
-                  totalProdutos += preco * qtd;
+                  totalProdutos += precoProduto(p) * qtd;
                 }
-
-                double totalCalculado = totalProdutos + juros - desconto;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +232,11 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                             editarValor(
                               titulo: "Editar Juros",
                               valorAtual: juros,
-                              onSalvar: (v) => juros = v,
+                              onSalvar: (v) {
+                                setState(() {
+                                  juros = v;
+                                });
+                              },
                             );
                           },
                           child: Text(
@@ -245,7 +269,11 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                             editarValor(
                               titulo: "Editar Desconto",
                               valorAtual: desconto,
-                              onSalvar: (v) => desconto = v,
+                              onSalvar: (v) {
+                                setState(() {
+                                  desconto = v;
+                                });
+                              },
                             );
                           },
                           child: Text(
@@ -287,13 +315,45 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
             GestureDetector(
               onTap: () {
-                Navigator.push(
+                final url = "/pedido";
+                final body = montarJsonPedido();
+
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => PedidoConfirmadoPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => PedidoConfirmadoPage()),
                 );
+
+                () async {
+                  try {
+                    final online = await hasInternetConnection();
+
+                    if (online) {
+                      final httpClient = HttpClient();
+                      final response = await httpClient.post(url, body);
+
+                      if (response.statusCode != 200) {
+                        await OfflineQueue.addToQueue({
+                          "url": url,
+                          "body": body,
+                        });
+                      }
+                    } else {
+                      await OfflineQueue.addToQueue({
+                        "url": url,
+                        "body": body,
+                      });
+                    }
+                  } catch (e, stack) {
+                    await LocalLogger.log('Erro ao enviar pedido: $e\n$stack');
+
+                    await OfflineQueue.addToQueue({
+                      "url": url,
+                      "body": body,
+                    });
+                  }
+                }();
               },
+
               child: Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(16),
@@ -319,13 +379,42 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
     );
   }
 
+  Map<String, dynamic> montarJsonPedido() {
+    return {
+      "id_cliente": widget.clienteId,
+      "lista_preco": widget.cliente.lista_preco,
+      "id_pagamento": widget.pagamentoId,
+      "juros": juros,
+      "desconto": desconto,
+      "data": DateTime.now().toIso8601String(),
+      "itens": widget.produtos.map((p) {
+        final qtd = widget.quantidades[p.id] ?? 1;
+
+        return {
+          "id_produto": p.id,
+          "quantidade": qtd,
+          "preco_unitario": precoProduto(p),
+        };
+      }).toList(),
+    };
+  }
+
+  double precoProduto(Product p) {
+    if (p.precoEditado != null) {
+      return p.precoEditado!;
+    }
+
+    return widget.cliente.lista_preco == 2
+        ? p.preco2
+        : p.preco1;
+  } 
+
   double getTotalCalculado() {
     double totalProdutos = 0;
 
     for (var p in widget.produtos) {
       final qtd = widget.quantidades[p.id] ?? 1;
-      final preco = (p.precoEditado ?? p.preco1);
-      totalProdutos += preco * qtd;
+      totalProdutos += precoProduto(p) * qtd;
     }
 
     return totalProdutos + juros - desconto;

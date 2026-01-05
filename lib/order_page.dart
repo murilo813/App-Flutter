@@ -12,6 +12,7 @@ import 'background/pendents.dart';
 import 'models/client.dart';
 import 'models/product.dart';
 import 'widgets/loading.dart';
+import 'widgets/error.dart';
 import 'clients_page.dart';
 import 'store_page.dart';
 import 'resume_page.dart';
@@ -24,6 +25,8 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage> {
   bool loading = true;
+  bool erroCritico = false;
+  String? mensagemErro;
   Cliente? clienteSelecionado;
   Map<String, dynamic>? pagamentoSelecionado;
   List<Product> produtosSelecionados = [];
@@ -49,43 +52,43 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Future<void> sincronizarAoEntrar() async {
     setState(() => loading = true);
-    print("🔄 [OrdersPage] Iniciando sync ao entrar na tela...");
 
-    final temInternet = await _hasInternet();
-    print("🌐 [OrdersPage] Internet? $temInternet");
+    try {
+      final temInternet = await _hasInternet();
 
-    if (temInternet) {
-      print("📡 Internet detectada — sincronizando com o backend...");
-      try {
-        await sync.syncClientes();
-        print("✔ Clientes sincronizados");
-
-        await sync.syncObservacoes();
-        print("✔ Observações sincronizadas");
-
-        await sync.syncEstoqueGeral();
-        print("✔ Estoque sincronizado");
-
-        await OfflineQueue.trySendQueue(backendUrl);
-        print("✔ Fila offline enviada");
-
-        await LocalLogger.log("Sync inicial no OrdersPage concluído");
-      } catch (e, stack) {
-        print("❌ Erro na sincronização: $e");
-        setState(() => loading = false);
+      if (temInternet) {
+        try {
+          await sync.syncClientes();
+          await sync.syncObservacoes();
+          await sync.syncEstoqueGeral();
+          await OfflineQueue.trySendQueue(backendUrl);
+        } catch (e, stack) {
+          await LocalLogger.log(
+            'Erro no sync inicial OrdersPage\nErro: $e\nStack: $stack',
+          );
+        }
       }
+
+      await carregarClientes();
+      await carregarProdutos();
+
+      if (clientes.isEmpty || produtos.isEmpty) {
+        setState(() {
+          erroCritico = true; 
+        });
+        return;
+      }
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro crítico OrdersPage\nErro: $e\nStack: $stack',
+      );
+
+      setState(() {
+        erroCritico = true; 
+      });
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
-
-    print("📥 Carregando clientes locais...");
-    await carregarClientes();
-    print("✔ Clientes carregados");
-
-    print("📦 Carregando produtos locais...");
-    await carregarProdutos();
-    print("✔ Produtos carregados");
-
-    print("🏁 Sync + carregamento da OrdersPage finalizado!");
-    setState(() => loading = false);
   }
 
   Future<bool> _hasInternet() async {
@@ -137,6 +140,11 @@ class _OrdersPageState extends State<OrdersPage> {
         ),
       );
     }
+
+  if (erroCritico) {
+    return ErrorScreen(onRetry: sincronizarAoEntrar);
+  }
+
     return Scaffold(
       appBar: AppBar(title: Text("Pedidos"), centerTitle: true),
       body: Container(
@@ -150,7 +158,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 children: [
                   _titulo("Cliente"),
                   _caixaSelecao(
-                    label: clienteSelecionado?.responsavel ?? "Selecionar Cliente",
+                    label: clienteSelecionado?.nomeCliente ?? "Selecionar Cliente",
                     icon: Icons.person_search,
                     onTap: () async {
                       final r = await Navigator.push(
@@ -555,7 +563,9 @@ class _OrdersPageState extends State<OrdersPage> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => ResumoPedidoPage(
+                              clienteId: clienteSelecionado!.id,
                               cliente: clienteSelecionado!,
+                              pagamentoId: pagamentoSelecionado!["id"],
                               pagamento: pagamentoSelecionado!,
                               produtos: produtosSelecionados,
                               quantidades: quantidades,

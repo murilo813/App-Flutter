@@ -12,16 +12,17 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
+import 'background/local_log.dart';
+import 'services/http_client.dart';
+import 'models/client.dart';
 import 'login.screen.dart';
 import 'store_page.dart';
 import 'clients_page.dart';
 import 'order_page.dart';
 import 'admin_page.dart';
 import 'secrets.dart';
-import 'background/local_log.dart';
-import 'log_page.dart';
-import 'models/client.dart';
-import 'services/http_client.dart';
+import 'debug_page.dart';
+import 'pendents_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -263,7 +264,7 @@ class HomePageState extends State<HomePage> {
                         _titleTapCount = 0;
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => LogViewerPage()),
+                          MaterialPageRoute(builder: (_) => DebugPage()),
                         );
                       }
                     });

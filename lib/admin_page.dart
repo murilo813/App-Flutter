@@ -10,6 +10,7 @@ import 'services/http_client.dart';
 import 'background/pendents.dart';
 import 'background/local_log.dart';
 import 'widgets/loading.dart';
+import 'widgets/error.dart';
 import 'models/user.dart';
 import 'secrets.dart';
 
@@ -19,18 +20,19 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
-  late Future<List<User>> usuarios;
+  bool loading = true;
+  bool erroCritico = false;
+  String? mensagemErro;
   late List<User> allUsuarios;
   late List<User> filteredUsuarios;
   late TextEditingController searchController;
-  bool loading = true;
+
   final SyncService syncService = SyncService();
 
   @override
   void initState() {
     super.initState();
     searchController = TextEditingController();
-    usuarios = Future.value([]);
     allUsuarios = [];
     filteredUsuarios = [];
     checkConnectionAndLoadData();
@@ -47,47 +49,83 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
-  Future<void> checkConnectionAndLoadData() async {
-    final temInternet = await hasInternetConnection();
+  Future<void> carregarDadosLocais() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/users.json');
 
-    Future<void> carregarDadosLocais() async {
-      try {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/users.json');
+      if (!await file.exists()) {
+        await LocalLogger.log(
+          'Offline e sem cache: users.json não encontrado',
+        );
 
-        if (await file.exists()) {
-          final content = await file.readAsString();
-          final Map<String, dynamic> jsonData = json.decode(content);
-
-          List<User> localUsuarios =
-              (jsonData['data'] as List).map((j) => User.fromJson(j)).toList();
-
-          setState(() {
-            usuarios = Future.value(localUsuarios);
-            allUsuarios = localUsuarios;
-            filteredUsuarios = localUsuarios;
-          });
-        } else {
-          await LocalLogger.log('Erro crítico: arquivo users.json não existe');
-          setState(() {
-            usuarios = Future.error('Sem dados locais disponíveis');
-          });
-        }
-      } catch (e, stack) {
-        await LocalLogger.log('Erro crítico ao carregar dados locais\nErro: $e\nStack: $stack');
         setState(() {
-          usuarios = Future.error('Erro ao carregar dados locais');
+          allUsuarios = [];
+          filteredUsuarios = [];
         });
+        return;
       }
-    }
 
-    if (!temInternet) {
-      await carregarDadosLocais();
-    } else {
-      setState(() => loading = true);
-      await syncService.syncUsers();
-      await carregarDadosLocais();
-      setState(() => loading = false);
+      final content = await file.readAsString();
+      final Map<String, dynamic> jsonData = json.decode(content);
+
+      final List<User> localUsuarios =
+          (jsonData['data'] as List).map((j) => User.fromJson(j)).toList();
+
+      setState(() {
+        allUsuarios = localUsuarios;
+        filteredUsuarios = localUsuarios;
+      });
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro ao carregar usuários locais\nErro: $e\nStack: $stack',
+      );
+
+      setState(() {
+        allUsuarios = [];
+        filteredUsuarios = [];
+      });
+    }
+  }
+
+  Future<void> checkConnectionAndLoadData() async {
+    setState(() {
+      loading = true;
+      erroCritico = false;
+    });
+
+    try {
+      final temInternet = await hasInternetConnection();
+
+      if (temInternet) {
+        try {
+          await syncService.syncUsers();
+        } catch (e, stack) {
+          await LocalLogger.log(
+            'Erro na sincronização de usuários\nErro: $e\nStack: $stack',
+          );
+        }
+
+        await carregarDadosLocais();
+      } else {
+        await carregarDadosLocais();
+      }
+
+      if (allUsuarios.isEmpty) {
+        setState(() {
+          erroCritico = true;
+        });
+        return;
+      }
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro crítico em AdminPage\nErro: $e\nStack: $stack',
+      );
+      setState(() {
+        erroCritico = true; 
+      });
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -105,6 +143,11 @@ class _AdminPageState extends State<AdminPage> {
           icon: Icons.admin_panel_settings,
           color: Colors.deepPurple,
         ),
+      );
+    }
+    if (erroCritico) {
+      return ErrorScreen(
+        onRetry: checkConnectionAndLoadData, 
       );
     }
     return Scaffold(
