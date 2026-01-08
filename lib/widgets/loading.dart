@@ -50,13 +50,18 @@ class _LoadingState extends State<Loading>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: FadeTransition(
-        opacity: _opacityAnimation,
-        child: Icon(
-          widget.icon,
-          size: widget.size,
-          color: widget.color ?? Theme.of(context).primaryColor,
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: FadeTransition(
+          opacity: _opacityAnimation,
+          child: Icon(
+            widget.icon,
+            size: widget.size,
+            color: widget.color ?? Theme.of(context).primaryColor,
+          ),
         ),
       ),
     );

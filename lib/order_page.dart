@@ -13,6 +13,7 @@ import 'models/client.dart';
 import 'models/product.dart';
 import 'widgets/loading.dart';
 import 'widgets/error.dart';
+import 'widgets/gradientgreen.dart';
 import 'clients_page.dart';
 import 'store_page.dart';
 import 'resume_page.dart';
@@ -141,12 +142,33 @@ class _OrdersPageState extends State<OrdersPage> {
       );
     }
 
-  if (erroCritico) {
-    return ErrorScreen(onRetry: sincronizarAoEntrar);
-  }
-
+    if (erroCritico) {
+      return ErrorScreen(onRetry: sincronizarAoEntrar);
+    }
     return Scaffold(
-      appBar: AppBar(title: Text("Pedidos"), centerTitle: true),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: GradientGreen.primary,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(15),
+              bottomRight: Radius.circular(15),
+            ),
+          ),
+        ),
+        title: const Text(
+          "Pedidos",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Container(
         height: MediaQuery.of(context).size.height,
         child: Stack(
@@ -156,159 +178,161 @@ class _OrdersPageState extends State<OrdersPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _titulo("Cliente"),
-                  _caixaSelecao(
-                    label: clienteSelecionado?.nomeCliente ?? "Selecionar Cliente",
-                    icon: Icons.person_search,
-                    onTap: () async {
-                      final r = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ClientsPage(modoSelecao: true),
-                        ),
-                      );
-                      if (r != null) setState(() => clienteSelecionado = r);
-                    },
-                  ),
-
-                  SizedBox(height: 1),
-
-                  _titulo("Forma de Pagamento"),
-                  _caixaSelecao(
-                    label: pagamentoSelecionado?['nome'] ?? "Selecionar Forma de pagamento",
-                    icon: Icons.payment,
-                    onTap: () async {
-                      final r = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SelecaoPagamentoPage(),
-                        ),
-                      );
-
-                      if (r != null) {
-                        setState(() {
-                          pagamentoSelecionado = r;
-                          aplicarJuros = false; 
-                        });
-
-                        if (r.containsKey("juros")) {
-                          jurosSelecionado = r["juros"] * 1.0;
-
-                          Future.delayed(Duration(milliseconds: 100), () {
-                            mostrarDialogoJuros();
-                          });
-                        }
-                      }
-                    },
-                  ),
-
-                  SizedBox(height: 5),
-
-                  if (pagamentoSelecionado != null) ...[
-                    SizedBox(height: 1),
-
-                    Table(
-                      border: TableBorder.symmetric(
-                        inside: BorderSide(color: Colors.grey.shade400, width: 1),
+                  // --- GRADIENTE COMEÇA AQUI ---
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: GradientGreen.primary,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(15),
+                        bottomRight: Radius.circular(15),
                       ),
-                      columnWidths: {
-                        0: FlexColumnWidth(1), // parcela
-                        1: FlexColumnWidth(2), // vencimento
-                        2: FlexColumnWidth(2), // valor parcela
-                      },
+                    ),
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                              child: Text(
-                                "Parcela",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                        _titulo("Cliente"),
+                        _caixaSelecao(
+                          label: clienteSelecionado?.nomeCliente ?? "Selecionar Cliente",
+                          icon: Icons.person_search,
+                          onTap: () async {
+                            final r = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ClientsPage(modoSelecao: true),
                               ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                              child: Text(
-                                "Vencimento",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                              child: Text(
-                                "Valor",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
+                            );
+                            if (r != null) setState(() => clienteSelecionado = r);
+                          },
                         ),
 
-                        // ---- LINHAS DAS PARCELAS ----
-                        ...gerarParcelas().map((p) {
-                          int totalParcelas = gerarParcelas().length;
-                          double valorParcela = calcularTotal() / totalParcelas;
+                        SizedBox(height: 1),
 
-                          return TableRow(
+                        _titulo("Forma de Pagamento"),
+                        _caixaSelecao(
+                          label: pagamentoSelecionado?['nome'] ?? "Selecionar Forma de pagamento",
+                          icon: Icons.payment,
+                          onTap: () async {
+                            final r = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SelecaoPagamentoPage(),
+                              ),
+                            );
+                            if (r != null) {
+                              setState(() {
+                                pagamentoSelecionado = r;
+                                aplicarJuros = false; 
+                              });
+                              if (r.containsKey("juros")) {
+                                jurosSelecionado = r["juros"] * 1.0;
+                                Future.delayed(Duration(milliseconds: 100), () {
+                                  mostrarDialogoJuros();
+                                });
+                              }
+                            }
+                          },
+                        ),
+
+                        SizedBox(height: 5),
+
+                        if (pagamentoSelecionado != null) ...[
+                          Table(
+                            border: TableBorder.symmetric(
+                              inside: BorderSide(color: Colors.grey.shade400, width: 1),
+                            ),
+                            columnWidths: {
+                              0: FlexColumnWidth(1),
+                              1: FlexColumnWidth(2),
+                              2: FlexColumnWidth(2),
+                            },
                             children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                child: Text(p["parcela"]!, textAlign: TextAlign.center),
+                              TableRow(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+                                    child: Text(
+                                      "Parcela",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+                                    child: Text(
+                                      "Vencimento",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+                                    child: Text(
+                                      "Valor",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                child: Text(p["vencimento"]!, textAlign: TextAlign.center),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                child: Text(
-                                  formatador.format(valorParcela),
-                                  textAlign: TextAlign.center,
-                                ),
+                              ...gerarParcelas().map((p) {
+                                int totalParcelas = gerarParcelas().length;
+                                double valorParcela = calcularTotal() / totalParcelas;
+                                return TableRow(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      child: Text(p["parcela"]!, textAlign: TextAlign.center),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      child: Text(p["vencimento"]!, textAlign: TextAlign.center),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      child: Text(
+                                        formatador.format(valorParcela),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                              TableRow(
+                                children: [
+                                  SizedBox(),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                    child: Text(
+                                      "Total",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                    child: Text(
+                                      formatador.format(calcularTotal()),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.green.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          );
-                        }).toList(),
-
-                        // ---- LINHA DO TOTAL ----
-                        TableRow(
-                          children: [
-                            SizedBox(),
-
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                              child: Text(
-                                "Total",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                              child: Text(
-                                formatador.format(calcularTotal()),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.green.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ],
                     ),
-
-                    SizedBox(height: 10),
-                  ],
-
+                  ),
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
@@ -362,6 +386,7 @@ class _OrdersPageState extends State<OrdersPage> {
                       },
 
                       child: Card(
+                        color: Colors.white,
                         margin: EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 2,
@@ -513,7 +538,6 @@ class _OrdersPageState extends State<OrdersPage> {
                       ),
                     );
                   }),
-
 
                   GestureDetector(
                     onTap: () async {
@@ -802,7 +826,7 @@ class _OrdersPageState extends State<OrdersPage> {
       child: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -851,22 +875,27 @@ class SelecaoPagamentoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Forma de Pagamento")),
-        body: ListView(
-          children: metodos.map((m) {
-            return Card(
-              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: ListTile(
-                title: Text(
-                  m["nome"],
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                trailing: Icon(Icons.check_circle_outline),
-                onTap: () => Navigator.pop(context, m),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text("Forma de Pagamento"),
+        centerTitle: true, 
+      ),
+      body: ListView(
+        children: metodos.map((m) {
+          return Card(
+            color: Colors.white, 
+            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: ListTile(
+              title: Text(
+                m["nome"],
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-            );
-          }).toList(),
-        ),
+              trailing: Icon(Icons.check_circle_outline),
+              onTap: () => Navigator.pop(context, m),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

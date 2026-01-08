@@ -151,6 +151,7 @@ class _AdminPageState extends State<AdminPage> {
       );
     }
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Administração"), centerTitle: true),
       body: Column(
         children: [

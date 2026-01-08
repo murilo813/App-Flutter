@@ -15,6 +15,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'background/local_log.dart';
 import 'services/http_client.dart';
 import 'models/client.dart';
+import 'widgets/gradientgreen.dart';
 import 'login.screen.dart';
 import 'store_page.dart';
 import 'clients_page.dart';
@@ -34,7 +35,15 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   int _titleTapCount = 0;
+  int? _idEmpresa;
   String? _tipoUsuario;
+
+  final Map<int, String> empresas = {
+    1: 'Bela Vista',
+    2: 'Imbuia',
+    3: 'Vila Nova',
+    4: 'Aurora',
+  };
   
   @override
   void initState() {
@@ -52,6 +61,7 @@ class HomePageState extends State<HomePage> {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
         _tipoUsuario = prefs.getString('tipo_usuario');
+        _idEmpresa = prefs.getInt('id_empresa');
       });
     })();
   }
@@ -106,6 +116,7 @@ class HomePageState extends State<HomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
+            backgroundColor: Colors.white,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -248,70 +259,133 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    String empresaNome = _idEmpresa != null ? empresas[_idEmpresa!]! : '';
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 60),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _titleTapCount++;
-                      if (_titleTapCount >= 6) {
-                        _titleTapCount = 0;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => DebugPage()),
-                        );
-                      }
-                    });
-                  },
-                  child: const Text(
-                    'AgroZecão',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                _buildHomeButton(
-                  context: context,
-                  label: 'Estoque',
-                  page: StorePage(),
-                ),
-                _buildHomeButton(
-                  context: context,
-                  label: 'Meus Clientes',
-                  page: ClientsPage(),
-                ),
-                _buildHomeButton(
-                  context: context,
-                  label: 'Pedidos',
-                  page: OrdersPage(),
-                ),
-                if (_tipoUsuario == 'admin')
-                  _buildHomeButton(
-                    context: context,
-                    label: 'Admin',
-                    page: AdminPage(),
-                  ),
-              ],
-            ),
-          ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 50),
 
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: SafeArea(
-              bottom: true,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // <--- espaço mínimo
-                child: ElevatedButton.icon(
+              // ÍCONE
+              Container(
+                width: 100,
+                height: 100,
+                decoration: const BoxDecoration(
+                  gradient: GradientGreen.accent,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Image(
+                  image: AssetImage('assets/icons/iconWhite.png'),
+                  width: 75,
+                  height: 75,
+                  fit: BoxFit.contain,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // TÍTULO
+              ShaderMask(
+                shaderCallback: (bounds) =>
+                    GradientGreen.accent.createShader(bounds),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 2), 
+                  child: Text(
+                    'AgroZecão',
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                'Agropecuária Zecão $empresaNome',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // CARDS
+              _homeCard(
+                icon: Icons.inventory_2_outlined,
+                title: 'Estoque',
+                subtitle: 'Estoque, disponível, preço',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => StorePage()),
+                ),
+              ),
+
+              _homeCard(
+                icon: Icons.people_outline,
+                title: 'Meus Clientes',
+                subtitle: 'Limites, observações',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ClientsPage()),
+                ),
+              ),
+
+              _homeCard(
+                icon: Icons.shopping_cart_outlined,
+                title: 'Pedidos',
+                subtitle: 'Envie pedidos de produtos',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => OrdersPage()),
+                ),
+              ),
+
+              if (_tipoUsuario == 'admin')
+                _homeCard(
+                  icon: Icons.admin_panel_settings_outlined,
+                  title: 'Admin',
+                  subtitle: 'Painel administrativo',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AdminPage()),
+                  ),
+                ),
+
+              const Spacer(),
+
+              // BOTÃO SAIR
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text(
+                    'Sair',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   onPressed: () async {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.clear();
@@ -323,21 +397,75 @@ class HomePageState extends State<HomePage> {
                       );
                     }
                   },
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Sair'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 16),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _homeCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.shade100),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: GradientGreen.accent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

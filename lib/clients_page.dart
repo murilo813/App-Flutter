@@ -13,6 +13,7 @@ import 'background/local_log.dart';
 import 'background/pendents.dart';
 import 'widgets/loading.dart';
 import 'widgets/error.dart';
+import 'widgets/gradientgreen.dart';
 import 'models/client.dart'; 
 import 'models/obs.dart';
 import 'secrets.dart';
@@ -62,25 +63,53 @@ class _ClientsPageState extends State<ClientsPage> {
       final file = File('${dir.path}/clientes.json');
 
       if (!await file.exists()) {
-        await LocalLogger.log(
-          'Offline e sem cache: clientes.json não encontrado',
-        );
-
-        setState(() {
-          clientes = [];
-          allClientes = [];
-          filteredClientes = [];
-          ultimaAtualizacao = null;
-        });
+        await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
         return;
       }
 
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      final List<Cliente> localClientes = (jsonData['data'] as List)
-          .map((e) => Cliente.fromJson(e))
+      List<Cliente> localClientes = (jsonData['data'] as List)
+          .map((json) => Cliente.fromJson(json))
           .toList();
+
+      final hoje = DateTime.now();
+
+      localClientes.sort((a, b) {
+        final aAniv = a.data_nasc != null &&
+            a.data_nasc!.day == hoje.day &&
+            a.data_nasc!.month == hoje.month;
+        final bAniv = b.data_nasc != null &&
+            b.data_nasc!.day == hoje.day &&
+            b.data_nasc!.month == hoje.month;
+
+        if (aAniv && !bAniv) return -1;
+        if (!aAniv && bAniv) return 1;
+
+        DateTime? ultimaObsA = allObs
+            .where((o) => o['responsavel'] == a.responsavel)
+            .map((o) => DateTime.parse(o['data']))
+            .fold<DateTime?>(null,
+                (prev, e) => prev == null || e.isAfter(prev) ? e : prev);
+
+        DateTime? ultimaObsB = allObs
+            .where((o) => o['responsavel'] == b.responsavel)
+            .map((o) => DateTime.parse(o['data']))
+            .fold<DateTime?>(null,
+                (prev, e) => prev == null || e.isAfter(prev) ? e : prev);
+
+        final refA = _maisRecenteEntre(ultimaObsA, a.ultima_compra);
+        final refB = _maisRecenteEntre(ultimaObsB, b.ultima_compra);
+
+        if (refA == null && refB == null) {
+          return a.nomeCliente.compareTo(b.nomeCliente);
+        }
+        if (refA == null) return 1;
+        if (refB == null) return -1;
+
+        return refA.compareTo(refB);
+      });
 
       setState(() {
         clientes = localClientes;
@@ -90,14 +119,12 @@ class _ClientsPageState extends State<ClientsPage> {
       });
     } catch (e, stack) {
       await LocalLogger.log(
-        'Erro ao carregar clientes locais\nErro: $e\nStack: $stack',
+        'Erro ao carregar dados locais\nErro: $e\nStack: $stack',
       );
-
       setState(() {
         clientes = [];
         allClientes = [];
         filteredClientes = [];
-        ultimaAtualizacao = null;
       });
     }
   }
@@ -172,190 +199,214 @@ class _ClientsPageState extends State<ClientsPage> {
         ),
       );
     }
+
     if (erroCritico) {
       return ErrorScreen(
-        onRetry: checkConnectionAndLoadData, 
+        onRetry: checkConnectionAndLoadData,
       );
     }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Meus Clientes'),
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.grey[100],
       body: Stack(
         children: [
           Column(
             children: [
-              if (ultimaAtualizacao != null)
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
-                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              // Top gradient container (AppBar fake)
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: GradientGreen.primary,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(15),
+                    bottomRight: Radius.circular(15),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: const EdgeInsets.only(
+                  top: 40, // status bar
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                ),
+                child: Column(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.green, size: 18),
-                    const SizedBox(width: 4),
-                    const Text('0–10 dias'),
-                    const SizedBox(width: 16),
-                    Icon(Icons.info_outline, color: Colors.orangeAccent, size: 18),
-                    const SizedBox(width: 4),
-                    const Text('11–25 dias'),
-                    const SizedBox(width: 16),
-                    Icon(Icons.info_outline, color: Colors.red, size: 18),
-                    const SizedBox(width: 4),
-                    const Text('+25 dias'),
+                    SizedBox(
+                      height: 35,
+                      child: Stack(
+                        children: [
+                          if (Navigator.canPop(context))
+                            const Positioned(
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: BackButton(color: Colors.white),
+                            ),
+                          Center(
+                            child: Text(
+                              'Meus Clientes',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (ultimaAtualizacao != null)
+                      Text(
+                        'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    // Caixa de pesquisa branca
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'Pesquisar cliente',
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.search),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        onChanged: _filterClientes,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
-              
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    labelText: 'Pesquisar cliente',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  onChanged: _filterClientes,
-                ),
-              ),
+              // Lista de clientes
               Expanded(
-                child: clientes.isEmpty
-                    ? const Center(
-                        child: Text('Nenhum cliente disponível'),
+                child: filteredClientes.isEmpty
+                    ? Center(
+                        child: Text(
+                          clientes.isEmpty
+                              ? 'Nenhum cliente disponível'
+                              : 'Nenhum cliente encontrado',
+                        ),
                       )
-                    : Builder(
-                        builder: (context) {
-                          filteredClientes = _getFilteredClientes();
+                    : ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 160),
+                        itemCount: filteredClientes.length,
+                        separatorBuilder: (_, __) => const Divider(),
+                        itemBuilder: (context, index) {
+                          final cliente = filteredClientes[index];
+                          final hoje = DateTime.now();
+                          final isAniversariante = cliente.data_nasc != null &&
+                              cliente.data_nasc!.day == hoje.day &&
+                              cliente.data_nasc!.month == hoje.month;
 
-                          if (filteredClientes.isEmpty) {
-                            return const Center(
-                              child: Text('Nenhum cliente encontrado'),
-                            );
+                          // Cálculo cor do ícone
+                          final obsDoResponsavel = allObs
+                              .where((o) => o['responsavel'] == cliente.responsavel)
+                              .toList();
+
+                          DateTime? ultimaObs;
+                          if (obsDoResponsavel.isNotEmpty) {
+                            obsDoResponsavel.sort((a, b) =>
+                                DateTime.parse(b['data'])
+                                    .compareTo(DateTime.parse(a['data'])));
+                            ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
                           }
 
-                          final hoje = DateTime.now();
+                          Color corIcone;
+                          if (ultimaObs != null) {
+                            final dias = DateTime.now().difference(ultimaObs).inDays;
+                            corIcone = dias <= 10
+                                ? Colors.green
+                                : (dias <= 25 ? Colors.orangeAccent : Colors.red);
+                          } else if (cliente.ultima_compra != null) {
+                            final diasSemCompra =
+                                DateTime.now().difference(cliente.ultima_compra!).inDays;
+                            corIcone = diasSemCompra <= 10
+                                ? Colors.green
+                                : (diasSemCompra <= 25 ? Colors.orangeAccent : Colors.red);
+                          } else {
+                            corIcone = Colors.grey;
+                          }
 
-                          return ListView.separated(
-                            padding: const EdgeInsets.only(bottom: 160),
-                            itemCount: filteredClientes.length,
-                            separatorBuilder: (_, __) => const Divider(),
-                            itemBuilder: (context, index) {
-                              final cliente = filteredClientes[index];
-
-                              final isAniversariante =
-                                  cliente.data_nasc != null &&
-                                  cliente.data_nasc!.day == hoje.day &&
-                                  cliente.data_nasc!.month == hoje.month;
-
-                              final obsDoResponsavel = allObs
-                                  .where((o) => o['responsavel'] == cliente.responsavel)
-                                  .toList();
-
-                              DateTime? ultimaObs;
-                              if (obsDoResponsavel.isNotEmpty) {
-                                obsDoResponsavel.sort(
-                                  (a, b) => DateTime.parse(b['data'])
-                                      .compareTo(DateTime.parse(a['data'])),
-                                );
-                                ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
-                              }
-
-                              Color corIcone;
-                              if (ultimaObs != null) {
-                                final dias =
-                                    DateTime.now().difference(ultimaObs).inDays;
-                                if (dias <= 10) {
-                                  corIcone = Colors.green;
-                                } else if (dias <= 25) {
-                                  corIcone = Colors.orangeAccent;
-                                } else {
-                                  corIcone = Colors.red;
-                                }
-                              } else if (cliente.ultima_compra != null) {
-                                final diasSemCompra =
-                                    DateTime.now().difference(cliente.ultima_compra!).inDays;
-                                if (diasSemCompra <= 10) {
-                                  corIcone = Colors.green;
-                                } else if (diasSemCompra <= 25) {
-                                  corIcone = Colors.orangeAccent;
-                                } else {
-                                  corIcone = Colors.red;
-                                }
-                              } else {
-                                corIcone = Colors.grey;
-                              }
-
-                              return ListTile(
-                                onTap: widget.modoSelecao
-                                    ? () => Navigator.pop(context, cliente)
-                                    : null,
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                          return ListTile(
+                            onTap: widget.modoSelecao
+                                ? () => Navigator.pop(context, cliente)
+                                : null,
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  cliente.nomeCliente,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              if (isAniversariante)
-                                                const Icon(
-                                                  Icons.cake,
-                                                  color: Colors.pink,
-                                                  size: 18,
-                                                ),
-                                              const SizedBox(width: 8),
-                                              GestureDetector(
-                                                onTap: () =>
-                                                    _mostrarInfoCliente(context, cliente),
-                                                child: Icon(
-                                                  Icons.info_outline,
-                                                  color: corIcone,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          if (cliente.responsavel.isNotEmpty)
-                                            Text(
-                                              'Responsável: ${cliente.responsavel}',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.grey[700],
+                                          Expanded(
+                                            child: Text(
+                                              cliente.nomeCliente,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
+                                          ),
+                                          if (isAniversariante)
+                                            const Icon(
+                                              Icons.cake,
+                                              color: Colors.pink,
+                                              size: 18,
+                                            ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () =>
+                                                _mostrarInfoCliente(context, cliente),
+                                            child: Icon(
+                                              Icons.info_outline,
+                                              color: corIcone,
+                                              size: 20,
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    ),
-                                  ],
+                                      if (cliente.responsavel.isNotEmpty)
+                                        Text(
+                                          'Responsável: ${cliente.responsavel}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                                subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: _buildLimitesTable(cliente),
-                                ),
-                              );
-                            },
+                              ],
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: _buildLimitesTable(cliente),
+                            ),
                           );
                         },
                       ),
               ),
             ],
           ),
+          // Totais flutuantes
           Positioned(
             bottom: 16,
             left: 16,

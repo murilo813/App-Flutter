@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,11 +10,12 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:android_id/android_id.dart';
 import 'package:flutter/services.dart';
 
-import 'home_page.dart';
-import 'secrets.dart';
 import 'background/pendents.dart';
 import 'services/http_client.dart';
 import 'services/auth_headers.dart';
+import 'widgets/gradientgreen.dart';
+import 'home_page.dart';
+import 'secrets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  String? loginError;
+  String? networkError;
 
   final String baseUrl = backendUrl;
   bool _checkingLogin = true;
@@ -87,7 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      loginError = null;
+    });
 
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
@@ -106,11 +113,18 @@ class _LoginScreenState extends State<LoginScreen> {
         'assinatura': assinatura,
       };
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(body),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode(body),
+          )
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('Tempo de conexão esgotado');
+            },
+          );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -134,19 +148,29 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
         );
-      } else if (response.statusCode == 401) {
-        _showError('Usuário ou senha inválidos');
-      } else if (response.statusCode == 429) {
-        _showError('Muitas tentativas de login. Tente novamente em 5 minutos.');
-      } else {
-        _showError('Erro no servidor: ${response.body}');
+      } 
+      // ✅ Todos os erros de login do servidor
+      else if (response.statusCode == 401 || response.statusCode == 404 || response.statusCode == 429) {
+        setState(() {
+          loginError = 'Usuário ou senha inválidos';
+        });
+      } 
+      // ✅ Outros status do servidor (500, 502, etc) → modal de conexão
+      else {
+        _showConnectionError('Não foi possível conectar ao servidor.');
       }
-    } on SocketException {
-      _showError('Sem conexão com a internet.');
-    } catch (e, stack) {
-      print('Exceção capturada no login: $e\nStackTrace: $stack');
-      _showError('Erro de conexão: $e');
-    } finally {
+    } 
+    // ✅ Problemas de rede real
+    on SocketException {
+      _showConnectionError('Sem conexão com a internet.');
+    } 
+    on TimeoutException {
+      _showConnectionError('Tempo de conexão esgotado.');
+    } 
+    catch (e) {
+      _showConnectionError('Erro de conexão. Tente novamente.');
+    } 
+    finally {
       setState(() => isLoading = false);
     }
   }
@@ -190,101 +214,264 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     if (_checkingLogin) {
-      return Scaffold(
-        backgroundColor: Color(0xFF2E2E2E),
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.greenAccent[700]),
+      return const Scaffold(
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: GradientGreen.primary,
+          ),
+          child: Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
         ),
       );
     }
     return Scaffold(
-      backgroundColor: Color(0xFF2E2E2E),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 400,
-            padding: EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: GradientGreen.primary,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxWidth: 420),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-              ],
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'AGROZECÃO',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      color: Colors.greenAccent[700],
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Login',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 24),
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: 'Nome de usuário',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Digite o nome de usuário' : null,
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Senha',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Digite a senha' : null,
-                  ),
-                  SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : login, 
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[600],
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ÍCONE
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          gradient: GradientGreen.accent,
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 12,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Image(
+                          image: AssetImage('assets/icons/iconWhite.png'),
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              'ENTRAR',
-                              style: TextStyle(fontSize: 16, color: Colors.white),
+
+                      const SizedBox(height: 16),
+
+                      ShaderMask(
+                        shaderCallback: (bounds) =>
+                            GradientGreen.accent.createShader(bounds),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 2), 
+                          child: Text(
+                            'AgroZecão',
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.2,
                             ),
-                    ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      const Text(
+                        'Faça login para continuar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _inputLabel('Nome de usuário'),
+                      _inputField(
+                        controller: _usernameController,
+                        hint: 'Digite seu usuário',
+                        obscure: false,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Digite o usuário' : null,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _inputLabel('Senha'),
+                      _inputField(
+                        controller: _passwordController,
+                        hint: 'Digite sua senha',
+                        obscure: true,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Digite a senha' : null,
+                      ),
+
+                      if (loginError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            loginError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 6),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: Ink(
+                            decoration: const BoxDecoration(
+                              gradient: GradientGreen.accent,
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
+                            child: Center(
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Entrar',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _inputLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    required bool obscure,
+    required String? Function(String?) validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: GradientGreen.accent,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.all(1.5), 
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        validator: validator,
+        decoration: InputDecoration(
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none, 
+          ),
+        ),
+      ),
+    );
+  }
+  void _showConnectionError(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wifi_off, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Sem conexão',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Fechar',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ),
       ),

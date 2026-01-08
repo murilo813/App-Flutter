@@ -14,6 +14,7 @@ import 'background/local_log.dart';
 import 'background/pendents.dart';
 import 'widgets/loading.dart';
 import 'widgets/error.dart';
+import 'widgets/gradientgreen.dart';
 import 'secrets.dart';
 
 class StorePage extends StatefulWidget {
@@ -35,13 +36,6 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
   String? ultimaAtualizacao;
   bool loading = true;
     bool erroCritico = false;
-
-  final Map<String, String> storeLabels = {
-    'aurora': 'Aurora',
-    'imbuia': 'Imbuia',
-    'vilanova': 'Vila Nova',
-    'belavista': 'Bela Vista',
-  };
 
   @override
   void initState() {
@@ -187,7 +181,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     if (loading) {
       return const Scaffold(
         body: Loading(
-          icon: Icons.backpack,
+          icon: Icons.inventory_2_outlined,
           color: Colors.green,
         ),
       );
@@ -200,32 +194,95 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(tituloLoja),
-      ),
+      backgroundColor: Colors.grey[100],
       body: Column(
         children: [
-          if (ultimaAtualizacao != null)
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: GradientGreen.primary,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                labelText: 'Pesquisar',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: _filterProducts,
+            padding: const EdgeInsets.only(
+              top: 40, 
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            child: Column(
+              children: [
+                // AppBar fake
+                SizedBox(
+                  height: 35, // altura típica do AppBar
+                  child: Stack(
+                    children: [
+                      // Botão de voltar
+                      if (Navigator.canPop(context))
+                        const Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: BackButton(color: Colors.white),
+                        ),
+                      // Título centralizado na tela
+                      Center(
+                        child: Text(
+                          widget.modoSelecao ? "Selecionar Produto" : "Estoque",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+                // Última atualização
+                if (ultimaAtualizacao != null)
+                  Text(
+                    'Última atualização: ${_formatarData(ultimaAtualizacao!)}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white70,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                // Caixa de pesquisa branca com borda arredondada
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Pesquisar',
+                      border: InputBorder.none,
+                      prefixIcon: Icon(Icons.search),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: _filterProducts,
+                  ),
+                ),
+              ],
             ),
           ),
+
+          // Resto da página
           Expanded(
             child: loading
                 ? const Center(
@@ -243,6 +300,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                         ),
                       )
                     : ListView.separated(
+                        padding: const EdgeInsets.all(8),
                         itemCount: filteredProducts.length,
                         separatorBuilder: (context, index) =>
                             const Divider(height: 20, thickness: 1),
@@ -285,7 +343,8 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                                   children: [
                                     Text(
                                       product.marca,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style:
+                                          const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     if (product.aplicacao.isNotEmpty)
                                       Text(
@@ -301,34 +360,13 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                                 _buildEstoqueTable(product),
                               ],
                             ),
-                            trailing: null, // botão/ícone futuro
+                            trailing: null,
                           );
                         },
                       ),
-          )
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildEstoqueDisponivelRow(String store, int estoque, int disponivel) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start, 
-      children: [
-        Text(
-          'Estoque $store:',
-          style: TextStyle(fontWeight: FontWeight.bold), 
-        ),
-        SizedBox(width: 5), 
-        Text('$estoque'), 
-        SizedBox(width: 26), 
-        Text(
-          'Disponível:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        SizedBox(width: 5), 
-        Text('$disponivel'),
-      ],
     );
   }
 

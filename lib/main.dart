@@ -9,6 +9,7 @@ import 'services/anniversary.dart';
 import 'background/background_task.dart';
 import 'background/pendents.dart';
 import 'background/local_log.dart';
+import 'widgets/gradientgreen.dart';
 import 'home_page.dart';
 import 'login.screen.dart';
 import 'secrets.dart';
@@ -112,6 +113,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AgroZecão',
       navigatorKey: navigatorKey,
+      theme: ThemeData(
+        fontFamily: 'Inter',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+      ),
       home: LoginScreen(),
       supportedLocales: const [
         Locale('pt', 'BR'),

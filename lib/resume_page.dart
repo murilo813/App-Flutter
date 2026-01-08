@@ -69,6 +69,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
     print(widget.clienteId);
     print(widget.pagamentoId);
     return Scaffold(
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
