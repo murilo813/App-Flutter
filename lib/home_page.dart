@@ -5,11 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'background/local_log.dart';
@@ -22,9 +19,7 @@ import 'store_page.dart';
 import 'clients_page.dart';
 import 'order_page.dart';
 import 'admin_page.dart';
-import 'secrets.dart';
 import 'debug_page.dart';
-import 'pendents_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -90,7 +85,7 @@ class HomePageState extends State<HomePage> {
 
   Future<void> anniversaryModal({bool force = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    final hojeStr = DateTime.now().toIso8601String().substring(0, 10);
+    DateTime.now().toIso8601String().substring(0, 10);
 
     final jaExibido = prefs.getBool('aniversario_ja_exibido') ?? false;
     if (jaExibido && !force) return;
@@ -507,38 +502,6 @@ class HomePageState extends State<HomePage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHomeButton({
-    required BuildContext context,
-    required String label,
-    required Widget page,
-    Color? color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: SizedBox(
-        width: 250,
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => page));
-          },
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            backgroundColor: color ?? Colors.green[700],
-            foregroundColor: Colors.white,
-            textStyle: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          child: Text(label),
         ),
       ),
     );

@@ -57,8 +57,6 @@ class _PendentsPageState extends State<PendentsPage> {
                 itemCount: pendentes.length,
                 itemBuilder: (_, i) {
                   final item = pendentes[i];
-                  final body = item['body'];
-                  final createdAt = item['created_at'];
 
                   return Card(
                     margin: const EdgeInsets.symmetric(

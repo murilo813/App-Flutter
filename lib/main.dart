@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
-import 'services/sync_service.dart';
-import 'services/anniversary.dart';
 import 'background/background_task.dart';
 import 'background/pendents.dart';
 import 'background/local_log.dart';
-import 'widgets/gradientgreen.dart';
 import 'home_page.dart';
 import 'login.screen.dart';
 import 'secrets.dart';

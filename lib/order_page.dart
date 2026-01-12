@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'services/sync_service.dart';
@@ -625,8 +622,8 @@ class _OrdersPageState extends State<OrdersPage> {
 
   void editarPrecoProduto(Product p) {
     final precoPadrao =
-        (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
-    final precoMinimo = p.preco_minimo ?? 0.0;
+        (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1);
+    final precoMinimo = p.preco_minimo;
 
     String precoInicial = (p.precoEditado ?? precoPadrao)
         .toStringAsFixed(2)
@@ -742,7 +739,7 @@ class _OrdersPageState extends State<OrdersPage> {
       final qtd = quantidades[p.id] ?? 1;
 
       final precoBase =
-          (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+          (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1);
       final preco = p.precoEditado ?? precoBase;
 
       total += preco * qtd;

@@ -1,30 +1,28 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:alembro/main.dart';
+import '../lib/widgets/gradientgreen.dart'; // Ajuste o caminho conforme seu projeto
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Testes de Gradiente - GradientGreen', () {
+    
+    test('O gradiente primário deve ter as 3 cores corretas', () {
+      // Verificamos se a lista de cores tem 3 itens
+      expect(GradientGreen.primary.colors.length, 3);
+      
+      // Verificamos se a primeira cor é o verde escuro esperado
+      expect(GradientGreen.primary.colors[0], const Color(0xFF15803D));
+      
+      // Verificamos se o alinhamento está correto
+      expect(GradientGreen.primary.begin, Alignment.bottomLeft);
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('O gradiente accent deve ter as 2 cores corretas', () {
+      expect(GradientGreen.accent.colors.length, 2);
+      expect(GradientGreen.accent.colors[1], const Color(0xFF049271));
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('Os stops do gradiente primário devem estar distribuídos corretamente', () {
+      expect(GradientGreen.primary.stops, [0.0, 0.5, 1.0]);
+    });
   });
 }

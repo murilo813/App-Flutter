@@ -15,7 +15,6 @@ import 'widgets/loading.dart';
 import 'widgets/error.dart';
 import 'widgets/gradientgreen.dart';
 import 'models/client.dart';
-import 'models/obs.dart';
 import 'secrets.dart';
 
 class ClientsPage extends StatefulWidget {
@@ -490,7 +489,6 @@ class _ClientsPageState extends State<ClientsPage> {
     BuildContext context,
     Cliente cliente,
   ) async {
-    final hoje = DateTime.now();
     DateTime selectedDate = DateTime.now();
 
     bool visitado = false;
@@ -973,40 +971,6 @@ class _ClientsPageState extends State<ClientsPage> {
       decimalDigits: 2,
     );
     return formatter.format(valor).trim();
-  }
-
-  void _mostrarAvisoInicial() {
-    Future.delayed(Duration(milliseconds: 500), () {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Aviso importante'),
-              content: Text(
-                'Lembrando:\n\n'
-                '• Limite e Saldo BM são os limites cadastrados no sistema.\n'
-                '• Limite e Saldo C são calculados com base no último ano de compras do cliente.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Entendi'),
-                ),
-              ],
-            ),
-      );
-    });
-  }
-
-  void _verificarAvisoInicial() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jaMostrou = prefs.getBool('aviso_mostrado') ?? false;
-
-    if (!jaMostrou) {
-      _mostrarAvisoInicial();
-
-      await prefs.setBool('aviso_mostrado', true);
-    }
   }
 
   String _formatarData(String dataIso) {

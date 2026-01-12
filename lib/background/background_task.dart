@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 
 import '../services/sync_service.dart';
 import '../services/anniversary.dart';

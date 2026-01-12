@@ -5,14 +5,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:android_id/android_id.dart';
 import 'package:flutter/services.dart';
 
 import 'background/pendents.dart';
 import 'services/http_client.dart';
-import 'services/auth_headers.dart';
 import 'widgets/loading.dart';
 import 'widgets/gradientgreen.dart';
 import 'home_page.dart';
@@ -82,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final httpClient = HttpClient();
-      final response = await httpClient.post('/uso', payload);
+      await httpClient.post('/uso', payload);
     } catch (e) {
       await OfflineQueue.addToQueue({
         'url': '/uso',
@@ -212,22 +210,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showError(String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Erro'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          )
-        ],
-      ),
-    );
-  }
-
   Future<void> _verificarAtualizacaoApp() async {
     final prefs = await SharedPreferences.getInstance();
     final packageInfo = await PackageInfo.fromPlatform();
@@ -239,7 +221,6 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('app_version', versaoAtual);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -345,8 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _inputField(
                         controller: _passwordController,
                         hint: 'Digite sua senha',
-                        obscure: t
-                        ue,
+                        obscure: true,
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Digite a senha' : null,
                       ),

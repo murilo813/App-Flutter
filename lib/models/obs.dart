@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class Obs {
   final int idCliente;
   final String nome_cliente;

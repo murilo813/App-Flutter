@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-import 'local_log.dart';
+// import 'local_log.dart';
 import '../services/http_client.dart';
 
 class OfflineQueue {

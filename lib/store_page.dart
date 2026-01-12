@@ -3,13 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'models/product.dart';
 import 'services/sync_service.dart';
-import 'services/http_client.dart';
 import 'background/local_log.dart';
 import 'background/pendents.dart';
 import 'widgets/loading.dart';
@@ -188,7 +186,6 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
     if (erroCritico) {
       return ErrorScreen(onRetry: checkConnectionAndLoadData);
     }
-    final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -500,7 +497,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
     termo = termo.trim();
     if (termo.isEmpty) return;
 
-    final queue = await OfflineQueue.getQueue() ?? [];
+    final queue = await OfflineQueue.getQueue();
 
     final outros = queue.where((item) => item['url'] != '/pesquisa').toList();
 
