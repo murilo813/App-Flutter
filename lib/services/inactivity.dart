@@ -35,8 +35,7 @@ class InactivityService {
         return;
       }
 
-      final clientesPorResponsavel =
-          _agruparPorResponsavel(inativos);
+      final clientesPorResponsavel = _agruparPorResponsavel(inativos);
 
       await _enviarNotificacoes(
         clientesPorResponsavel,
@@ -45,7 +44,6 @@ class InactivityService {
       );
 
       await _marcarEnvioHoje();
-
     } catch (e, stack) {
       await LocalLogger.log(
         "Erro em InactivityService.checkAndNotify: $e\n$stack",
@@ -80,8 +78,7 @@ class InactivityService {
     await prefs.setString('ultimo_inativo', _hojeStr());
   }
 
-  static String _hojeStr() =>
-      DateTime.now().toIso8601String().substring(0, 10);
+  static String _hojeStr() => DateTime.now().toIso8601String().substring(0, 10);
 
   static void _logInicio() {
     print("Função inactivity chamada");
@@ -98,9 +95,7 @@ class InactivityService {
     final jsonMap = json.decode(await file.readAsString());
     if (jsonMap['data'] is! List) return [];
 
-    return jsonMap['data']
-        .map<Cliente>((e) => Cliente.fromJson(e))
-        .toList();
+    return jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
   }
 
   static Future<Map<int, DateTime>> _carregarUltimaObsPorCliente() async {
@@ -132,8 +127,7 @@ class InactivityService {
     DateTime hoje,
   ) {
     return clientes.where((c) {
-      final ultimaAtividade =
-          _ultimaAtividade(c, ultimaObsPorCliente);
+      final ultimaAtividade = _ultimaAtividade(c, ultimaObsPorCliente);
       return ultimaAtividade != null &&
           hoje.difference(ultimaAtividade).inDays >= _diasInatividade;
     }).toList();
@@ -174,17 +168,17 @@ class InactivityService {
   ) async {
     for (final entry in clientesPorResponsavel.entries) {
       final diasInativos = entry.value
-          .map((c) =>
-              hoje.difference(
-                _ultimaAtividade(c, ultimaObsPorCliente)!,
-              ).inDays)
+          .map(
+            (c) =>
+                hoje
+                    .difference(_ultimaAtividade(c, ultimaObsPorCliente)!)
+                    .inDays,
+          )
           .reduce((a, b) => a > b ? a : b);
 
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
-          id: DateTime.now()
-              .millisecondsSinceEpoch
-              .remainder(100000),
+          id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
           channelKey: 'inactivity_channel',
           title: '🕒 ${entry.key} não está sendo atendido!',
           body: 'Já fazem $diasInativos dias sem comprar.',

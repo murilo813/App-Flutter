@@ -8,7 +8,7 @@ class Cliente {
   final double limite_calculado;
   final double saldo_limite_calculado;
   final DateTime? data_nasc;
-  final int id; 
+  final int id;
   final DateTime? ultima_compra;
   final int? lista_preco;
 
@@ -33,13 +33,15 @@ class Cliente {
       saldo_limite: json['saldo_limite'],
       limite_calculado: json['limite_calculado'],
       saldo_limite_calculado: json['saldo_limite_calculado'],
-      data_nasc: json['data_nasc'] != null && json['data_nasc'] != ""
-          ? DateTime.parse(json['data_nasc'])
-          : null,
-      id: json['id_cliente'], 
-      ultima_compra: json['ultima_compra'] != null && json['ultima_compra'] != ""
-          ? DateTime.parse(json['ultima_compra'])
-          : null,
+      data_nasc:
+          json['data_nasc'] != null && json['data_nasc'] != ""
+              ? DateTime.parse(json['data_nasc'])
+              : null,
+      id: json['id_cliente'],
+      ultima_compra:
+          json['ultima_compra'] != null && json['ultima_compra'] != ""
+              ? DateTime.parse(json['ultima_compra'])
+              : null,
       lista_preco: json['lista_preco'] ?? 1,
     );
   }

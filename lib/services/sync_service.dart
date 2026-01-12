@@ -21,7 +21,8 @@ class SyncService {
   final String baseUrl;
   final HttpClient client;
 
-  SyncService({this.baseUrl = backendUrl}) : client = HttpClient(baseUrl: backendUrl);
+  SyncService({this.baseUrl = backendUrl})
+    : client = HttpClient(baseUrl: backendUrl);
 
   // ESTOQUE
   Future<List<Product>> syncEstoqueGeral() async {
@@ -32,11 +33,15 @@ class SyncService {
 
       final produtos = data.map(Product.fromJson).toList();
 
-      final file = File('${(await getApplicationDocumentsDirectory()).path}/estoque_geral.json');
-      await file.writeAsString(json.encode({
-        'lastSynced': DateTime.now().toIso8601String(),
-        'data': data,
-      }));
+      final file = File(
+        '${(await getApplicationDocumentsDirectory()).path}/estoque_geral.json',
+      );
+      await file.writeAsString(
+        json.encode({
+          'lastSynced': DateTime.now().toIso8601String(),
+          'data': data,
+        }),
+      );
 
       return produtos;
     }
@@ -44,7 +49,9 @@ class SyncService {
   }
 
   Future<List<Product>> lerEstoqueLocalGeral() async {
-    final file = File('${(await getApplicationDocumentsDirectory()).path}/estoque_geral.json');
+    final file = File(
+      '${(await getApplicationDocumentsDirectory()).path}/estoque_geral.json',
+    );
     if (!await file.exists()) return [];
 
     final data = await compute(parseLocalList, await file.readAsString());
@@ -62,11 +69,15 @@ class SyncService {
     if (response.statusCode == 200) {
       final data = await compute(parseApiList, response.body);
 
-      final file = File('${(await getApplicationDocumentsDirectory()).path}/clientes.json');
-      await file.writeAsString(json.encode({
-        'lastSynced': DateTime.now().toIso8601String(),
-        'data': data,
-      }));
+      final file = File(
+        '${(await getApplicationDocumentsDirectory()).path}/clientes.json',
+      );
+      await file.writeAsString(
+        json.encode({
+          'lastSynced': DateTime.now().toIso8601String(),
+          'data': data,
+        }),
+      );
 
       return data.map(Cliente.fromJson).toList();
     }
@@ -74,7 +85,9 @@ class SyncService {
   }
 
   Future<List<Cliente>> lerClientesLocal() async {
-    final file = File('${(await getApplicationDocumentsDirectory()).path}/clientes.json');
+    final file = File(
+      '${(await getApplicationDocumentsDirectory()).path}/clientes.json',
+    );
     if (!await file.exists()) return [];
 
     final data = await compute(parseLocalList, await file.readAsString());
@@ -88,11 +101,15 @@ class SyncService {
     if (response.statusCode == 200) {
       final data = await compute(parseApiList, response.body);
 
-      final file = File('${(await getApplicationDocumentsDirectory()).path}/users.json');
-      await file.writeAsString(json.encode({
-        'lastSynced': DateTime.now().toIso8601String(),
-        'data': data,
-      }));
+      final file = File(
+        '${(await getApplicationDocumentsDirectory()).path}/users.json',
+      );
+      await file.writeAsString(
+        json.encode({
+          'lastSynced': DateTime.now().toIso8601String(),
+          'data': data,
+        }),
+      );
 
       return data.map(User.fromJson).toList();
     }
@@ -100,7 +117,9 @@ class SyncService {
   }
 
   Future<List<User>> lerUsersLocal() async {
-    final file = File('${(await getApplicationDocumentsDirectory()).path}/users.json');
+    final file = File(
+      '${(await getApplicationDocumentsDirectory()).path}/users.json',
+    );
     if (!await file.exists()) return [];
 
     final data = await compute(parseLocalList, await file.readAsString());
@@ -118,11 +137,15 @@ class SyncService {
     if (response.statusCode == 200) {
       final data = await compute(parseApiList, response.body);
 
-      final file = File('${(await getApplicationDocumentsDirectory()).path}/observacoes.json');
-      await file.writeAsString(json.encode({
-        'lastSynced': DateTime.now().toIso8601String(),
-        'data': data,
-      }));
+      final file = File(
+        '${(await getApplicationDocumentsDirectory()).path}/observacoes.json',
+      );
+      await file.writeAsString(
+        json.encode({
+          'lastSynced': DateTime.now().toIso8601String(),
+          'data': data,
+        }),
+      );
 
       return data.map(Obs.fromJson).toList();
     }
@@ -130,13 +153,16 @@ class SyncService {
   }
 
   Future<List<Obs>> lerObservacoesLocal() async {
-    final file = File('${(await getApplicationDocumentsDirectory()).path}/observacoes.json');
+    final file = File(
+      '${(await getApplicationDocumentsDirectory()).path}/observacoes.json',
+    );
     if (!await file.exists()) return [];
 
     final data = await compute(parseLocalList, await file.readAsString());
     return data.map(Obs.fromJson).toList();
   }
 }
+
 class SyncProgress {
   final String etapa;
   final double progresso;

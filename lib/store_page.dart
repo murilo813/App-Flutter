@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:convert'; 
-import 'dart:io';  
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -20,22 +20,20 @@ import 'secrets.dart';
 class StorePage extends StatefulWidget {
   final bool modoSelecao;
 
-  const StorePage({
-    this.modoSelecao = false,
-  });
+  const StorePage({this.modoSelecao = false});
 
   @override
   _StorePageState createState() => _StorePageState();
 }
 
-class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
+class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
   late List<Product> filteredProducts;
   late List<Product> allProducts = [];
   late TextEditingController searchController;
   final SyncService syncService = SyncService();
   String? ultimaAtualizacao;
   bool loading = true;
-    bool erroCritico = false;
+  bool erroCritico = false;
 
   @override
   void initState() {
@@ -62,14 +60,13 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-
-    if (state == AppLifecycleState.paused || 
-        state == AppLifecycleState.inactive || 
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       _savePesquisa(searchController.text);
     }
   }
-  
+
   Future<bool> hasInternetConnection() async {
     try {
       final response = await http
@@ -102,9 +99,8 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      final List<Product> localProducts = (jsonData['data'] as List)
-          .map((e) => Product.fromJson(e))
-          .toList();
+      final List<Product> localProducts =
+          (jsonData['data'] as List).map((e) => Product.fromJson(e)).toList();
 
       setState(() {
         allProducts = localProducts;
@@ -164,7 +160,9 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
         });
       }
     } catch (e, stack) {
-      await LocalLogger.log('Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack');
+      await LocalLogger.log(
+        'Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack',
+      );
       setState(() {
         erroCritico = true;
       });
@@ -184,16 +182,11 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(
-        body: Loading(
-          icon: Icons.inventory_2_outlined,
-          color: Colors.white,
-        ),
+        body: Loading(icon: Icons.inventory_2_outlined, color: Colors.white),
       );
     }
     if (erroCritico) {
-      return ErrorScreen(
-        onRetry: checkConnectionAndLoadData, 
-      );
+      return ErrorScreen(onRetry: checkConnectionAndLoadData);
     }
     final tituloLoja = widget.modoSelecao ? "Selecionar Produto" : "Estoque";
 
@@ -210,7 +203,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
               ),
             ),
             padding: const EdgeInsets.only(
-              top: 40, 
+              top: 40,
               left: 16,
               right: 16,
               bottom: 16,
@@ -276,8 +269,10 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                       hintText: 'Pesquisar',
                       border: InputBorder.none,
                       prefixIcon: Icon(Icons.search),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                     onChanged: _filterProducts,
                   ),
@@ -288,86 +283,90 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
           // Resto da página
           Expanded(
-            child: loading
-                ? const Center(
-                    child: Loading(
-                      icon: Icons.inventory,
-                      color: Colors.green,
-                    ),
-                  )
-                : filteredProducts.isEmpty
-                    ? Center(
-                        child: Text(
-                          searchController.text.isEmpty
-                              ? 'Nenhum produto disponível'
-                              : 'Nenhum produto encontrado',
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: filteredProducts.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 20, thickness: 1),
-                        itemBuilder: (context, index) {
-                          final product = filteredProducts[index];
-
-                          return ListTile(
-                            onTap: widget.modoSelecao
-                                ? () => Navigator.pop(context, product)
-                                : null,
-                            splashColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${product.id}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  product.nome,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product.marca,
-                                      style:
-                                          const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    if (product.aplicacao.isNotEmpty)
-                                      Text(
-                                        product.aplicacao,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                _buildEstoqueTable(product),
-                              ],
-                            ),
-                            trailing: null,
-                          );
-                        },
+            child:
+                loading
+                    ? const Center(
+                      child: Loading(
+                        icon: Icons.inventory,
+                        color: Colors.green,
                       ),
+                    )
+                    : filteredProducts.isEmpty
+                    ? Center(
+                      child: Text(
+                        searchController.text.isEmpty
+                            ? 'Nenhum produto disponível'
+                            : 'Nenhum produto encontrado',
+                      ),
+                    )
+                    : ListView.separated(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: filteredProducts.length,
+                      separatorBuilder:
+                          (context, index) =>
+                              const Divider(height: 20, thickness: 1),
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+
+                        return ListTile(
+                          onTap:
+                              widget.modoSelecao
+                                  ? () => Navigator.pop(context, product)
+                                  : null,
+                          splashColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${product.id}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              Text(
+                                product.nome,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.marca,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (product.aplicacao.isNotEmpty)
+                                    Text(
+                                      product.aplicacao,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              _buildEstoqueTable(product),
+                            ],
+                          ),
+                          trailing: null,
+                        );
+                      },
+                    ),
           ),
         ],
       ),
@@ -378,16 +377,24 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     final List<List<String>> rows = [
       ['Aurora', '${product.estoqueAurora}', '${product.disponivelAurora}'],
       ['Imbuia', '${product.estoqueImbuia}', '${product.disponivelImbuia}'],
-      ['Vila Nova', '${product.estoqueVilanova}', '${product.disponivelVilanova}'],
-      ['Bela Vista', '${product.estoqueBelavista}', '${product.disponivelBelavista}'],
+      [
+        'Vila Nova',
+        '${product.estoqueVilanova}',
+        '${product.disponivelVilanova}',
+      ],
+      [
+        'Bela Vista',
+        '${product.estoqueBelavista}',
+        '${product.disponivelBelavista}',
+      ],
     ];
 
     return Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       columnWidths: const {
         0: FlexColumnWidth(), // nome da loja
-        1: FixedColumnWidth(60),  // QTD
-        2: FixedColumnWidth(60),  // DISP
+        1: FixedColumnWidth(60), // QTD
+        2: FixedColumnWidth(60), // DISP
       },
       border: TableBorder.symmetric(
         inside: BorderSide(width: 1, color: Colors.grey.shade300),
@@ -401,7 +408,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Preço 1 
+                  // Preço 1
                   RichText(
                     text: TextSpan(
                       style: TextStyle(fontSize: 13, color: Colors.black),
@@ -410,13 +417,11 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                           text: 'Preço 1: ',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        TextSpan(
-                          text: '${product.preco1Formatado}',
-                        ),
+                        TextSpan(text: '${product.preco1Formatado}'),
                       ],
                     ),
                   ),
-                  // Preço 2 
+                  // Preço 2
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: RichText(
@@ -427,9 +432,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
                             text: 'Preço 2: ',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          TextSpan(
-                            text: '${product.preco2Formatado}',
-                          ),
+                          TextSpan(text: '${product.preco2Formatado}'),
                         ],
                       ),
                     ),
@@ -442,7 +445,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Center(
                 child: Text(
-                  'Qtd', 
+                  'Qtd',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -454,7 +457,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Center(
                 child: Text(
-                  'Disp', 
+                  'Disp',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -507,7 +510,8 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
         (item) => item['url'] == '/pesquisa',
         orElse: () => {},
       );
-      if (itemPesquisa.containsKey('body') && itemPesquisa['body'].containsKey('termos')) {
+      if (itemPesquisa.containsKey('body') &&
+          itemPesquisa['body'].containsKey('termos')) {
         termosSalvos = List<String>.from(itemPesquisa['body']['termos']);
       }
     }
@@ -528,21 +532,24 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
     await OfflineQueue.addToQueue(data);
   }
 
-
   void _filterProducts(String query) {
     setState(() {
       final lowerQuery = query.toLowerCase();
 
-      filteredProducts = allProducts.where((product) {
-        final matchesName = product.nome.toLowerCase().contains(lowerQuery);
-        final matchesMarca = product.marca.toLowerCase().contains(lowerQuery);
-        final matchesId = product.id.toString().contains(lowerQuery);
-        final matchesAplicacao = product.aplicacao.toLowerCase().contains(lowerQuery);
-        return matchesName || matchesMarca || matchesId || matchesAplicacao;
-      }).toList();
+      filteredProducts =
+          allProducts.where((product) {
+            final matchesName = product.nome.toLowerCase().contains(lowerQuery);
+            final matchesMarca = product.marca.toLowerCase().contains(
+              lowerQuery,
+            );
+            final matchesId = product.id.toString().contains(lowerQuery);
+            final matchesAplicacao = product.aplicacao.toLowerCase().contains(
+              lowerQuery,
+            );
+            return matchesName || matchesMarca || matchesId || matchesAplicacao;
+          }).toList();
     });
   }
-
 
   String _formatarData(String dataIso) {
     final dt = DateTime.parse(dataIso).toLocal();

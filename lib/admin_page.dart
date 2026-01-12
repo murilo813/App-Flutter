@@ -56,9 +56,7 @@ class _AdminPageState extends State<AdminPage> {
       final file = File('${dir.path}/users.json');
 
       if (!await file.exists()) {
-        await LocalLogger.log(
-          'Offline e sem cache: users.json não encontrado',
-        );
+        await LocalLogger.log('Offline e sem cache: users.json não encontrado');
 
         setState(() {
           allUsuarios = [];
@@ -123,7 +121,7 @@ class _AdminPageState extends State<AdminPage> {
         'Erro crítico em AdminPage\nErro: $e\nStack: $stack',
       );
       setState(() {
-        erroCritico = true; 
+        erroCritico = true;
       });
     } finally {
       if (mounted) setState(() => loading = false);
@@ -140,10 +138,7 @@ class _AdminPageState extends State<AdminPage> {
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(
-        body: Loading(
-          icon: Icons.admin_panel_settings,
-          color: Colors.white,
-        ),
+        body: Loading(icon: Icons.admin_panel_settings, color: Colors.white),
       );
     }
 
@@ -218,16 +213,21 @@ class _AdminPageState extends State<AdminPage> {
                       hintText: 'Pesquisar usuário',
                       border: InputBorder.none,
                       prefixIcon: Icon(Icons.search),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                     onChanged: (q) {
                       setState(() {
-                        filteredUsuarios = allUsuarios
-                            .where((u) => u.usuario
-                                .toLowerCase()
-                                .contains(q.toLowerCase()))
-                            .toList();
+                        filteredUsuarios =
+                            allUsuarios
+                                .where(
+                                  (u) => u.usuario.toLowerCase().contains(
+                                    q.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
                       });
                     },
                   ),
@@ -249,8 +249,10 @@ class _AdminPageState extends State<AdminPage> {
                 GestureDetector(
                   onTap: () => _abrirDialogNovoUsuario(),
                   child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 8,
+                    ),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: GradientGreen.primary,
@@ -264,8 +266,9 @@ class _AdminPageState extends State<AdminPage> {
                         Text(
                           "Novo Usuário",
                           style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -293,16 +296,19 @@ class _AdminPageState extends State<AdminPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: u.tipo_usuario.toLowerCase() == 'admin'
-                      ? Colors.green.shade100
-                      : Colors.blue.shade50,
+                  backgroundColor:
+                      u.tipo_usuario.toLowerCase() == 'admin'
+                          ? Colors.green.shade100
+                          : Colors.blue.shade50,
                   child: Image.asset(
                     u.tipo_usuario.toLowerCase() == 'admin'
                         ? 'assets/icons/adminicon.png'
                         : 'assets/icons/usericon.png',
                     width: 24,
                     height: 24,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.grey),
+                    errorBuilder:
+                        (_, __, ___) =>
+                            const Icon(Icons.person, color: Colors.grey),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -321,13 +327,17 @@ class _AdminPageState extends State<AdminPage> {
                       Text(
                         "${u.usuario} | ${'*' * 8}",
                         style: TextStyle(
-                          color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
+                          color:
+                              u.ativo == 'N' ? Colors.white54 : Colors.black87,
                         ),
                       ),
                       Text(
                         "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
                         style: TextStyle(
-                          color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
+                          color:
+                              u.ativo == 'N'
+                                  ? Colors.white54
+                                  : Colors.grey[700],
                         ),
                       ),
                     ],
@@ -347,7 +357,11 @@ class _AdminPageState extends State<AdminPage> {
             left: 8,
             child: Text(
               u.id.toString(),
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
             ),
           ),
           Positioned(
@@ -381,26 +395,27 @@ class _AdminPageState extends State<AdminPage> {
   void _mostrarAvisoIdVendedor(String mensagem) {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height * 0.4,
-        left: 20,
-        right: 20,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              mensagem,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 14),
+      builder:
+          (context) => Positioned(
+            top: MediaQuery.of(context).size.height * 0.4,
+            left: 20,
+            right: 20,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  mensagem,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
     );
 
     overlay.insert(overlayEntry);
@@ -428,7 +443,9 @@ class _AdminPageState extends State<AdminPage> {
             return Dialog(
               backgroundColor: Colors.white,
               insetPadding: EdgeInsets.all(20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Container(
                 width: double.infinity,
                 height: MediaQuery.of(context).size.height * 0.7,
@@ -438,7 +455,10 @@ class _AdminPageState extends State<AdminPage> {
                   children: [
                     Text(
                       "Novo Usuário",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Divider(height: 20),
                     Expanded(
@@ -447,40 +467,56 @@ class _AdminPageState extends State<AdminPage> {
                           children: [
                             // id empresa
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: idEmpresaController,
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Id Empresa",
                                 ),
                               ),
                             ),
                             // usuario
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: usuarioController,
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Usuário",
                                 ),
                               ),
                             ),
                             // senha
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: senhaController,
                                 obscureText: !senhaVisivel,
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Senha",
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      senhaVisivel ? Icons.visibility : Icons.visibility_off,
+                                      senhaVisivel
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
                                     ),
                                     onPressed: () {
                                       setStateDialog(() {
@@ -493,78 +529,112 @@ class _AdminPageState extends State<AdminPage> {
                             ),
                             // nomeclatura
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: nomeclaturaController,
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Nomeclatura",
                                 ),
                               ),
                             ),
                             // id vendedor
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: idVendedorController,
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Id Vendedor",
                                 ),
                                 onTap: () {
                                   _mostrarAvisoIdVendedor(
-                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes."
+                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes.",
                                   );
                                 },
                               ),
                             ),
                             // credito
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: creditoDispController,
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   labelText: "Crédito para novos dispositivos",
                                 ),
                               ),
                             ),
                             // tipo de usuario
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
                                 children: [
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(() => tipoUsuario = "user"),
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => tipoUsuario = "user",
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: tipoUsuario == "user"
-                                              ? Colors.blue.shade100
-                                              : Colors.transparent,
-                                          border: Border.all(color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color:
+                                              tipoUsuario == "user"
+                                                  ? Colors.blue.shade100
+                                                  : Colors.transparent,
+                                          border: Border.all(
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.person,
-                                                color: tipoUsuario == "user"
-                                                    ? Colors.blue
-                                                    : Colors.grey),
+                                            Icon(
+                                              Icons.person,
+                                              color:
+                                                  tipoUsuario == "user"
+                                                      ? Colors.blue
+                                                      : Colors.grey,
+                                            ),
                                             SizedBox(width: 8),
-                                            Text("User",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: tipoUsuario == "user"
+                                            Text(
+                                              "User",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    tipoUsuario == "user"
                                                         ? Colors.blue
-                                                        : Colors.grey)),
+                                                        : Colors.grey,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -573,31 +643,47 @@ class _AdminPageState extends State<AdminPage> {
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(() => tipoUsuario = "admin"),
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => tipoUsuario = "admin",
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: tipoUsuario == "admin"
-                                              ? Colors.green.shade100
-                                              : Colors.transparent,
-                                          border: Border.all(color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color:
+                                              tipoUsuario == "admin"
+                                                  ? Colors.green.shade100
+                                                  : Colors.transparent,
+                                          border: Border.all(
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.admin_panel_settings,
-                                                color: tipoUsuario == "admin"
-                                                    ? Colors.green
-                                                    : Colors.grey),
+                                            Icon(
+                                              Icons.admin_panel_settings,
+                                              color:
+                                                  tipoUsuario == "admin"
+                                                      ? Colors.green
+                                                      : Colors.grey,
+                                            ),
                                             SizedBox(width: 8),
-                                            Text("Admin",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: tipoUsuario == "admin"
+                                            Text(
+                                              "Admin",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    tipoUsuario == "admin"
                                                         ? Colors.green
-                                                        : Colors.grey)),
+                                                        : Colors.grey,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -626,8 +712,12 @@ class _AdminPageState extends State<AdminPage> {
                               "nome": usuarioController.text.trim(),
                               "senha": senhaController.text.trim(),
                               "nomeclatura": nomeclaturaController.text.trim(),
-                              "id_vendedor": int.parse(idVendedorController.text),
-                              "registrar_novo_disp": int.parse(creditoDispController.text),
+                              "id_vendedor": int.parse(
+                                idVendedorController.text,
+                              ),
+                              "registrar_novo_disp": int.parse(
+                                creditoDispController.text,
+                              ),
                               "tipo_usuario": tipoUsuario,
                             };
 
@@ -636,16 +726,24 @@ class _AdminPageState extends State<AdminPage> {
                                 (body["senha"] as String).isEmpty ||
                                 (body["nomeclatura"] as String).isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Preencha todos os campos obrigatórios")),
+                                SnackBar(
+                                  content: Text(
+                                    "Preencha todos os campos obrigatórios",
+                                  ),
+                                ),
                               );
                               return;
                             }
 
                             final httpClient = HttpClient();
                             final url = "/usuarios";
-                            final nextId = allUsuarios.isNotEmpty
-                              ? allUsuarios.map((u) => u.id).reduce((a, b) => a > b ? a : b) + 1
-                              : 1;
+                            final nextId =
+                                allUsuarios.isNotEmpty
+                                    ? allUsuarios
+                                            .map((u) => u.id)
+                                            .reduce((a, b) => a > b ? a : b) +
+                                        1
+                                    : 1;
 
                             // cria na memoria para UI
                             final newUser = User(
@@ -653,7 +751,8 @@ class _AdminPageState extends State<AdminPage> {
                               id_empresa: body["id_empresa"] as int,
                               usuario: body["nome"] as String,
                               id_vendedor: body["id_vendedor"] as int,
-                              registrar_novo_disp: body["registrar_novo_disp"] as int,
+                              registrar_novo_disp:
+                                  body["registrar_novo_disp"] as int,
                               tipo_usuario: body["tipo_usuario"] as String,
                               nomeclatura: body["nomeclatura"] as String,
                             );
@@ -664,11 +763,14 @@ class _AdminPageState extends State<AdminPage> {
                             });
 
                             // atualiza banco local
-                            final dir = await getApplicationDocumentsDirectory();
+                            final dir =
+                                await getApplicationDocumentsDirectory();
                             final file = File('${dir.path}/users.json');
                             if (await file.exists()) {
                               final content = await file.readAsString();
-                              final Map<String, dynamic> jsonData = json.decode(content);
+                              final Map<String, dynamic> jsonData = json.decode(
+                                content,
+                              );
                               final usersList = jsonData['data'] as List;
                               usersList.add(body);
                               await file.writeAsString(json.encode(jsonData));
@@ -683,7 +785,10 @@ class _AdminPageState extends State<AdminPage> {
                                 print("Erro do servidor: ${response.body}");
                               }
                             } catch (e) {
-                              await OfflineQueue.addToQueue({'url': url, 'body': body});
+                              await OfflineQueue.addToQueue({
+                                'url': url,
+                                'body': body,
+                              });
                               print("Sem conexão, criação salva no pendente.");
                             }
 
@@ -706,17 +811,22 @@ class _AdminPageState extends State<AdminPage> {
   void _abrirDialogEditarUsuario(User u) {
     int registrarNovoDisp = u.registrar_novo_disp;
     TextEditingController senhaController = TextEditingController();
-    TextEditingController vendedorController =
-        TextEditingController(text: u.id_vendedor.toString());
-    TextEditingController novoDispController =
-        TextEditingController(text: registrarNovoDisp.toString());
+    TextEditingController vendedorController = TextEditingController(
+      text: u.id_vendedor.toString(),
+    );
+    TextEditingController novoDispController = TextEditingController(
+      text: registrarNovoDisp.toString(),
+    );
     bool senhaVisivel = false;
 
-    String tipoUsuario = (u.tipo_usuario.toLowerCase() == "admin") ? "admin" : "user";
+    String tipoUsuario =
+        (u.tipo_usuario.toLowerCase() == "admin") ? "admin" : "user";
 
     String ativoLocal = (u.ativo?.trim().toUpperCase() == 'S') ? 'S' : 'N';
-    
-    print('Usuário ${u.id} ativo: "${u.ativo}", ativoLocal inicial: $ativoLocal');
+
+    print(
+      'Usuário ${u.id} ativo: "${u.ativo}", ativoLocal inicial: $ativoLocal',
+    );
 
     showDialog(
       context: context,
@@ -736,15 +846,22 @@ class _AdminPageState extends State<AdminPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Editar Usuário",
-                        style:
-                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      "Editar Usuário",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Divider(height: 20),
-                    Text(u.id.toString(),
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600])),
+                    Text(
+                      u.id.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                      ),
+                    ),
                     SizedBox(height: 2),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -753,13 +870,21 @@ class _AdminPageState extends State<AdminPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(u.nomeclatura,
-                                  style: TextStyle(
-                                      fontSize: 22, fontWeight: FontWeight.bold)),
+                              Text(
+                                u.nomeclatura,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               SizedBox(height: 2),
-                              Text(_nomeEmpresa(u.id_empresa),
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.grey[700])),
+                              Text(
+                                _nomeEmpresa(u.id_empresa),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -772,7 +897,9 @@ class _AdminPageState extends State<AdminPage> {
                           children: [
                             // Senha
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: senhaController,
                                 obscureText: !senhaVisivel,
@@ -782,9 +909,11 @@ class _AdminPageState extends State<AdminPage> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   suffixIcon: IconButton(
-                                    icon: Icon(senhaVisivel
-                                        ? Icons.visibility
-                                        : Icons.visibility_off),
+                                    icon: Icon(
+                                      senhaVisivel
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
                                     onPressed: () {
                                       setStateDialog(() {
                                         senhaVisivel = !senhaVisivel;
@@ -796,7 +925,9 @@ class _AdminPageState extends State<AdminPage> {
                             ),
                             // Vendedor
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: vendedorController,
                                 keyboardType: TextInputType.number,
@@ -808,14 +939,16 @@ class _AdminPageState extends State<AdminPage> {
                                 ),
                                 onTap: () {
                                   _mostrarAvisoIdVendedor(
-                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes."
+                                    "Id = 0 não puxa nenhum cliente, Id = 1 puxa todos os clientes.",
                                   );
                                 },
                               ),
                             ),
                             // Novo dispositivo
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: TextField(
                                 controller: novoDispController,
                                 keyboardType: TextInputType.number,
@@ -829,39 +962,54 @@ class _AdminPageState extends State<AdminPage> {
                             ),
                             // Tipo de usuário
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
                                 children: [
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(
-                                          () => tipoUsuario = "user"),
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => tipoUsuario = "user",
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: tipoUsuario == "user"
-                                              ? Colors.blue.shade100
-                                              : Colors.transparent,
+                                          color:
+                                              tipoUsuario == "user"
+                                                  ? Colors.blue.shade100
+                                                  : Colors.transparent,
                                           border: Border.all(
-                                              color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.person,
-                                                color: tipoUsuario == "user"
-                                                    ? Colors.blue
-                                                    : Colors.grey),
+                                            Icon(
+                                              Icons.person,
+                                              color:
+                                                  tipoUsuario == "user"
+                                                      ? Colors.blue
+                                                      : Colors.grey,
+                                            ),
                                             SizedBox(width: 8),
-                                            Text("User",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: tipoUsuario == "user"
+                                            Text(
+                                              "User",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    tipoUsuario == "user"
                                                         ? Colors.blue
-                                                        : Colors.grey)),
+                                                        : Colors.grey,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -870,34 +1018,47 @@ class _AdminPageState extends State<AdminPage> {
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(
-                                          () => tipoUsuario = "admin"),
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => tipoUsuario = "admin",
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: tipoUsuario == "admin"
-                                              ? Colors.green.shade100
-                                              : Colors.transparent,
+                                          color:
+                                              tipoUsuario == "admin"
+                                                  ? Colors.green.shade100
+                                                  : Colors.transparent,
                                           border: Border.all(
-                                              color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.admin_panel_settings,
-                                                color: tipoUsuario == "admin"
-                                                    ? Colors.green
-                                                    : Colors.grey),
+                                            Icon(
+                                              Icons.admin_panel_settings,
+                                              color:
+                                                  tipoUsuario == "admin"
+                                                      ? Colors.green
+                                                      : Colors.grey,
+                                            ),
                                             SizedBox(width: 8),
-                                            Text("Admin",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: tipoUsuario == "admin"
+                                            Text(
+                                              "Admin",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    tipoUsuario == "admin"
                                                         ? Colors.green
-                                                        : Colors.grey)),
+                                                        : Colors.grey,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -908,26 +1069,41 @@ class _AdminPageState extends State<AdminPage> {
                             ),
 
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
                                 children: [
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(() => ativoLocal = 'S'), 
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => ativoLocal = 'S',
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: ativoLocal == 'S' ? Colors.green.shade200 : Colors.transparent,
-                                          border: Border.all(color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color:
+                                              ativoLocal == 'S'
+                                                  ? Colors.green.shade200
+                                                  : Colors.transparent,
+                                          border: Border.all(
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Center(
                                           child: Text(
                                             "ATIVO",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: ativoLocal == 'S' ? Colors.green.shade800 : Colors.grey,
+                                              color:
+                                                  ativoLocal == 'S'
+                                                      ? Colors.green.shade800
+                                                      : Colors.grey,
                                             ),
                                           ),
                                         ),
@@ -937,21 +1113,34 @@ class _AdminPageState extends State<AdminPage> {
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setStateDialog(() => ativoLocal = 'N'), 
+                                      onTap:
+                                          () => setStateDialog(
+                                            () => ativoLocal = 'N',
+                                          ),
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: ativoLocal == 'N' ? Colors.red.shade200 : Colors.transparent,
-                                          border: Border.all(color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color:
+                                              ativoLocal == 'N'
+                                                  ? Colors.red.shade200
+                                                  : Colors.transparent,
+                                          border: Border.all(
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Center(
                                           child: Text(
                                             "INATIVO",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: ativoLocal == 'N' ? Colors.red.shade800 : Colors.grey,
+                                              color:
+                                                  ativoLocal == 'N'
+                                                      ? Colors.red.shade800
+                                                      : Colors.grey,
                                             ),
                                           ),
                                         ),
@@ -980,17 +1169,20 @@ class _AdminPageState extends State<AdminPage> {
                             if (senhaController.text.isNotEmpty) {
                               body['senha'] = senhaController.text;
                             }
-                            if (vendedorController.text != u.id_vendedor.toString()) {
-                              body['id_vendedor'] =
-                                  int.tryParse(vendedorController.text);
+                            if (vendedorController.text !=
+                                u.id_vendedor.toString()) {
+                              body['id_vendedor'] = int.tryParse(
+                                vendedorController.text,
+                              );
                             }
                             if (novoDispController.text !=
                                 u.registrar_novo_disp.toString()) {
-                              body['registrar_novo_disp'] =
-                                  int.tryParse(novoDispController.text);
+                              body['registrar_novo_disp'] = int.tryParse(
+                                novoDispController.text,
+                              );
                             }
 
-                            body['tipo_usuario'] = tipoUsuario; 
+                            body['tipo_usuario'] = tipoUsuario;
 
                             body['ativo'] = ativoLocal;
 
@@ -1003,8 +1195,9 @@ class _AdminPageState extends State<AdminPage> {
                             final url = "/usuarios/${u.id}";
 
                             // Atualiza memória
-                            final index =
-                                allUsuarios.indexWhere((usr) => usr.id == u.id);
+                            final index = allUsuarios.indexWhere(
+                              (usr) => usr.id == u.id,
+                            );
                             if (index != -1) {
                               final oldUser = allUsuarios[index];
                               final updatedUser = User(
@@ -1015,7 +1208,7 @@ class _AdminPageState extends State<AdminPage> {
                                     body['id_vendedor'] ?? oldUser.id_vendedor,
                                 registrar_novo_disp:
                                     body['registrar_novo_disp'] ??
-                                        oldUser.registrar_novo_disp,
+                                    oldUser.registrar_novo_disp,
                                 tipo_usuario: tipoUsuario,
                                 nomeclatura: oldUser.nomeclatura,
                                 ativo: body['ativo'] ?? oldUser.ativo,
@@ -1023,22 +1216,27 @@ class _AdminPageState extends State<AdminPage> {
 
                               setState(() {
                                 allUsuarios[index] = updatedUser;
-                                final fIndex =
-                                    filteredUsuarios.indexWhere((usr) => usr.id == u.id);
+                                final fIndex = filteredUsuarios.indexWhere(
+                                  (usr) => usr.id == u.id,
+                                );
                                 if (fIndex != -1)
                                   filteredUsuarios[fIndex] = updatedUser;
                               });
                             }
 
                             // Atualiza local
-                            final dir = await getApplicationDocumentsDirectory();
+                            final dir =
+                                await getApplicationDocumentsDirectory();
                             final file = File('${dir.path}/users.json');
                             if (await file.exists()) {
                               final content = await file.readAsString();
-                              final Map<String, dynamic> jsonData = json.decode(content);
+                              final Map<String, dynamic> jsonData = json.decode(
+                                content,
+                              );
                               final usersList = jsonData['data'];
-                              final jsonIndex =
-                                  usersList.indexWhere((item) => item['id'] == u.id);
+                              final jsonIndex = usersList.indexWhere(
+                                (item) => item['id'] == u.id,
+                              );
                               if (jsonIndex != -1) {
                                 body.forEach((key, value) {
                                   usersList[jsonIndex][key] = value;
@@ -1049,23 +1247,31 @@ class _AdminPageState extends State<AdminPage> {
 
                             // Atualiza backend
                             try {
-                              final response = await httpClient.patch(url, body);
+                              final response = await httpClient.patch(
+                                url,
+                                body,
+                              );
                               if (response.statusCode == 200) {
                                 print("Alterações salvas com sucesso!");
                               } else {
                                 print("Erro do servidor: ${response.body}");
                               }
                             } catch (e) {
-                              await OfflineQueue.addToQueue({'url': url, 'body': body});
-                              print("Sem conexão, alteração salva no pendente.");
+                              await OfflineQueue.addToQueue({
+                                'url': url,
+                                'body': body,
+                              });
+                              print(
+                                "Sem conexão, alteração salva no pendente.",
+                              );
                             }
 
                             Navigator.pop(context);
                           },
                           child: Text("Salvar"),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

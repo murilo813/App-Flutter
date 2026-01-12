@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:convert'; 
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,7 +14,7 @@ import 'background/pendents.dart';
 import 'widgets/loading.dart';
 import 'widgets/error.dart';
 import 'widgets/gradientgreen.dart';
-import 'models/client.dart'; 
+import 'models/client.dart';
 import 'models/obs.dart';
 import 'secrets.dart';
 
@@ -35,7 +35,7 @@ class _ClientsPageState extends State<ClientsPage> {
   late TextEditingController searchController;
   String? ultimaAtualizacao;
   bool loading = true;
-    bool erroCritico = false;
+  bool erroCritico = false;
   final SyncService syncService = SyncService();
 
   @override
@@ -70,17 +70,20 @@ class _ClientsPageState extends State<ClientsPage> {
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      List<Cliente> localClientes = (jsonData['data'] as List)
-          .map((json) => Cliente.fromJson(json))
-          .toList();
+      List<Cliente> localClientes =
+          (jsonData['data'] as List)
+              .map((json) => Cliente.fromJson(json))
+              .toList();
 
       final hoje = DateTime.now();
 
       localClientes.sort((a, b) {
-        final aAniv = a.data_nasc != null &&
+        final aAniv =
+            a.data_nasc != null &&
             a.data_nasc!.day == hoje.day &&
             a.data_nasc!.month == hoje.month;
-        final bAniv = b.data_nasc != null &&
+        final bAniv =
+            b.data_nasc != null &&
             b.data_nasc!.day == hoje.day &&
             b.data_nasc!.month == hoje.month;
 
@@ -90,14 +93,18 @@ class _ClientsPageState extends State<ClientsPage> {
         DateTime? ultimaObsA = allObs
             .where((o) => o['responsavel'] == a.responsavel)
             .map((o) => DateTime.parse(o['data']))
-            .fold<DateTime?>(null,
-                (prev, e) => prev == null || e.isAfter(prev) ? e : prev);
+            .fold<DateTime?>(
+              null,
+              (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
+            );
 
         DateTime? ultimaObsB = allObs
             .where((o) => o['responsavel'] == b.responsavel)
             .map((o) => DateTime.parse(o['data']))
-            .fold<DateTime?>(null,
-                (prev, e) => prev == null || e.isAfter(prev) ? e : prev);
+            .fold<DateTime?>(
+              null,
+              (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
+            );
 
         final refA = _maisRecenteEntre(ultimaObsA, a.ultima_compra);
         final refB = _maisRecenteEntre(ultimaObsB, b.ultima_compra);
@@ -167,7 +174,7 @@ class _ClientsPageState extends State<ClientsPage> {
 
         if (allClientes.isEmpty) {
           setState(() {
-            erroCritico = true; 
+            erroCritico = true;
           });
         }
       }
@@ -193,17 +200,12 @@ class _ClientsPageState extends State<ClientsPage> {
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(
-        body: Loading(
-          icon: Icons.people,
-          color: Colors.white,
-        ),
+        body: Loading(icon: Icons.people, color: Colors.white),
       );
     }
 
     if (erroCritico) {
-      return ErrorScreen(
-        onRetry: checkConnectionAndLoadData,
-      );
+      return ErrorScreen(onRetry: checkConnectionAndLoadData);
     }
 
     return Scaffold(
@@ -242,7 +244,9 @@ class _ClientsPageState extends State<ClientsPage> {
                             ),
                           Center(
                             child: Text(
-                              widget.modoSelecao ? 'Selecionar cliente' : 'Meus Clientes',
+                              widget.modoSelecao
+                                  ? 'Selecionar cliente'
+                                  : 'Meus Clientes',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,
@@ -297,112 +301,148 @@ class _ClientsPageState extends State<ClientsPage> {
               ),
               // Lista de clientes
               Expanded(
-                child: filteredClientes.isEmpty
-                    ? Center(
-                        child: Text(
-                          clientes.isEmpty
-                              ? 'Nenhum cliente disponível'
-                              : 'Nenhum cliente encontrado',
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.only(bottom: 160),
-                        itemCount: filteredClientes.length,
-                        separatorBuilder: (_, __) => const Divider(),
-                        itemBuilder: (context, index) {
-                          final cliente = filteredClientes[index];
-                          final hoje = DateTime.now();
-                          final isAniversariante = cliente.data_nasc != null &&
-                              cliente.data_nasc!.day == hoje.day &&
-                              cliente.data_nasc!.month == hoje.month;
+                child:
+                    filteredClientes.isEmpty
+                        ? const Center(
+                          child: Text(
+                            'Você não tem clientes em sua carteira',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                        : filteredClientes.isEmpty
+                        ? const Center(
+                          child: Text(
+                            'Nenhum cliente encontrado',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                        : ListView.separated(
+                          padding: const EdgeInsets.only(bottom: 160),
+                          itemCount: filteredClientes.length,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemBuilder: (context, index) {
+                            final cliente = filteredClientes[index];
+                            final hoje = DateTime.now();
+                            final isAniversariante =
+                                cliente.data_nasc != null &&
+                                cliente.data_nasc!.day == hoje.day &&
+                                cliente.data_nasc!.month == hoje.month;
 
-                          // Cálculo cor do ícone
-                          final obsDoResponsavel = allObs
-                              .where((o) => o['responsavel'] == cliente.responsavel)
-                              .toList();
+                            // Cálculo cor do ícone
+                            final obsDoResponsavel =
+                                allObs
+                                    .where(
+                                      (o) =>
+                                          o['responsavel'] ==
+                                          cliente.responsavel,
+                                    )
+                                    .toList();
 
-                          DateTime? ultimaObs;
-                          if (obsDoResponsavel.isNotEmpty) {
-                            obsDoResponsavel.sort((a, b) =>
-                                DateTime.parse(b['data'])
-                                    .compareTo(DateTime.parse(a['data'])));
-                            ultimaObs = DateTime.parse(obsDoResponsavel.first['data']);
-                          }
+                            DateTime? ultimaObs;
+                            if (obsDoResponsavel.isNotEmpty) {
+                              obsDoResponsavel.sort(
+                                (a, b) => DateTime.parse(
+                                  b['data'],
+                                ).compareTo(DateTime.parse(a['data'])),
+                              );
+                              ultimaObs = DateTime.parse(
+                                obsDoResponsavel.first['data'],
+                              );
+                            }
 
-                          Color corIcone;
-                          if (ultimaObs != null) {
-                            final dias = DateTime.now().difference(ultimaObs).inDays;
-                            corIcone = dias <= 10
-                                ? Colors.green
-                                : (dias <= 25 ? Colors.orangeAccent : Colors.red);
-                          } else if (cliente.ultima_compra != null) {
-                            final diasSemCompra =
-                                DateTime.now().difference(cliente.ultima_compra!).inDays;
-                            corIcone = diasSemCompra <= 10
-                                ? Colors.green
-                                : (diasSemCompra <= 25 ? Colors.orangeAccent : Colors.red);
-                          } else {
-                            corIcone = Colors.grey;
-                          }
+                            Color corIcone;
+                            if (ultimaObs != null) {
+                              final dias =
+                                  DateTime.now().difference(ultimaObs).inDays;
+                              corIcone =
+                                  dias <= 10
+                                      ? Colors.green
+                                      : (dias <= 25
+                                          ? Colors.orangeAccent
+                                          : Colors.red);
+                            } else if (cliente.ultima_compra != null) {
+                              final diasSemCompra =
+                                  DateTime.now()
+                                      .difference(cliente.ultima_compra!)
+                                      .inDays;
+                              corIcone =
+                                  diasSemCompra <= 10
+                                      ? Colors.green
+                                      : (diasSemCompra <= 25
+                                          ? Colors.orangeAccent
+                                          : Colors.red);
+                            } else {
+                              corIcone = Colors.grey;
+                            }
 
-                          return ListTile(
-                            onTap: widget.modoSelecao
-                                ? () => Navigator.pop(context, cliente)
-                                : null,
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              cliente.nomeCliente,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                            return ListTile(
+                              onTap:
+                                  widget.modoSelecao
+                                      ? () => Navigator.pop(context, cliente)
+                                      : null,
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                cliente.nomeCliente,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          if (isAniversariante)
-                                            const Icon(
-                                              Icons.cake,
-                                              color: Colors.pink,
-                                              size: 18,
+                                            if (isAniversariante)
+                                              const Icon(
+                                                Icons.cake,
+                                                color: Colors.pink,
+                                                size: 18,
+                                              ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap:
+                                                  () => _mostrarInfoCliente(
+                                                    context,
+                                                    cliente,
+                                                  ),
+                                              child: Icon(
+                                                Icons.info_outline,
+                                                color: corIcone,
+                                                size: 20,
+                                              ),
                                             ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: () =>
-                                                _mostrarInfoCliente(context, cliente),
-                                            child: Icon(
-                                              Icons.info_outline,
-                                              color: corIcone,
-                                              size: 20,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (cliente.responsavel.isNotEmpty)
-                                        Text(
-                                          'Responsável: ${cliente.responsavel}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700],
-                                          ),
+                                          ],
                                         ),
-                                    ],
+                                        if (cliente.responsavel.isNotEmpty)
+                                          Text(
+                                            'Responsável: ${cliente.responsavel}',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: _buildLimitesTable(cliente),
-                            ),
-                          );
-                        },
-                      ),
+                                ],
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: _buildLimitesTable(cliente),
+                              ),
+                            );
+                          },
+                        ),
               ),
             ],
           ),
@@ -423,7 +463,7 @@ class _ClientsPageState extends State<ClientsPage> {
     if (b == null) return a;
     return a.isAfter(b) ? a : b;
   }
-  
+
   Future<void> atualizarObservacoesLocais() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -446,7 +486,10 @@ class _ClientsPageState extends State<ClientsPage> {
     }
   }
 
-  Future<void> _mostrarInfoCliente(BuildContext context, Cliente cliente) async {
+  Future<void> _mostrarInfoCliente(
+    BuildContext context,
+    Cliente cliente,
+  ) async {
     final hoje = DateTime.now();
     DateTime selectedDate = DateTime.now();
 
@@ -463,262 +506,323 @@ class _ClientsPageState extends State<ClientsPage> {
         final Map<String, dynamic> jsonData = json.decode(content);
         final List<dynamic> allObs = jsonData['data'] ?? [];
 
-        clienteObs = allObs
-            .where((o) => o['responsavel'] == cliente.responsavel)
-            .map((o) => Map<String, dynamic>.from(o))
-            .toList();
+        clienteObs =
+            allObs
+                .where((o) => o['responsavel'] == cliente.responsavel)
+                .map((o) => Map<String, dynamic>.from(o))
+                .toList();
       }
     } catch (e, stack) {
-      await LocalLogger.log('Erro ao carregar observações do cliente ${cliente.id}: $e\nStackTrace: $stack');
+      await LocalLogger.log(
+        'Erro ao carregar observações do cliente ${cliente.id}: $e\nStackTrace: $stack',
+      );
     }
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Center(
-          child: Text(
-            'Nova observação',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            title: Center(
+              child: Text(
+                'Nova observação',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Data:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          const Text(
+                            'Data:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  selectedDate = picked;
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
+                      Row(
+                        children: [
+                          const Text(
+                            'Visitado:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          child: Text(
-                            '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          Checkbox(
+                            value: visitado,
+                            activeColor: Colors.green,
+                            onChanged: (val) {
+                              visitado = val ?? false;
+                              (context as Element)
+                                  .markNeedsBuild(); // Atualiza UI
+                            },
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      const Text(
-                        'Visitado:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Checkbox(
-                        value: visitado,
-                        activeColor: Colors.green,
-                        onChanged: (val) {
-                          visitado = val ?? false;
-                          (context as Element).markNeedsBuild(); // Atualiza UI
-                        },
-                      ),
-                    ],
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Observação (opcional)',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Observação (opcional)',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: obsController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Digite aqui sua observação...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Divider(),
-              if (clienteObs.isNotEmpty) ...[
-                for (var o in (List<Map<String, dynamic>>.from(clienteObs)
-                    ..sort((a, b) {
-                      final dateA = DateTime.parse(a['data']);
-                      final dateB = DateTime.parse(b['data']);
-                      return dateB.compareTo(dateA); 
-                    })))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${DateTime.parse(o['data']).day.toString().padLeft(2, '0')}/'
-                          '${DateTime.parse(o['data']).month.toString().padLeft(2, '0')}/'
-                          '${DateTime.parse(o['data']).year}  •  '
-                          '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}  •  '
-                          '${o['nome_cliente'] ?? ''}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        if ((o['observacao'] ?? '').isNotEmpty)
-                          Text(
-                            o['observacao']!,
-                            style: const TextStyle(height: 1.4),
-                          ),
-                      ],
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: obsController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Digite aqui sua observação...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-              ] else
-                const Text(
-                  'Nenhuma observação registrada para este cliente.',
-                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              final int? idVendedor = prefs.getInt('id_vendedor');
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  if (clienteObs.isNotEmpty) ...[
+                    for (var o in (List<Map<String, dynamic>>.from(clienteObs)
+                      ..sort((a, b) {
+                        final dateA = DateTime.parse(a['data']);
+                        final dateB = DateTime.parse(b['data']);
+                        return dateB.compareTo(dateA);
+                      })))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${DateTime.parse(o['data']).day.toString().padLeft(2, '0')}/'
+                              '${DateTime.parse(o['data']).month.toString().padLeft(2, '0')}/'
+                              '${DateTime.parse(o['data']).year}  •  '
+                              '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}  •  '
+                              '${o['nome_cliente'] ?? ''}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if ((o['observacao'] ?? '').isNotEmpty)
+                              Text(
+                                o['observacao']!,
+                                style: const TextStyle(height: 1.4),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ] else
+                    const Text(
+                      'Nenhuma observação registrada para este cliente.',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fechar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final int? idVendedor = prefs.getInt('id_vendedor');
 
-              if (idVendedor == null) {
-                await LocalLogger.log('Erro: id_vendedor não encontrado no SharedPreferences');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erro: vendedor não encontrado')),
-                );
-                return;
-              }
+                  if (idVendedor == null) {
+                    await LocalLogger.log(
+                      'Erro: id_vendedor não encontrado no SharedPreferences',
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Erro: vendedor não encontrado')),
+                    );
+                    return;
+                  }
 
-              final body = {
-                'data': selectedDate.toIso8601String(),
-                'visitado': visitado,
-                'observacao': obsController.text.isNotEmpty ? obsController.text : null,
-              };
+                  final body = {
+                    'data': selectedDate.toIso8601String(),
+                    'visitado': visitado,
+                    'observacao':
+                        obsController.text.isNotEmpty
+                            ? obsController.text
+                            : null,
+                  };
 
-              final url = '/clientes/${cliente.id}/observacoes';
+                  final url = '/clientes/${cliente.id}/observacoes';
 
-              try {
-                // salva local
-                final dir = await getApplicationDocumentsDirectory();
-                final file = File('${dir.path}/observacoes.json');
-                Map<String, dynamic> jsonData = {'data': []};
+                  try {
+                    // salva local
+                    final dir = await getApplicationDocumentsDirectory();
+                    final file = File('${dir.path}/observacoes.json');
+                    Map<String, dynamic> jsonData = {'data': []};
 
-                if (await file.exists()) {
-                  final content = await file.readAsString();
-                  jsonData = json.decode(content);
-                }
+                    if (await file.exists()) {
+                      final content = await file.readAsString();
+                      jsonData = json.decode(content);
+                    }
 
-                final List<dynamic> localData = jsonData['data'] ?? [];
-                localData.add({
-                  'id_cliente': cliente.id,
-                  'nome_cliente': cliente.nomeCliente,
-                  'responsavel': cliente.responsavel,
-                  'data': body['data'],
-                  'visitado': body['visitado'],
-                  'observacao': body['observacao'],
-                });
-                jsonData['data'] = localData;
+                    final List<dynamic> localData = jsonData['data'] ?? [];
+                    localData.add({
+                      'id_cliente': cliente.id,
+                      'nome_cliente': cliente.nomeCliente,
+                      'responsavel': cliente.responsavel,
+                      'data': body['data'],
+                      'visitado': body['visitado'],
+                      'observacao': body['observacao'],
+                    });
+                    jsonData['data'] = localData;
 
-                await file.writeAsString(json.encode(jsonData));
+                    await file.writeAsString(json.encode(jsonData));
 
-                // salva online (ou no pendents se nao houver internet)
-                final online = await hasInternetConnection();
-                if (online) {
-                  final httpClient = HttpClient();
-                  final response = await httpClient.post(url, body);
+                    // salva online (ou no pendents se nao houver internet)
+                    final online = await hasInternetConnection();
+                    if (online) {
+                      final httpClient = HttpClient();
+                      final response = await httpClient.post(url, body);
 
-                  if (response.statusCode == 200) {
-                    final respBody = json.decode(response.body);
+                      if (response.statusCode == 200) {
+                        final respBody = json.decode(response.body);
 
-                    if (respBody['status'] == 'ok') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Observação registrada com sucesso')),
-                      );
+                        if (respBody['status'] == 'ok') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Observação registrada com sucesso',
+                              ),
+                            ),
+                          );
+                        } else {
+                          await LocalLogger.log(
+                            'Erro ao criar observação: ${respBody['mensagem']}',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Erro: ${respBody['mensagem']}'),
+                            ),
+                          );
+                        }
+                      } else {
+                        await LocalLogger.log(
+                          'Erro HTTP ao criar observação (status ${response.statusCode})',
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Erro ao registrar observação'),
+                          ),
+                        );
+                      }
                     } else {
-                      await LocalLogger.log('Erro ao criar observação: ${respBody['mensagem']}');
+                      await OfflineQueue.addToQueue({'url': url, 'body': body});
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro: ${respBody['mensagem']}')),
+                        SnackBar(
+                          content: Text(
+                            'Sem internet: observação salva para envio posterior',
+                          ),
+                        ),
                       );
                     }
-                  } else {
-                    await LocalLogger.log('Erro HTTP ao criar observação (status ${response.statusCode})');
+                  } catch (e, stack) {
+                    await LocalLogger.log(
+                      'Erro ao criar observação: $e\nStackTrace: $stack',
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Erro ao registrar observação')),
                     );
                   }
-                } else {
-                  await OfflineQueue.addToQueue({
-                    'url': url,
-                    'body': body,
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Sem internet: observação salva para envio posterior')),
-                  );
-                }
-              } catch (e, stack) {
-                await LocalLogger.log('Erro ao criar observação: $e\nStackTrace: $stack');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erro ao registrar observação')),
-                );
-              }
 
-              Navigator.pop(context);
-              await atualizarObservacoesLocais();
-            },
-            child: const Text('Salvar'),
+                  Navigator.pop(context);
+                  await atualizarObservacoesLocais();
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   Widget _buildLimitesTable(Cliente cliente) {
     return Row(
       children: [
-        _buildColunaLimiteComLinhaInterna("Limite BM", cliente.limiteFormatado, cliente.limite, true),
-        _buildColunaLimiteComLinhaInterna("Saldo BM", cliente.saldoFormatado, cliente.saldo_limite, true),
-        _buildColunaLimiteComLinhaInterna("Limite C", cliente.limiteCFormatado, cliente.limite_calculado, true),
-        _buildColunaLimiteComLinhaInterna("Saldo C", cliente.saldoCFormatado, cliente.saldo_limite_calculado, false),
+        _buildColunaLimiteComLinhaInterna(
+          "Limite BM",
+          cliente.limiteFormatado,
+          cliente.limite,
+          true,
+        ),
+        _buildColunaLimiteComLinhaInterna(
+          "Saldo BM",
+          cliente.saldoFormatado,
+          cliente.saldo_limite,
+          true,
+        ),
+        _buildColunaLimiteComLinhaInterna(
+          "Limite C",
+          cliente.limiteCFormatado,
+          cliente.limite_calculado,
+          true,
+        ),
+        _buildColunaLimiteComLinhaInterna(
+          "Saldo C",
+          cliente.saldoCFormatado,
+          cliente.saldo_limite_calculado,
+          false,
+        ),
       ],
     );
   }
 
-  Widget _buildColunaLimiteComLinhaInterna(String titulo, String valorFormatado, double valorOriginal, bool temLinhaDireita) {
+  Widget _buildColunaLimiteComLinhaInterna(
+    String titulo,
+    String valorFormatado,
+    double valorOriginal,
+    bool temLinhaDireita,
+  ) {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
           border: Border(
-            right: temLinhaDireita
-                ? BorderSide(color: Colors.grey.shade300, width: 1)
-                : BorderSide.none,
+            right:
+                temLinhaDireita
+                    ? BorderSide(color: Colors.grey.shade300, width: 1)
+                    : BorderSide.none,
           ),
         ),
         child: Column(
@@ -736,10 +840,7 @@ class _ClientsPageState extends State<ClientsPage> {
                 ),
               ),
             ),
-            Container(
-              height: 1,
-              color: Colors.grey.shade300,
-            ),
+            Container(height: 1, color: Colors.grey.shade300),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -757,19 +858,32 @@ class _ClientsPageState extends State<ClientsPage> {
   }
 
   Widget _buildTotaisFlutuantes() {
-    final clientesParaTotais = filteredClientes.isNotEmpty ? filteredClientes : allClientes;
+    final clientesParaTotais =
+        filteredClientes.isNotEmpty ? filteredClientes : allClientes;
 
-    double totalLimiteBM = clientesParaTotais.fold(0, (sum, c) => sum + c.limite);
-    double totalSaldoBM = clientesParaTotais.fold(0, (sum, c) => sum + c.saldo_limite);
-    double totalLimiteC = clientesParaTotais.fold(0, (sum, c) => sum + c.limite_calculado);
-    double totalSaldoC = clientesParaTotais.fold(0, (sum, c) => sum + c.saldo_limite_calculado);
+    double totalLimiteBM = clientesParaTotais.fold(
+      0,
+      (sum, c) => sum + c.limite,
+    );
+    double totalSaldoBM = clientesParaTotais.fold(
+      0,
+      (sum, c) => sum + c.saldo_limite,
+    );
+    double totalLimiteC = clientesParaTotais.fold(
+      0,
+      (sum, c) => sum + c.limite_calculado,
+    );
+    double totalSaldoC = clientesParaTotais.fold(
+      0,
+      (sum, c) => sum + c.saldo_limite_calculado,
+    );
 
     return SafeArea(
-      bottom: true, 
+      bottom: true,
       child: Container(
-        width: double.infinity, 
-        margin: const EdgeInsets.all(4), 
-        padding: const EdgeInsets.all(12), 
+        width: double.infinity,
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -789,7 +903,7 @@ class _ClientsPageState extends State<ClientsPage> {
               child: Text(
                 "Totais",
                 style: TextStyle(
-                  fontSize: 12, 
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.black54,
                 ),
@@ -800,10 +914,30 @@ class _ClientsPageState extends State<ClientsPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildColunaLimiteComLinhaInterna("Limite BM", formatarValor(totalLimiteBM), totalLimiteBM, true),
-                  _buildColunaLimiteComLinhaInterna("Saldo BM", formatarValor(totalSaldoBM), totalSaldoBM, true),
-                  _buildColunaLimiteComLinhaInterna("Limite C", formatarValor(totalLimiteC), totalLimiteC, true),
-                  _buildColunaLimiteComLinhaInterna("Saldo C", formatarValor(totalSaldoC), totalSaldoC, false),
+                  _buildColunaLimiteComLinhaInterna(
+                    "Limite BM",
+                    formatarValor(totalLimiteBM),
+                    totalLimiteBM,
+                    true,
+                  ),
+                  _buildColunaLimiteComLinhaInterna(
+                    "Saldo BM",
+                    formatarValor(totalSaldoBM),
+                    totalSaldoBM,
+                    true,
+                  ),
+                  _buildColunaLimiteComLinhaInterna(
+                    "Limite C",
+                    formatarValor(totalLimiteC),
+                    totalLimiteC,
+                    true,
+                  ),
+                  _buildColunaLimiteComLinhaInterna(
+                    "Saldo C",
+                    formatarValor(totalSaldoC),
+                    totalSaldoC,
+                    false,
+                  ),
                 ],
               ),
             ),
@@ -816,25 +950,26 @@ class _ClientsPageState extends State<ClientsPage> {
   List<Cliente> _getFilteredClientes() {
     final query = searchController.text.trim().toLowerCase();
 
-    final filtrados = allClientes.where((c) {
-      final nome = c.nomeCliente.toLowerCase();
-      final resp = c.responsavel.toLowerCase();
-      return nome.contains(query) || resp.contains(query);
-    }).toList();
+    final filtrados =
+        allClientes.where((c) {
+          final nome = c.nomeCliente.toLowerCase();
+          final resp = c.responsavel.toLowerCase();
+          return nome.contains(query) || resp.contains(query);
+        }).toList();
 
     return filtrados;
   }
 
   void _filterClientes(String query) {
-    setState(() {    
-      filteredClientes = _getFilteredClientes(); 
+    setState(() {
+      filteredClientes = _getFilteredClientes();
     });
   }
 
   String formatarValor(double valor) {
     final formatter = NumberFormat.currency(
-      locale: 'pt_BR',  
-      symbol: '',       
+      locale: 'pt_BR',
+      symbol: '',
       decimalDigits: 2,
     );
     return formatter.format(valor).trim();
@@ -844,20 +979,21 @@ class _ClientsPageState extends State<ClientsPage> {
     Future.delayed(Duration(milliseconds: 500), () {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Aviso importante'),
-          content: Text(
-            'Lembrando:\n\n'
-            '• Limite e Saldo BM são os limites cadastrados no sistema.\n'
-            '• Limite e Saldo C são calculados com base no último ano de compras do cliente.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Entendi'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Aviso importante'),
+              content: Text(
+                'Lembrando:\n\n'
+                '• Limite e Saldo BM são os limites cadastrados no sistema.\n'
+                '• Limite e Saldo C são calculados com base no último ano de compras do cliente.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Entendi'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     });
   }

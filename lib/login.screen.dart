@@ -153,18 +153,51 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } 
-      // ✅ Todos os erros de login do servidor
-      else if (response.statusCode == 401 || response.statusCode == 404 || response.statusCode == 429) {
+      // senha ou usuário incorreto
+      else if (response.statusCode == 401 || response.statusCode == 404) {
         setState(() {
           loginError = 'Usuário ou senha inválidos';
         });
       } 
-      // ✅ Outros status do servidor (500, 502, etc) → modal de conexão
+
+      else if (response.statusCode == 403) {
+        final data = jsonDecode(response.body);
+        final detail = data['detail'] ?? '';
+
+        setState(() {
+          if (detail.contains('Dispositivo')) {
+            loginError =
+              'Este dispositivo não está autorizado.\n'
+              'Por favor, contate o administrador.';
+          } else if (detail.contains('desativado')) {
+            loginError =
+              'Seu usuário foi desativado.\n'
+              'Por favor, contate o administrador.';
+          } else {
+            loginError = 'Acesso não permitido.';
+          }
+        });
+      }
+      
+      else if (response.statusCode == 409) {
+        setState(() {
+          loginError = 
+            'Você não pode registrar mais dispositivos. \n' 
+            'Por favor, contato o administrador.';
+        });
+      }
+      else if (response.statusCode == 422) {
+        setState(() {
+          loginError = 
+            'Aplicativo violado!';
+        });
+      }
+      // outros status do servidor (500, 502, etc) → modal de conexão
       else {
         _showConnectionError('Não foi possível conectar ao servidor.');
       }
     } 
-    // ✅ Problemas de rede real
+    // problemas de rede real
     on SocketException {
       _showConnectionError('Sem conexão com a internet.');
     } 
@@ -312,7 +345,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       _inputField(
                         controller: _passwordController,
                         hint: 'Digite sua senha',
-                        obscure: true,
+                        obscure: t
+                        ue,
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Digite a senha' : null,
                       ),
@@ -327,6 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
 

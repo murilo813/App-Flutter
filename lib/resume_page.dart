@@ -86,12 +86,14 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
             Text(widget.cliente.nomeCliente, style: TextStyle(fontSize: 18)),
             SizedBox(height: 12),
 
-            Text("Forma de Pagamento:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              "Forma de Pagamento:",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             Text(widget.pagamento["nome"], style: TextStyle(fontSize: 18)),
             SizedBox(height: 5),
 
@@ -102,10 +104,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     "Produtos",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(child: Divider(thickness: 2)),
@@ -176,7 +175,6 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                       SizedBox(height: 1),
 
                       Divider(thickness: 1),
-
                     ],
                   );
                 },
@@ -207,11 +205,18 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                       children: [
                         Text(
                           "Total dos Produtos",
-                          style: TextStyle(fontSize: 20, color: Colors.black87, fontWeight: FontWeight.bold,),
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           formatador.format(totalProdutos),
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -312,7 +317,6 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               ],
             ),
 
-
             SizedBox(height: 20),
 
             GestureDetector(
@@ -340,18 +344,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                         });
                       }
                     } else {
-                      await OfflineQueue.addToQueue({
-                        "url": url,
-                        "body": body,
-                      });
+                      await OfflineQueue.addToQueue({"url": url, "body": body});
                     }
                   } catch (e, stack) {
                     await LocalLogger.log('Erro ao enviar pedido: $e\n$stack');
 
-                    await OfflineQueue.addToQueue({
-                      "url": url,
-                      "body": body,
-                    });
+                    await OfflineQueue.addToQueue({"url": url, "body": body});
                   }
                 }();
               },
@@ -389,15 +387,16 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       "juros": juros,
       "desconto": desconto,
       "data": DateTime.now().toIso8601String(),
-      "itens": widget.produtos.map((p) {
-        final qtd = widget.quantidades[p.id] ?? 1;
+      "itens":
+          widget.produtos.map((p) {
+            final qtd = widget.quantidades[p.id] ?? 1;
 
-        return {
-          "id_produto": p.id,
-          "quantidade": qtd,
-          "preco_unitario": precoProduto(p),
-        };
-      }).toList(),
+            return {
+              "id_produto": p.id,
+              "quantidade": qtd,
+              "preco_unitario": precoProduto(p),
+            };
+          }).toList(),
     };
   }
 
@@ -406,10 +405,8 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       return p.precoEditado!;
     }
 
-    return widget.cliente.lista_preco == 2
-        ? p.preco2
-        : p.preco1;
-  } 
+    return widget.cliente.lista_preco == 2 ? p.preco2 : p.preco1;
+  }
 
   double getTotalCalculado() {
     double totalProdutos = 0;
@@ -430,10 +427,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
     final texto = valorAtual.toStringAsFixed(2).replaceAll('.', ',');
 
     TextEditingController ctrl = TextEditingController(text: texto)
-      ..selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: texto.length,
-      );
+      ..selection = TextSelection(baseOffset: 0, extentOffset: texto.length);
 
     showDialog(
       context: context,
@@ -471,6 +465,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       },
     );
   }
+
   double parsePreco(String input) {
     input = input.trim();
 

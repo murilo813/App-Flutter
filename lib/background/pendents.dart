@@ -13,10 +13,7 @@ class OfflineQueue {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getStringList(_key) ?? [];
 
-    final payload = {
-      ...data,
-      "created_at": DateTime.now().toIso8601String(),
-    };
+    final payload = {...data, "created_at": DateTime.now().toIso8601String()};
 
     existing.add(jsonEncode(payload));
     await prefs.setStringList(_key, existing);
@@ -47,7 +44,7 @@ class OfflineQueue {
             final String url = item['url'];
             final dynamic body = item['body'];
 
-            await httpClient.post(url, body); 
+            await httpClient.post(url, body);
           } catch (e) {
             failed.add(item);
           }
@@ -72,7 +69,7 @@ class OfflineQueue {
         final String url = item['url'];
         final dynamic body = item['body'];
 
-        await httpClient.post(url, body); 
+        await httpClient.post(url, body);
       } catch (_) {
         failed.add(item);
       }

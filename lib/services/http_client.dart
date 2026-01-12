@@ -20,10 +20,18 @@ class HttpClient {
     return http.post(Uri.parse(url), headers: headers, body: json.encode(body));
   }
 
-  Future<http.Response> patch(String endpoint, Map<String, dynamic> body) async {
+  Future<http.Response> patch(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
     final headers = await AuthHeaders.getHeaders();
     final url = '$baseUrl$endpoint';
-    return http.patch(Uri.parse(url), headers: headers, body: json.encode(body));
+    return http.patch(
+      Uri.parse(url),
+      headers: headers,
+      body: json.encode(body),
+    );
   }
+
   // Se precisar, add PUT, DELETE, PATCH do mesmo jeito
 }

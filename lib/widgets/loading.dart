@@ -6,20 +6,14 @@ class Loading extends StatefulWidget {
   final Color? color;
   final double size;
 
-  const Loading({
-    Key? key,
-    this.child,
-    this.icon,
-    this.color,
-    this.size = 70,
-  }) : super(key: key);
+  const Loading({Key? key, this.child, this.icon, this.color, this.size = 70})
+    : super(key: key);
 
   @override
   State<Loading> createState() => _LoadingState();
 }
 
-class _LoadingState extends State<Loading>
-    with SingleTickerProviderStateMixin {
+class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Alignment> _beginAnimation;
   late Animation<Alignment> _endAnimation;
@@ -36,18 +30,12 @@ class _LoadingState extends State<Loading>
     _beginAnimation = Tween<Alignment>(
       begin: Alignment.bottomLeft,
       end: Alignment.topRight,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.linear,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
 
     _endAnimation = Tween<Alignment>(
       begin: Alignment.topRight,
       end: Alignment.bottomLeft,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.linear,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
   }
 
   @override

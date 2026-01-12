@@ -18,7 +18,7 @@ class AnniversaryService {
       if (idVendedor == 1 || idVendedor == 0) {
         return; // para o admin nao receber essas notificacoes
       }
-      final hojeStr = DateTime.now().toIso8601String().substring(0, 10); 
+      final hojeStr = DateTime.now().toIso8601String().substring(0, 10);
       final ultimoEnvio = prefs.getString('ultimo_aniversario') ?? '';
 
       if (ultimoEnvio == hojeStr) {
@@ -36,16 +36,19 @@ class AnniversaryService {
 
       if (jsonMap['data'] is! List) return;
 
-      final clientes = jsonMap['data']
-          .map<Cliente>((e) => Cliente.fromJson(e))
-          .toList();
+      final clientes =
+          jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
 
       final hoje = DateTime.now();
-      final aniversariantes = clientes.where((c) =>
-        c.data_nasc != null &&
-        c.data_nasc!.day == hoje.day &&
-        c.data_nasc!.month == hoje.month
-      ).toList();
+      final aniversariantes =
+          clientes
+              .where(
+                (c) =>
+                    c.data_nasc != null &&
+                    c.data_nasc!.day == hoje.day &&
+                    c.data_nasc!.month == hoje.month,
+              )
+              .toList();
 
       if (aniversariantes.isEmpty) return;
 
@@ -62,9 +65,10 @@ class AnniversaryService {
       }
 
       await prefs.setString('ultimo_aniversario', hojeStr);
-
     } catch (e, stack) {
-      await LocalLogger.log("Erro em AnniversaryService.checkAndNotify: $e\n$stack");
+      await LocalLogger.log(
+        "Erro em AnniversaryService.checkAndNotify: $e\n$stack",
+      );
     }
   }
 }

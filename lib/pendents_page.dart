@@ -48,69 +48,73 @@ class _PendentsPageState extends State<PendentsPage> {
           ),
         ],
       ),
-      body: carregando
-          ? Center(child: CircularProgressIndicator())
-          : pendentes.isEmpty
+      body:
+          carregando
+              ? Center(child: CircularProgressIndicator())
+              : pendentes.isEmpty
               ? Center(child: Text("Nenhum pedido pendente"))
               : ListView.builder(
-                  itemCount: pendentes.length,
-                  itemBuilder: (_, i) {
-                    final item = pendentes[i];
-                    final body = item['body'];
-                    final createdAt = item['created_at'];
-                    
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            /// rota
+                itemCount: pendentes.length,
+                itemBuilder: (_, i) {
+                  final item = pendentes[i];
+                  final body = item['body'];
+                  final createdAt = item['created_at'];
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// rota
+                          Text(
+                            item['url'] ?? '',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          /// data
+                          if (item['created_at'] != null)
                             Text(
-                              item['url'] ?? '',
+                              "Criado em: ${formatarData(item['created_at'])}",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+
+                          const SizedBox(height: 8),
+
+                          /// JSON bruto
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              prettyJson(item['body']),
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                                fontFamily: 'monospace',
+                                fontSize: 12,
                               ),
                             ),
-
-                            const SizedBox(height: 6),
-
-                            /// data
-                            if (item['created_at'] != null)
-                              Text(
-                                "Criado em: ${formatarData(item['created_at'])}",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-
-                            const SizedBox(height: 8),
-
-                            /// JSON bruto
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                prettyJson(item['body']),
-                                style: const TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 

@@ -37,7 +37,7 @@ class _OrdersPageState extends State<OrdersPage> {
   List<Product> produtos = [];
   bool aplicarJuros = false;
   double jurosSelecionado = 0.0;
-  
+
   final SyncService sync = SyncService();
   Map<int, int> quantidades = {};
   Map<int, TextEditingController> controllers = {};
@@ -75,17 +75,15 @@ class _OrdersPageState extends State<OrdersPage> {
 
       if (clientes.isEmpty || produtos.isEmpty) {
         setState(() {
-          erroCritico = true; 
+          erroCritico = true;
         });
         return;
       }
     } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro crítico OrdersPage\nErro: $e\nStack: $stack',
-      );
+      await LocalLogger.log('Erro crítico OrdersPage\nErro: $e\nStack: $stack');
 
       setState(() {
-        erroCritico = true; 
+        erroCritico = true;
       });
     } finally {
       if (mounted) setState(() => loading = false);
@@ -94,8 +92,9 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Future<bool> _hasInternet() async {
     try {
-      final resp = await http.get(Uri.parse("$backendUrl/ping"))
-        .timeout(const Duration(seconds: 6));
+      final resp = await http
+          .get(Uri.parse("$backendUrl/ping"))
+          .timeout(const Duration(seconds: 6));
       return resp.statusCode == 200;
     } catch (_) {
       return false;
@@ -123,9 +122,10 @@ class _OrdersPageState extends State<OrdersPage> {
       final venc = hoje.add(Duration(days: prazos[i]));
       lista.add({
         "parcela": "${i + 1}",
-        "vencimento": "${venc.day.toString().padLeft(2, '0')}/"
+        "vencimento":
+            "${venc.day.toString().padLeft(2, '0')}/"
             "${venc.month.toString().padLeft(2, '0')}/"
-            "${venc.year}"
+            "${venc.year}",
       });
     }
     return lista;
@@ -180,7 +180,9 @@ class _OrdersPageState extends State<OrdersPage> {
               onTap: () async {
                 final r = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ClientsPage(modoSelecao: true)),
+                  MaterialPageRoute(
+                    builder: (_) => ClientsPage(modoSelecao: true),
+                  ),
                 );
                 if (r != null) setState(() => clienteSelecionado = r);
               },
@@ -189,7 +191,9 @@ class _OrdersPageState extends State<OrdersPage> {
 
             _titulo("Forma de Pagamento"),
             _caixaSelecao(
-              label: pagamentoSelecionado?['nome'] ?? "Selecionar Forma de pagamento",
+              label:
+                  pagamentoSelecionado?['nome'] ??
+                  "Selecionar Forma de pagamento",
               icon: Icons.payment,
               onTap: () async {
                 final r = await Navigator.push(
@@ -203,7 +207,10 @@ class _OrdersPageState extends State<OrdersPage> {
                   });
                   if (r.containsKey("juros")) {
                     jurosSelecionado = r["juros"] * 1.0;
-                    Future.delayed(const Duration(milliseconds: 100), mostrarDialogoJuros);
+                    Future.delayed(
+                      const Duration(milliseconds: 100),
+                      mostrarDialogoJuros,
+                    );
                   }
                 }
               },
@@ -241,12 +248,19 @@ class _OrdersPageState extends State<OrdersPage> {
       border: TableBorder.symmetric(
         inside: BorderSide(color: Colors.grey.shade400, width: 1),
       ),
-      columnWidths: const {0: FlexColumnWidth(1), 1: FlexColumnWidth(2), 2: FlexColumnWidth(2)},
+      columnWidths: const {
+        0: FlexColumnWidth(1),
+        1: FlexColumnWidth(2),
+        2: FlexColumnWidth(2),
+      },
       children: [
         TableRow(
-          children: ["Parcela", "Vencimento", "Valor"]
-              .map((t) => _tableCell(t, bold: true))
-              .toList(),
+          children:
+              [
+                "Parcela",
+                "Vencimento",
+                "Valor",
+              ].map((t) => _tableCell(t, bold: true)).toList(),
         ),
         ...parcelas.map((p) {
           final valorParcela = calcularTotal() / totalParcelas;
@@ -262,14 +276,24 @@ class _OrdersPageState extends State<OrdersPage> {
           children: [
             const SizedBox(),
             _tableCell("Total", fontSize: 14, bold: true),
-            _tableCell(formatador.format(calcularTotal()), fontSize: 16, bold: true, color: Colors.green.shade700),
+            _tableCell(
+              formatador.format(calcularTotal()),
+              fontSize: 16,
+              bold: true,
+              color: Colors.green.shade700,
+            ),
           ],
         ),
       ],
     );
   }
 
-  Padding _tableCell(String text, {double fontSize = 13, bool bold = false, Color? color}) {
+  Padding _tableCell(
+    String text, {
+    double fontSize = 13,
+    bool bold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       child: Text(
@@ -292,7 +316,14 @@ class _OrdersPageState extends State<OrdersPage> {
           const Expanded(child: Divider(thickness: 2)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87)),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.black87,
+              ),
+            ),
           ),
           const Expanded(child: Divider(thickness: 2)),
         ],
@@ -335,7 +366,13 @@ class _OrdersPageState extends State<OrdersPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(p.nome, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              Text(
+                p.nome,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 6),
               FutureBuilder(
                 future: getEmpresa(),
@@ -348,9 +385,15 @@ class _OrdersPageState extends State<OrdersPage> {
                     children: [
                       SizedBox(
                         width: 80,
-                        child: Text("Estoque: $est", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                        child: Text(
+                          "Estoque: $est",
+                          style: TextStyle(fontSize: 13, color: Colors.black54),
+                        ),
                       ),
-                      Text("Disponível: $disp", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                      Text(
+                        "Disponível: $disp",
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
                     ],
                   );
                 },
@@ -371,43 +414,68 @@ class _OrdersPageState extends State<OrdersPage> {
       children: [
         Row(
           children: [
-            _buildQuantityButton(Icons.remove, Colors.red, Colors.red.shade100, () {
-              if (qtd > 1) {
-                setState(() {
-                  quantidades[p.id] = qtd - 1;
-                  controllers[p.id]!.text = (qtd - 1).toString();
-                });
-              }
-            }),
+            _buildQuantityButton(
+              Icons.remove,
+              Colors.red,
+              Colors.red.shade100,
+              () {
+                if (qtd > 1) {
+                  setState(() {
+                    quantidades[p.id] = qtd - 1;
+                    controllers[p.id]!.text = (qtd - 1).toString();
+                  });
+                }
+              },
+            ),
             const SizedBox(width: 14),
             _buildQuantityInput(p),
             const SizedBox(width: 14),
-            _buildQuantityButton(Icons.add, Colors.green, Colors.green.shade100, () {
-              setState(() {
-                quantidades[p.id] = qtd + 1;
-                controllers[p.id]!.text = (qtd + 1).toString();
-              });
-            }),
+            _buildQuantityButton(
+              Icons.add,
+              Colors.green,
+              Colors.green.shade100,
+              () {
+                setState(() {
+                  quantidades[p.id] = qtd + 1;
+                  controllers[p.id]!.text = (qtd + 1).toString();
+                });
+              },
+            ),
           ],
         ),
         InkWell(
           onTap: () => editarPrecoProduto(p),
           child: Text(
-            formatador.format(p.precoEditado ?? (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1)),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+            formatador.format(
+              p.precoEditado ??
+                  (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1),
+            ),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade700,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildQuantityButton(IconData icon, Color color, Color bgColor, VoidCallback onTap) {
+  Widget _buildQuantityButton(
+    IconData icon,
+    Color color,
+    Color bgColor,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       child: Container(
         width: 25,
         height: 25,
-        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Icon(icon, color: color, size: 22),
       ),
     );
@@ -427,7 +495,11 @@ class _OrdersPageState extends State<OrdersPage> {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        decoration: const InputDecoration(border: InputBorder.none, isCollapsed: true, contentPadding: EdgeInsets.zero),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          isCollapsed: true,
+          contentPadding: EdgeInsets.zero,
+        ),
         onChanged: (v) {
           int n = int.tryParse(v) ?? 1;
           if (n < 1) n = 1;
@@ -455,12 +527,24 @@ class _OrdersPageState extends State<OrdersPage> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.blue.shade600, borderRadius: BorderRadius.circular(12)),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
-          Icon(Icons.add, color: Colors.white),
-          SizedBox(width: 8),
-          Text("Adicionar Produto", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ]),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade600,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.add, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              "Adicionar Produto",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -471,15 +555,16 @@ class _OrdersPageState extends State<OrdersPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ResumoPedidoPage(
-              clienteId: clienteSelecionado!.id,
-              cliente: clienteSelecionado!,
-              pagamentoId: pagamentoSelecionado!["id"],
-              pagamento: pagamentoSelecionado!,
-              produtos: produtosSelecionados,
-              quantidades: quantidades,
-              total: calcularTotal(),
-            ),
+            builder:
+                (_) => ResumoPedidoPage(
+                  clienteId: clienteSelecionado!.id,
+                  cliente: clienteSelecionado!,
+                  pagamentoId: pagamentoSelecionado!["id"],
+                  pagamento: pagamentoSelecionado!,
+                  produtos: produtosSelecionados,
+                  quantidades: quantidades,
+                  total: calcularTotal(),
+                ),
           ),
         );
       },
@@ -490,11 +575,20 @@ class _OrdersPageState extends State<OrdersPage> {
           gradient: GradientGreen.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
-          Icon(Icons.check, color: Colors.white),
-          SizedBox(width: 8),
-          Text("Finalizar Pedido", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.check, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              "Finalizar Pedido",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -529,9 +623,9 @@ class _OrdersPageState extends State<OrdersPage> {
     return double.tryParse("$intPart.$decPart") ?? 0.0;
   }
 
-
   void editarPrecoProduto(Product p) {
-    final precoPadrao = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+    final precoPadrao =
+        (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
     final precoMinimo = p.preco_minimo ?? 0.0;
 
     String precoInicial = (p.precoEditado ?? precoPadrao)
@@ -549,7 +643,6 @@ class _OrdersPageState extends State<OrdersPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-
             double valorDigitado = parsePreco(ctrl.text);
 
             bool valido = valorDigitado >= precoMinimo;
@@ -562,13 +655,18 @@ class _OrdersPageState extends State<OrdersPage> {
                   if (!valido)
                     Text(
                       "Preço abaixo do mínimo permitido!",
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
 
                   TextField(
                     controller: ctrl,
                     autofocus: true,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: "Digite o preço",
                       prefixText: "R\$ ",
@@ -583,17 +681,18 @@ class _OrdersPageState extends State<OrdersPage> {
                   child: Text("Cancelar"),
                 ),
                 TextButton(
-                  onPressed: valido
-                      ? () {
-                          double novoPreco = parsePreco(ctrl.text);
+                  onPressed:
+                      valido
+                          ? () {
+                            double novoPreco = parsePreco(ctrl.text);
 
-                          setState(() {
-                            p.precoEditado = novoPreco;
-                          });
+                            setState(() {
+                              p.precoEditado = novoPreco;
+                            });
 
-                          Navigator.pop(context);
-                        }
-                      : null,
+                            Navigator.pop(context);
+                          }
+                          : null,
                   child: Text("OK"),
                 ),
               ],
@@ -634,18 +733,16 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  final formatador = NumberFormat.currency(
-    locale: 'pt_BR',
-    symbol: 'R\$ ',
-  );
-  
+  final formatador = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
+
   double calcularTotal() {
     double total = 0.0;
 
     for (var p in produtosSelecionados) {
       final qtd = quantidades[p.id] ?? 1;
 
-      final precoBase = (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
+      final precoBase =
+          (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1) ?? 0.0;
       final preco = p.precoEditado ?? precoBase;
 
       total += preco * qtd;
@@ -665,38 +762,55 @@ class _OrdersPageState extends State<OrdersPage> {
 
   int estoquePorEmpresa(Product p, int empresa) {
     switch (empresa) {
-      case 1: return p.estoqueBelavista;
-      case 2: return p.estoqueImbuia;
-      case 3: return p.estoqueVilanova;
-      case 4: return p.estoqueAurora;
-      default: return 0;
+      case 1:
+        return p.estoqueBelavista;
+      case 2:
+        return p.estoqueImbuia;
+      case 3:
+        return p.estoqueVilanova;
+      case 4:
+        return p.estoqueAurora;
+      default:
+        return 0;
     }
   }
 
   int disponivelPorEmpresa(Product p, int empresa) {
     switch (empresa) {
-      case 1: return p.disponivelBelavista;
-      case 2: return p.disponivelImbuia;
-      case 3: return p.disponivelVilanova;
-      case 4: return p.disponivelAurora;
-      default: return 0;
+      case 1:
+        return p.disponivelBelavista;
+      case 2:
+        return p.disponivelImbuia;
+      case 3:
+        return p.disponivelVilanova;
+      case 4:
+        return p.disponivelAurora;
+      default:
+        return 0;
     }
   }
 
   Widget _titulo(String txt) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(txt,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      txt,
+      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  );
 
-  Widget _caixaSelecao({required String label, required IconData icon, required VoidCallback onTap}) {
+  Widget _caixaSelecao({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(12)),
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [Text(label), Icon(icon)],
@@ -710,35 +824,177 @@ class _OrdersPageState extends State<OrdersPage> {
 class SelecaoPagamentoPage extends StatelessWidget {
   final List<Map<String, dynamic>> metodos = const [
     // crediario
-    {"id": 66, "nome": "7 dias crediario", "prazo": [7], "parcelas": 1},
-    {"id": 67, "nome": "14 dias crediario", "prazo": [14], "parcelas": 1},
-    {"id": 2, "nome": "28 dias crediario", "prazo": [28], "parcelas": 1},
-    {"id": 29, "nome": "42 dias crediario (45 dias)", "prazo": [42], "parcelas": 1, "juros": 2.81},
-    {"id": 31, "nome": "56 dias crediario (60 dias)", "prazo": [56], "parcelas": 1, "juros": 3.77},
-    {"id": 32, "nome": "84 dias crediario (90 dias)", "prazo": [84], "parcelas": 1, "juros": 5.7},
+    {
+      "id": 66,
+      "nome": "7 dias crediario",
+      "prazo": [7],
+      "parcelas": 1,
+    },
+    {
+      "id": 67,
+      "nome": "14 dias crediario",
+      "prazo": [14],
+      "parcelas": 1,
+    },
+    {
+      "id": 2,
+      "nome": "28 dias crediario",
+      "prazo": [28],
+      "parcelas": 1,
+    },
+    {
+      "id": 29,
+      "nome": "42 dias crediario (45 dias)",
+      "prazo": [42],
+      "parcelas": 1,
+      "juros": 2.81,
+    },
+    {
+      "id": 31,
+      "nome": "56 dias crediario (60 dias)",
+      "prazo": [56],
+      "parcelas": 1,
+      "juros": 3.77,
+    },
+    {
+      "id": 32,
+      "nome": "84 dias crediario (90 dias)",
+      "prazo": [84],
+      "parcelas": 1,
+      "juros": 5.7,
+    },
 
-    {"id": 37, "nome": "2 parcelas crediario", "prazo": [28, 56], "parcelas": 2, "juros": 2.81},
-    {"id": 35, "nome": "3 parcelas crediario (1 parcela avista)", "prazo": [0, 28, 56], "parcelas": 3},
-    {"id": 39, "nome": "3 parcelas crediario", "prazo": [28, 56, 84], "parcelas": 3, "juros": 3.77},
-    {"id": 45, "nome": "4 parcelas crediario", "prazo": [28, 56, 84, 112], "parcelas": 4, "juros": 4.73},
-    {"id": 41, "nome": "5 parcelas crediario", "prazo": [28, 56, 84, 112, 140], "parcelas": 5, "juros": 5.7},
-    {"id": 42, "nome": "7 parcelas crediario", "prazo": [28, 56, 84, 112, 140, 168, 196], "parcelas": 7, "juros": 7.67},
+    {
+      "id": 37,
+      "nome": "2 parcelas crediario",
+      "prazo": [28, 56],
+      "parcelas": 2,
+      "juros": 2.81,
+    },
+    {
+      "id": 35,
+      "nome": "3 parcelas crediario (1 parcela avista)",
+      "prazo": [0, 28, 56],
+      "parcelas": 3,
+    },
+    {
+      "id": 39,
+      "nome": "3 parcelas crediario",
+      "prazo": [28, 56, 84],
+      "parcelas": 3,
+      "juros": 3.77,
+    },
+    {
+      "id": 45,
+      "nome": "4 parcelas crediario",
+      "prazo": [28, 56, 84, 112],
+      "parcelas": 4,
+      "juros": 4.73,
+    },
+    {
+      "id": 41,
+      "nome": "5 parcelas crediario",
+      "prazo": [28, 56, 84, 112, 140],
+      "parcelas": 5,
+      "juros": 5.7,
+    },
+    {
+      "id": 42,
+      "nome": "7 parcelas crediario",
+      "prazo": [28, 56, 84, 112, 140, 168, 196],
+      "parcelas": 7,
+      "juros": 7.67,
+    },
 
     // boleto
-    {"id": 64, "nome": "7 dias boleto", "prazo": [7], "parcelas": 1},
-    {"id": 65, "nome": "14 dias boleto", "prazo": [14], "parcelas": 1},
-    {"id": 28, "nome": "28 dias boleto", "prazo": [28], "parcelas": 1},
-    {"id": 30, "nome": "42 dias boleto (45 dias)", "prazo": [42], "parcelas": 1, "juros": 2.81},
-    {"id": 33, "nome": "56 dias boleto (60 dias)", "prazo": [56], "parcelas": 1, "juros": 3.77},
-    {"id": 34, "nome": "84 dias boleto (90 dias)", "prazo": [84], "parcelas": 1, "juros": 5.7},
-    {"id": 49, "nome": "112 dias boleto (120 dias)", "prazo": [112], "parcelas": 1, "juros": 7.67},
-    {"id": 48, "nome": "140 dias boleto (150 dias)", "prazo": [140], "parcelas": 1, "juros": 9.68},
+    {
+      "id": 64,
+      "nome": "7 dias boleto",
+      "prazo": [7],
+      "parcelas": 1,
+    },
+    {
+      "id": 65,
+      "nome": "14 dias boleto",
+      "prazo": [14],
+      "parcelas": 1,
+    },
+    {
+      "id": 28,
+      "nome": "28 dias boleto",
+      "prazo": [28],
+      "parcelas": 1,
+    },
+    {
+      "id": 30,
+      "nome": "42 dias boleto (45 dias)",
+      "prazo": [42],
+      "parcelas": 1,
+      "juros": 2.81,
+    },
+    {
+      "id": 33,
+      "nome": "56 dias boleto (60 dias)",
+      "prazo": [56],
+      "parcelas": 1,
+      "juros": 3.77,
+    },
+    {
+      "id": 34,
+      "nome": "84 dias boleto (90 dias)",
+      "prazo": [84],
+      "parcelas": 1,
+      "juros": 5.7,
+    },
+    {
+      "id": 49,
+      "nome": "112 dias boleto (120 dias)",
+      "prazo": [112],
+      "parcelas": 1,
+      "juros": 7.67,
+    },
+    {
+      "id": 48,
+      "nome": "140 dias boleto (150 dias)",
+      "prazo": [140],
+      "parcelas": 1,
+      "juros": 9.68,
+    },
 
-    {"id": 38, "nome": "2 parcelas boleto", "prazo": [28, 56], "parcelas": 2, "juros": 2.81},
-    {"id": 36, "nome": "3 parcelas boleto (1 parcela avista)", "prazo": [0, 28, 56], "parcelas": 3},
-    {"id": 40, "nome": "3 parcelas boleto", "prazo": [28, 56, 84], "parcelas": 3, "juros": 3.77},
-    {"id": 46, "nome": "4 parcelas boleto (1 parcela avista)", "prazo": [0, 28, 56, 84], "parcelas": 4, "juros": 2.81},
-    {"id": 47, "nome": "6 parcelas boleto", "prazo": [28, 56, 84, 112, 140, 168], "parcelas": 6, "juros": 6.68},
+    {
+      "id": 38,
+      "nome": "2 parcelas boleto",
+      "prazo": [28, 56],
+      "parcelas": 2,
+      "juros": 2.81,
+    },
+    {
+      "id": 36,
+      "nome": "3 parcelas boleto (1 parcela avista)",
+      "prazo": [0, 28, 56],
+      "parcelas": 3,
+    },
+    {
+      "id": 40,
+      "nome": "3 parcelas boleto",
+      "prazo": [28, 56, 84],
+      "parcelas": 3,
+      "juros": 3.77,
+    },
+    {
+      "id": 46,
+      "nome": "4 parcelas boleto (1 parcela avista)",
+      "prazo": [0, 28, 56, 84],
+      "parcelas": 4,
+      "juros": 2.81,
+    },
+    {
+      "id": 47,
+      "nome": "6 parcelas boleto",
+      "prazo": [28, 56, 84, 112, 140, 168],
+      "parcelas": 6,
+      "juros": 6.68,
+    },
   ];
 
   @override
@@ -746,21 +1002,22 @@ class SelecaoPagamentoPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Forma de Pagamento")),
-        body: ListView(
-          children: metodos.map((m) {
-            return Card(
-              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: ListTile(
-                title: Text(
-                  m["nome"],
-                  style: TextStyle(fontWeight: FontWeight.bold),
+      body: ListView(
+        children:
+            metodos.map((m) {
+              return Card(
+                margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: ListTile(
+                  title: Text(
+                    m["nome"],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: Icon(Icons.check_circle_outline),
+                  onTap: () => Navigator.pop(context, m),
                 ),
-                trailing: Icon(Icons.check_circle_outline),
-                onTap: () => Navigator.pop(context, m),
-              ),
-            );
-          }).toList(),
-        ),
+              );
+            }).toList(),
+      ),
     );
   }
 }

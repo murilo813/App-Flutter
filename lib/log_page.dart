@@ -56,7 +56,8 @@ class _LogViewerPageState extends State<LogViewerPage> {
             final timestamp = match.group(1)!;
             final date = DateTime.tryParse(timestamp)?.toLocal();
             if (date != null) {
-              final formattedDate = '${date.day.toString().padLeft(2, '0')}/'
+              final formattedDate =
+                  '${date.day.toString().padLeft(2, '0')}/'
                   '${date.month.toString().padLeft(2, '0')}/'
                   '${date.year}';
               if (formattedDate != lastDate) {
@@ -67,7 +68,7 @@ class _LogViewerPageState extends State<LogViewerPage> {
 
             currentEntry.writeln('• $line');
           } else {
-            currentEntry?.writeln('    $line'); 
+            currentEntry?.writeln('    $line');
           }
         }
 
@@ -102,9 +103,9 @@ class _LogViewerPageState extends State<LogViewerPage> {
       }
       await _loadLog();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao limpar o log: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao limpar o log: $e')));
     }
   }
 
@@ -126,20 +127,21 @@ class _LogViewerPageState extends State<LogViewerPage> {
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirmar'),
-                  content: const Text('Deseja limpar o log?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancelar'),
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Confirmar'),
+                      content: const Text('Deseja limpar o log?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Confirmar'),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Confirmar'),
-                    ),
-                  ],
-                ),
               );
               if (confirm == true) {
                 await _clearLog();
@@ -149,19 +151,20 @@ class _LogViewerPageState extends State<LogViewerPage> {
           ),
         ],
       ),
-      body: _loading
-          ? const SizedBox.shrink()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: SelectableText(
-                _logContent,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
-                  height: 1.4,
+      body:
+          _loading
+              ? const SizedBox.shrink()
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: SelectableText(
+                  _logContent,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ),
     );
   }
 }

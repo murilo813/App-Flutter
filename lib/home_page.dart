@@ -31,7 +31,6 @@ class HomePage extends StatefulWidget {
 
   @override
   HomePageState createState() => HomePageState();
-
 }
 
 class HomePageState extends State<HomePage> {
@@ -46,7 +45,7 @@ class HomePageState extends State<HomePage> {
     3: 'Vila Nova',
     4: 'Aurora',
   };
-  
+
   @override
   void initState() {
     super.initState();
@@ -107,18 +106,21 @@ class HomePageState extends State<HomePage> {
 
       if (jsonMap['data'] is! List) return;
 
-      final clientes = jsonMap['data']
-          .map<Cliente>((e) => Cliente.fromJson(e))
-          .toList();
+      final clientes =
+          jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
 
       final hoje = DateTime.now();
-      final aniversariantes = clientes.where((c) =>
-        c.data_nasc != null &&
-        c.data_nasc!.day == hoje.day &&
-        c.data_nasc!.month == hoje.month
-      ).toList();
+      final aniversariantes =
+          clientes
+              .where(
+                (c) =>
+                    c.data_nasc != null &&
+                    c.data_nasc!.day == hoje.day &&
+                    c.data_nasc!.month == hoje.month,
+              )
+              .toList();
 
-      if (aniversariantes.isEmpty) return; 
+      if (aniversariantes.isEmpty) return;
 
       showDialog(
         context: context,
@@ -132,10 +134,7 @@ class HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 const Text(
                   'Por favor, verifique se é realmente o aniversário do cliente',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.red, fontSize: 14),
                 ),
               ],
             ),
@@ -176,7 +175,9 @@ class HomePageState extends State<HomePage> {
 
     try {
       final httpClient = HttpClient();
-      final response = await httpClient.get('/versao').timeout(const Duration(seconds: 10));
+      final response = await httpClient
+          .get('/versao')
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -192,25 +193,30 @@ class HomePageState extends State<HomePage> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => AlertDialog(
-              title: const Text('Acesso Negado'),
-              content: const Text('Seu usuário foi desativado. Você não tem mais acesso a este aplicativo.'),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    await prefs.clear();
-                    if (context.mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    }
-                  },
-                  child: const Text('OK'),
+            builder:
+                (_) => AlertDialog(
+                  title: const Text('Acesso Negado'),
+                  content: const Text(
+                    'Seu usuário foi desativado. Você não tem mais acesso a este aplicativo.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        await prefs.clear();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           );
           return;
         }
@@ -219,33 +225,36 @@ class HomePageState extends State<HomePage> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => AlertDialog(
-              title: const Text('Atualização disponível'),
-              content: Text(
-                'Uma nova versão do app está disponível.\n\n'
-                'Versão atual: $currentVersion\n'
-                'Nova versão: $latestVersion\n\n'
-                'Clique no botão abaixo para ser redirecionado ao link de atualização.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    await openURL();
-                    Navigator.of(context).pop(); 
-                  },
-                  child: const Text('Atualizar'),
+            builder:
+                (_) => AlertDialog(
+                  title: const Text('Atualização disponível'),
+                  content: Text(
+                    'Uma nova versão do app está disponível.\n\n'
+                    'Versão atual: $currentVersion\n'
+                    'Nova versão: $latestVersion\n\n'
+                    'Clique no botão abaixo para ser redirecionado ao link de atualização.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        await openURL();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Atualizar'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
           );
         }
       }
     } catch (e, stack) {
-      await LocalLogger.log('Erro na checagem de versão: $e\nStackTrace: $stack');
+      await LocalLogger.log(
+        'Erro na checagem de versão: $e\nStackTrace: $stack',
+      );
       print('Erro ao verificar versão: $e');
     }
   }
@@ -317,10 +326,10 @@ class HomePageState extends State<HomePage> {
 
               // TÍTULO
               ShaderMask(
-                shaderCallback: (bounds) =>
-                    GradientGreen.accent.createShader(bounds),
+                shaderCallback:
+                    (bounds) => GradientGreen.accent.createShader(bounds),
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 2), 
+                  padding: const EdgeInsets.only(bottom: 2),
                   child: Text(
                     'AgroZecão',
                     style: const TextStyle(
@@ -351,30 +360,33 @@ class HomePageState extends State<HomePage> {
                 icon: Icons.inventory_2_outlined,
                 title: 'Estoque',
                 subtitle: 'Estoque, disponível, preço',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => StorePage()),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => StorePage()),
+                    ),
               ),
 
               _homeCard(
                 icon: Icons.people_outline,
                 title: 'Meus Clientes',
                 subtitle: 'Limites, observações',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ClientsPage()),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ClientsPage()),
+                    ),
               ),
 
               _homeCard(
                 icon: Icons.shopping_cart_outlined,
                 title: 'Pedidos',
                 subtitle: 'Envie pedidos de produtos',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => OrdersPage()),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => OrdersPage()),
+                    ),
               ),
 
               if (_tipoUsuario == 'admin')
@@ -382,10 +394,11 @@ class HomePageState extends State<HomePage> {
                   icon: Icons.admin_panel_settings_outlined,
                   title: 'Admin',
                   subtitle: 'Painel administrativo',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => AdminPage()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AdminPage()),
+                      ),
                 ),
 
               const Spacer(),
@@ -467,11 +480,7 @@ class HomePageState extends State<HomePage> {
                   gradient: GradientGreen.accent,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -515,17 +524,19 @@ class HomePageState extends State<HomePage> {
         width: 250,
         child: ElevatedButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => page),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => page));
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             backgroundColor: color ?? Colors.green[700],
             foregroundColor: Colors.white,
-            textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textStyle: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           child: Text(label),
         ),

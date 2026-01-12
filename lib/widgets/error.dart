@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class ErrorScreen extends StatelessWidget {
   final VoidCallback onRetry;
 
-  const ErrorScreen({
-    Key? key,
-    required this.onRetry,
-  }) : super(key: key);
+  const ErrorScreen({Key? key, required this.onRetry}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +17,7 @@ class ErrorScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(
-                  Icons.wifi_off,
-                  size: 120,
-                  color: Colors.red,
-                ),
+                Icon(Icons.wifi_off, size: 120, color: Colors.red),
                 SizedBox(height: 16),
                 Text(
                   'Não foi possível carregar os dados',

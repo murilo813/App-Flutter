@@ -3,7 +3,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 import '../services/sync_service.dart';
-import '../services/anniversary.dart'; 
+import '../services/anniversary.dart';
 import '../services/inactivity.dart';
 import '../secrets.dart';
 import 'local_log.dart';
@@ -30,7 +30,9 @@ void callbackDispatcher() {
       }
       return Future.value(true);
     } catch (e, stack) {
-      await LocalLogger.log('Erro na execução da task $task: $e\nStack: $stack');
+      await LocalLogger.log(
+        'Erro na execução da task $task: $e\nStack: $stack',
+      );
       return Future.value(false);
     }
   });

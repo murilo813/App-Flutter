@@ -10,11 +10,14 @@ class LocalLogger {
 
   static Future<void> log(String message) async {
     try {
-        final file = await _getLogFile();
-        final timestamp = DateTime.now().toIso8601String();
-        await file.writeAsString('[$timestamp] $message\n', mode: FileMode.append);
+      final file = await _getLogFile();
+      final timestamp = DateTime.now().toIso8601String();
+      await file.writeAsString(
+        '[$timestamp] $message\n',
+        mode: FileMode.append,
+      );
     } catch (e) {
-        // evita crash se falhar ao escrever o log
+      // evita crash se falhar ao escrever o log
     }
   }
 }

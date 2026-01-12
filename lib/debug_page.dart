@@ -20,12 +20,7 @@ class DebugPage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            LogViewerPage(),
-            PendentsPage(),
-          ],
-        ),
+        body: const TabBarView(children: [LogViewerPage(), PendentsPage()]),
       ),
     );
   }
