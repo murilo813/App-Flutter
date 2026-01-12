@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'widgets/loading.dart';
-
 class LogViewerPage extends StatefulWidget {
   const LogViewerPage({super.key});
 
@@ -132,8 +130,14 @@ class _LogViewerPageState extends State<LogViewerPage> {
                   title: const Text('Confirmar'),
                   content: const Text('Deseja limpar o log?'),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Confirmar')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Confirmar'),
+                    ),
                   ],
                 ),
               );
@@ -146,12 +150,7 @@ class _LogViewerPageState extends State<LogViewerPage> {
         ],
       ),
       body: _loading
-          ? const Center(
-              child: Loading(
-                icon: Icons.article, 
-                color: Colors.green,
-              ),
-            )
+          ? const SizedBox.shrink()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: SelectableText(
@@ -163,7 +162,6 @@ class _LogViewerPageState extends State<LogViewerPage> {
                 ),
               ),
             ),
-
     );
   }
 }

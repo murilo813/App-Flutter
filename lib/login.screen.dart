@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'background/pendents.dart';
 import 'services/http_client.dart';
 import 'services/auth_headers.dart';
+import 'widgets/loading.dart';
 import 'widgets/gradientgreen.dart';
 import 'home_page.dart';
 import 'secrets.dart';
@@ -47,16 +48,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
-    int? idVendedor = prefs.getInt('id_vendedor');
-    String? idUsuario = prefs.getString('id_usuario');
-    String? appVersion = prefs.getString('app_version');
+    final loggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final idVendedor = prefs.getInt('id_vendedor');
+    final idUsuario = prefs.getString('id_usuario');
+
+    if (!mounted) return;
 
     if (loggedIn && idUsuario != null && idVendedor != null) {
       await registrarUso();
+
       Navigator.pushReplacement(
         context,
-       MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
       );
     } else {
       setState(() {
@@ -64,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
+
 
   Future<void> registrarUso() async {
     final prefs = await SharedPreferences.getInstance();
@@ -197,34 +201,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final versaoAtual = packageInfo.version;
     final versaoSalva = prefs.getString('app_version');
-    print(versaoAtual);
-    print(versaoSalva);
 
     if (versaoSalva == null || versaoSalva != versaoAtual) {
-      print('App atualizado: limpando SharedPreferences...');
-      
-      await prefs.clear(); 
-      
       await prefs.setString('app_version', versaoAtual);
-    } else {
-      print('App não foi atualizado. SharedPreferences mantido.');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
     if (_checkingLogin) {
-      return const Scaffold(
-        body: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: GradientGreen.primary,
-          ),
-          child: Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          ),
+      return const Loading(
+        child: Image(
+          image: AssetImage('assets/icons/iconWhite.png'),
+          width: 80,
+          height: 80,
         ),
       );
     }
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(

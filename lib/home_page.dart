@@ -16,6 +16,7 @@ import 'background/local_log.dart';
 import 'services/http_client.dart';
 import 'models/client.dart';
 import 'widgets/gradientgreen.dart';
+import 'widgets/loading.dart';
 import 'login.screen.dart';
 import 'store_page.dart';
 import 'clients_page.dart';
@@ -34,6 +35,7 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  bool _inicializado = false;
   int _titleTapCount = 0;
   int? _idEmpresa;
   String? _tipoUsuario;
@@ -48,22 +50,28 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _init();
+  }
 
-    (() async {
-      bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+  Future<void> _init() async {
+    final prefs = await SharedPreferences.getInstance();
 
-      if (!isAllowed) {
-        isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications();
-      }
+    bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
 
-      await anniversaryModal();
-      await checkLoginStatus(context);
-      final prefs = await SharedPreferences.getInstance();
+    _tipoUsuario = prefs.getString('tipo_usuario');
+    _idEmpresa = prefs.getInt('id_empresa');
+
+    await anniversaryModal();
+    await checkAppVersion();
+
+    if (mounted) {
       setState(() {
-        _tipoUsuario = prefs.getString('tipo_usuario');
-        _idEmpresa = prefs.getInt('id_empresa');
+        _inicializado = true;
       });
-    })();
+    }
   }
 
   Future<void> checkLoginStatus(BuildContext context) async {
@@ -259,6 +267,15 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_inicializado) {
+      return const Loading(
+        child: Image(
+          image: AssetImage('assets/icons/iconWhite.png'),
+          width: 80,
+          height: 80,
+        ),
+      );
+    }
     String empresaNome = _idEmpresa != null ? empresas[_idEmpresa!]! : '';
     return Scaffold(
       backgroundColor: Colors.white,
@@ -270,26 +287,29 @@ class HomePageState extends State<HomePage> {
               const SizedBox(height: 50),
 
               // ÍCONE
-              Container(
-                width: 100,
-                height: 100,
-                decoration: const BoxDecoration(
-                  gradient: GradientGreen.accent,
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const Image(
-                  image: AssetImage('assets/icons/iconWhite.png'),
-                  width: 75,
-                  height: 75,
-                  fit: BoxFit.contain,
+              GestureDetector(
+                onTap: _onLogoTapped,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    gradient: GradientGreen.accent,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const Image(
+                    image: AssetImage('assets/icons/iconWhite.png'),
+                    width: 75,
+                    height: 75,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
 
@@ -406,6 +426,19 @@ class HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void _onLogoTapped() {
+    _titleTapCount++;
+
+    if (_titleTapCount >= 6) {
+      _titleTapCount = 0;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DebugPage()),
+      );
+    }
   }
 
   Widget _homeCard({

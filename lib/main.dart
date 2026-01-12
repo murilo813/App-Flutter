@@ -115,10 +115,17 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       theme: ThemeData(
         fontFamily: 'Inter',
+
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
+        ),
+
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          elevation: 2,
+          margin: EdgeInsets.symmetric(vertical: 6),
         ),
       ),
       home: LoginScreen(),

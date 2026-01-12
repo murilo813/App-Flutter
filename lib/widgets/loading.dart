@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class Loading extends StatefulWidget {
-  final IconData icon;
-  final double size;
+  final Widget? child;
+  final IconData? icon;
   final Color? color;
+  final double size;
 
   const Loading({
     Key? key,
-    required this.icon,
-    this.size = 70,
+    this.child,
+    this.icon,
     this.color,
+    this.size = 70,
   }) : super(key: key);
 
   @override
@@ -18,9 +20,9 @@ class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
-  late Animation<double> _opacityAnimation;
+  late Animation<Alignment> _beginAnimation;
+  late Animation<Alignment> _endAnimation;
 
   @override
   void initState() {
@@ -28,18 +30,24 @@ class _LoadingState extends State<Loading>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 12),
     )..repeat(reverse: true);
 
-    _opacityAnimation = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _beginAnimation = Tween<Alignment>(
+      begin: Alignment.bottomLeft,
+      end: Alignment.topRight,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.linear,
+    ));
+
+    _endAnimation = Tween<Alignment>(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.linear,
+    ));
   }
 
   @override
@@ -50,20 +58,44 @@ class _LoadingState extends State<Loading>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      width: double.infinity,
-      height: double.infinity,
-      child: Center(
-        child: FadeTransition(
-          opacity: _opacityAnimation,
-          child: Icon(
-            widget.icon,
-            size: widget.size,
-            color: widget.color ?? Theme.of(context).primaryColor,
+    Widget content;
+
+    if (widget.child != null) {
+      content = widget.child!;
+    } else if (widget.icon != null) {
+      content = Icon(
+        widget.icon,
+        size: widget.size,
+        color: widget.color ?? Colors.white,
+      );
+    } else {
+      content = const Image(
+        image: AssetImage('assets/icons/iconWhite.png'),
+        width: 70,
+        height: 70,
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: _beginAnimation.value,
+              end: _endAnimation.value,
+              colors: const [
+                Color(0xFF15803D),
+                Color(0xFF16A34A),
+                Color(0xFF049271),
+              ],
+            ),
           ),
-        ),
-      ),
+          child: Center(child: content),
+        );
+      },
     );
   }
 }

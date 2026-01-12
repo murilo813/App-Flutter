@@ -195,7 +195,7 @@ class _ClientsPageState extends State<ClientsPage> {
       return const Scaffold(
         body: Loading(
           icon: Icons.people,
-          color: Colors.green,
+          color: Colors.white,
         ),
       );
     }
@@ -242,7 +242,7 @@ class _ClientsPageState extends State<ClientsPage> {
                             ),
                           Center(
                             child: Text(
-                              'Meus Clientes',
+                              widget.modoSelecao ? 'Selecionar cliente' : 'Meus Clientes',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,

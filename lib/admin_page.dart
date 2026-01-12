@@ -11,6 +11,7 @@ import 'background/pendents.dart';
 import 'background/local_log.dart';
 import 'widgets/loading.dart';
 import 'widgets/error.dart';
+import 'widgets/gradientgreen.dart';
 import 'models/user.dart';
 import 'secrets.dart';
 
@@ -141,174 +142,222 @@ class _AdminPageState extends State<AdminPage> {
       return const Scaffold(
         body: Loading(
           icon: Icons.admin_panel_settings,
-          color: Colors.deepPurple,
+          color: Colors.white,
         ),
       );
     }
+
     if (erroCritico) {
-      return ErrorScreen(
-        onRetry: checkConnectionAndLoadData, 
-      );
+      return ErrorScreen(onRetry: checkConnectionAndLoadData);
     }
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: Text("Administração"), centerTitle: true),
+      backgroundColor: Colors.grey[100],
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                labelText: 'Pesquisar usuário',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.search),
+          // ================= Gradient AppBar + Pesquisa fixos =================
+          Container(
+            decoration: const BoxDecoration(
+              gradient: GradientGreen.primary,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15),
               ),
-              onChanged: (q) {
-                setState(() {
-                  filteredUsuarios = allUsuarios
-                      .where((u) =>
-                          u.usuario.toLowerCase().contains(q.toLowerCase()))
-                      .toList();
-                });
-              },
+            ),
+            padding: const EdgeInsets.only(
+              top: 40,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // AppBar fake
+                SizedBox(
+                  height: 35,
+                  child: Stack(
+                    children: [
+                      if (Navigator.canPop(context))
+                        const Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: BackButton(color: Colors.white),
+                        ),
+                      Center(
+                        child: Text(
+                          "Administração",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Caixa de pesquisa
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Pesquisar usuário',
+                      border: InputBorder.none,
+                      prefixIcon: Icon(Icons.search),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: (q) {
+                      setState(() {
+                        filteredUsuarios = allUsuarios
+                            .where((u) => u.usuario
+                                .toLowerCase()
+                                .contains(q.toLowerCase()))
+                            .toList();
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: filteredUsuarios.isEmpty
-                ? Center(child: Text("Nenhum usuário disponível"))
-                : SafeArea(
-                    bottom: true,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: filteredUsuarios.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == filteredUsuarios.length) {
-                          return GestureDetector(
-                            onTap: () => _abrirDialogNovoUsuario(),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade400,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "Novo Usuário",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
+          // ================= Fim Gradient AppBar + Pesquisa =================
 
-                        final u = filteredUsuarios[index];
-                        return Card(
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          color: u.ativo == 'N' ? Colors.grey.shade800 : null, 
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          child: Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor:
-                                          u.tipo_usuario.toLowerCase() == 'admin'
-                                              ? Colors.green.shade100
-                                              : Colors.blue.shade50,
-                                      child: Image.asset(
-                                        u.tipo_usuario.toLowerCase() == 'admin'
-                                            ? 'assets/icons/adminicon.png'
-                                            : 'assets/icons/usericon.png',
-                                        width: 24,
-                                        height: 24,
-                                        errorBuilder: (_, __, ___) => Icon(Icons.person, color: Colors.grey),
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            u.nomeclatura,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: u.ativo == 'N' ? Colors.white70 : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            "${u.usuario} | ${'*' * 8}",
-                                            style: TextStyle(
-                                              color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
-                                            ),
-                                          ),
-                                          Text(
-                                            "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
-                                            style: TextStyle(
-                                              color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (u.ativo == 'N') 
-                                Positioned.fill(
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.lock,
-                                      color: Colors.grey.shade600,
-                                      size: 40,
-                                    ),
-                                  ),
-                                ),
-                              Positioned(
-                                top: 4,
-                                left: 8,
-                                child: Text(
-                                  u.id.toString(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 4,
-                                right: 8,
-                                child: IconButton(
-                                  icon: Icon(Icons.edit,
-                                      size: 18, color: Colors.grey[700]),
-                                  onPressed: () => _abrirDialogEditarUsuario(u), 
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+          // ================= Lista rolável abaixo =================
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              children: [
+                // Usuários
+                ...filteredUsuarios.map((u) => _buildUsuarioCard(u)),
+
+                // Botão Novo Usuário
+                GestureDetector(
+                  onTap: () => _abrirDialogNovoUsuario(),
+                  child: Container(
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: GradientGreen.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.add, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          "Novo Usuário",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                   ),
-          )
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUsuarioCard(User u) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: u.ativo == 'N' ? Colors.grey.shade800 : null,
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: u.tipo_usuario.toLowerCase() == 'admin'
+                      ? Colors.green.shade100
+                      : Colors.blue.shade50,
+                  child: Image.asset(
+                    u.tipo_usuario.toLowerCase() == 'admin'
+                        ? 'assets/icons/adminicon.png'
+                        : 'assets/icons/usericon.png',
+                    width: 24,
+                    height: 24,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        u.nomeclatura,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: u.ativo == 'N' ? Colors.white70 : Colors.black,
+                        ),
+                      ),
+                      Text(
+                        "${u.usuario} | ${'*' * 8}",
+                        style: TextStyle(
+                          color: u.ativo == 'N' ? Colors.white54 : Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
+                        style: TextStyle(
+                          color: u.ativo == 'N' ? Colors.white54 : Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (u.ativo == 'N')
+            Positioned.fill(
+              child: Center(
+                child: Icon(Icons.lock, color: Colors.grey.shade600, size: 40),
+              ),
+            ),
+          Positioned(
+            top: 4,
+            left: 8,
+            child: Text(
+              u.id.toString(),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 8,
+            child: IconButton(
+              icon: Icon(Icons.edit, size: 18, color: Colors.grey[700]),
+              onPressed: () => _abrirDialogEditarUsuario(u),
+            ),
+          ),
         ],
       ),
     );
@@ -377,6 +426,7 @@ class _AdminPageState extends State<AdminPage> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return Dialog(
+              backgroundColor: Colors.white,
               insetPadding: EdgeInsets.all(20),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Container(
@@ -674,6 +724,7 @@ class _AdminPageState extends State<AdminPage> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return Dialog(
+              backgroundColor: Colors.white,
               insetPadding: EdgeInsets.all(20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

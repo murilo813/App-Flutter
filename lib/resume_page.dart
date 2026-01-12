@@ -8,6 +8,7 @@ import 'background/pendents.dart';
 import 'background/local_log.dart';
 import 'models/client.dart';
 import 'models/product.dart';
+import 'widgets/gradientgreen.dart';
 import 'pedido_confirmado_page.dart';
 import 'secrets.dart';
 
@@ -359,7 +360,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                 width: double.infinity,
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade700,
+                  gradient: GradientGreen.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(

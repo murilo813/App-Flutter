@@ -127,6 +127,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
   Future<void> checkConnectionAndLoadData() async {
     setState(() {
       loading = true;
+      erroCritico = false;
     });
 
     try {
@@ -134,35 +135,38 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
 
       if (widget.modoSelecao) {
         await carregarDadosLocais();
-        return;
-      }
-
-      if (!temInternet) {
-        print('Sem conexão — carregando do arquivo local');
+      } else if (!temInternet) {
         await carregarDadosLocais();
       } else {
-        print('Com conexão — sincronizando com a API');
+        List<Product> produtos = [];
         try {
-          await syncService.syncEstoqueGeral();
+          produtos = await syncService.syncEstoqueGeral();
         } catch (e, stack) {
-          await LocalLogger.log(
-            'Erro na sincronização (rota com internet)\nErro: $e\nStack: $stack',
-          );
+          await LocalLogger.log('Erro na sincronização: $e\n$stack');
         }
-        await carregarDadosLocais();
+
+        // Atualiza o estado com os produtos sincronizados
+        if (produtos.isNotEmpty) {
+          setState(() {
+            allProducts = produtos;
+            filteredProducts = produtos;
+            ultimaAtualizacao = DateTime.now().toIso8601String();
+          });
+        }
+
+        // Se ainda não tiver produtos, tenta carregar local
+        if (produtos.isEmpty) await carregarDadosLocais();
       }
 
       if (allProducts.isEmpty) {
         setState(() {
-          erroCritico = true; 
+          erroCritico = true;
         });
       }
     } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack',
-      );
+      await LocalLogger.log('Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack');
       setState(() {
-        erroCritico = true; 
+        erroCritico = true;
       });
     } finally {
       if (mounted) setState(() => loading = false);
@@ -182,7 +186,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver{
       return const Scaffold(
         body: Loading(
           icon: Icons.inventory_2_outlined,
-          color: Colors.green,
+          color: Colors.white,
         ),
       );
     }
