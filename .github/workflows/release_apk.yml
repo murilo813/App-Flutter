@@ -2,19 +2,21 @@ name: Build APK
 
 on:
   push:
-    branches: [ main ] # Só gera o APK quando a main é atualizada
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] 
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # Baixa seu código
+      - uses: actions/checkout@v4 
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17' # Versão padrão para Flutter em 2026
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -25,13 +27,15 @@ jobs:
         run: flutter pub get
 
       - name: Rodar Testes
-        run: flutter test # O APK só será gerado se os testes passarem!
+        run: flutter test # Roda sempre (PR e Push)
 
       - name: Build APK Release
+        if: github.event_name == 'push' # Só roda no Merge/Push direto na main
         run: flutter build apk --release
 
       - name: Salvar APK como Artefato
+        if: github.event_name == 'push' # Só gera o arquivo para download na main
         uses: actions/upload-artifact@v4
         with:
-          name: Alembro # Nome do arquivo para download
-          path: build/app/outputs/flutter-apk/Alembro.apk
+          name: Alembro-Release
+          path: build/app/outputs/flutter-apk/app-release.apk

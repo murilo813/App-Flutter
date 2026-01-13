@@ -18,7 +18,10 @@ void main() {
       final user = User.fromJson(json);
 
       expect(user.id, 1);
-      expect(user.usuario, 'joao'); // vem do banco como 'nome' mas vira 'usuario'
+      expect(
+        user.usuario,
+        'joao',
+      ); // vem do banco como 'nome' mas vira 'usuario'
       expect(user.id_vendedor, 123);
       expect(user.tipo_usuario, 'USER');
       expect(user.ativo, 'S');
@@ -56,7 +59,12 @@ void main() {
       final json = user.toJson();
 
       expect(json['id'], 1);
-      expect(json['nome'], 'marcos_vendas', reason: 'A variável "usuario" deve ser exportada como "nome" para o Backend');
+      expect(
+        json['nome'],
+        'marcos_vendas',
+        reason:
+            'A variável "usuario" deve ser exportada como "nome" para o Backend',
+      );
       expect(json['id_vendedor'], 5);
       expect(json['tipo_usuario'], 'USER');
       expect(json['ativo'], 'S');
