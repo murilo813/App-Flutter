@@ -192,9 +192,10 @@ class _OrdersPageState extends State<OrdersPage> {
                     pagamentoSelecionado = r;
                     aplicarJuros = false;
 
-                    vencimentosParcelas = prazos
-                        .map((dias) => hoje.add(Duration(days: dias)))
-                        .toList();
+                    vencimentosParcelas =
+                        prazos
+                            .map((dias) => hoje.add(Duration(days: dias)))
+                            .toList();
                   });
 
                   if (r.containsKey("juros")) {
@@ -261,18 +262,18 @@ class _OrdersPageState extends State<OrdersPage> {
           return TableRow(
             children: [
               _tableCell("${index + 1}"),
-                podeEditar
-                    ? InkWell(
-                        onTap: () => _editarVencimento(index),
-                        child: _tableCell(
-                          DateFormat('dd/MM/yyyy')
-                            .format(vencimentosParcelas[index]),
-                        ),
-                      )
-                    : _tableCell(
-                        DateFormat('dd/MM/yyyy')
-                          .format(vencimentosParcelas[index]),
-                      ),
+              podeEditar
+                  ? InkWell(
+                    onTap: () => _editarVencimento(index),
+                    child: _tableCell(
+                      DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(vencimentosParcelas[index]),
+                    ),
+                  )
+                  : _tableCell(
+                    DateFormat('dd/MM/yyyy').format(vencimentosParcelas[index]),
+                  ),
 
               _tableCell(formatador.format(valorParcela)),
             ],

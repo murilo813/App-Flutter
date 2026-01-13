@@ -87,15 +87,24 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(widget.cliente.nomeCliente, style: const TextStyle(fontSize: 18)),
+            const Text(
+              "Cliente:",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.cliente.nomeCliente,
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 12),
 
             const Text(
               "Forma de Pagamento:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Text(widget.pagamento["nome"], style: const TextStyle(fontSize: 18)),
+            Text(
+              widget.pagamento["nome"],
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 5),
 
             const Row(
@@ -327,7 +336,9 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const PedidoConfirmadoPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const PedidoConfirmadoPage(),
+                  ),
                 );
 
                 () async {
@@ -389,25 +400,23 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       "desconto": desconto,
       "data": DateTime.now().toIso8601String(),
       "itens":
-        widget.produtos.map((p) {
-          final qtd = widget.quantidades[p.id] ?? 1;
+          widget.produtos.map((p) {
+            final qtd = widget.quantidades[p.id] ?? 1;
 
-          return {
-            "id_produto": p.id,
-            "quantidade": qtd,
-            "preco_unitario": precoProduto(p),
-          };
-        }).toList(),
+            return {
+              "id_produto": p.id,
+              "quantidade": qtd,
+              "preco_unitario": precoProduto(p),
+            };
+          }).toList(),
     };
 
     if (widget.vencimentoEditado != null) {
-      json["data_vencimento"] =
-        widget.vencimentoEditado!.toIso8601String();
+      json["data_vencimento"] = widget.vencimentoEditado!.toIso8601String();
     }
 
     return json;
   }
-
 
   double precoProduto(Product p) {
     if (p.precoEditado != null) {
@@ -448,7 +457,9 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               content: TextField(
                 controller: ctrl,
                 autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: "Digite o valor",
                   prefixText: "R\$ ",

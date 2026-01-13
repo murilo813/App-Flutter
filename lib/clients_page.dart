@@ -560,7 +560,8 @@ class _ClientsPageState extends State<ClientsPage> {
                                       colorScheme: const ColorScheme.light(
                                         primary: Colors.black, // header + OK
                                         onPrimary: Colors.white,
-                                        surface: Colors.white, // fundo calendário
+                                        surface:
+                                            Colors.white, // fundo calendário
                                         onSurface: Colors.black, // textos
                                       ),
                                       dialogTheme: const DialogThemeData(
@@ -690,7 +691,9 @@ class _ClientsPageState extends State<ClientsPage> {
                       'Erro: id_vendedor não encontrado no SharedPreferences',
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Erro: vendedor não encontrado')),
+                      const SnackBar(
+                        content: Text('Erro: vendedor não encontrado'),
+                      ),
                     );
                     return;
                   }
@@ -782,7 +785,9 @@ class _ClientsPageState extends State<ClientsPage> {
                       'Erro ao criar observação: $e\nStackTrace: $stack',
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Erro ao registrar observação')),
+                      const SnackBar(
+                        content: Text('Erro ao registrar observação'),
+                      ),
                     );
                   }
 

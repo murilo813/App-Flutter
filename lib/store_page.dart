@@ -423,7 +423,10 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                     padding: const EdgeInsets.only(right: 8),
                     child: RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         children: [
                           const TextSpan(
                             text: 'Preço 2: ',
