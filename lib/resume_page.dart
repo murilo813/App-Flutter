@@ -15,6 +15,7 @@ class ResumoPedidoPage extends StatefulWidget {
   final int clienteId;
   final Cliente cliente;
   final int pagamentoId;
+  final DateTime? vencimentoEditado;
   final Map<String, dynamic> pagamento;
   final List<Product> produtos;
   final Map<int, int> quantidades;
@@ -24,6 +25,7 @@ class ResumoPedidoPage extends StatefulWidget {
     required this.clienteId,
     required this.cliente,
     required this.pagamentoId,
+    this.vencimentoEditado,
     required this.pagamento,
     required this.produtos,
     required this.quantidades,
@@ -379,7 +381,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   }
 
   Map<String, dynamic> montarJsonPedido() {
-    return {
+    final Map<String, dynamic> json = {
       "id_cliente": widget.clienteId,
       "lista_preco": widget.cliente.lista_preco,
       "id_pagamento": widget.pagamentoId,
@@ -387,17 +389,25 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       "desconto": desconto,
       "data": DateTime.now().toIso8601String(),
       "itens":
-          widget.produtos.map((p) {
-            final qtd = widget.quantidades[p.id] ?? 1;
+        widget.produtos.map((p) {
+          final qtd = widget.quantidades[p.id] ?? 1;
 
-            return {
-              "id_produto": p.id,
-              "quantidade": qtd,
-              "preco_unitario": precoProduto(p),
-            };
-          }).toList(),
+          return {
+            "id_produto": p.id,
+            "quantidade": qtd,
+            "preco_unitario": precoProduto(p),
+          };
+        }).toList(),
     };
+
+    if (widget.vencimentoEditado != null) {
+      json["data_vencimento"] =
+        widget.vencimentoEditado!.toIso8601String();
+    }
+
+    return json;
   }
+
 
   double precoProduto(Product p) {
     if (p.precoEditado != null) {

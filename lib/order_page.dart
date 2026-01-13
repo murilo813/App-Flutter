@@ -20,15 +20,18 @@ class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
 
   @override
-  _OrdersPageState createState() => _OrdersPageState();
+  State<OrdersPage> createState() => _OrdersPageState();
 }
 
 class _OrdersPageState extends State<OrdersPage> {
   bool loading = true;
   bool erroCritico = false;
   String? mensagemErro;
+
   Cliente? clienteSelecionado;
   Map<String, dynamic>? pagamentoSelecionado;
+  DateTime? vencimentoEditado;
+  List<DateTime> vencimentosParcelas = [];
   List<Product> produtosSelecionados = [];
   Map<int, TextEditingController> precoControllers = {};
 
@@ -110,26 +113,6 @@ class _OrdersPageState extends State<OrdersPage> {
     setState(() => produtos = dados);
   }
 
-  List<Map<String, String>> gerarParcelas() {
-    if (pagamentoSelecionado == null) return [];
-
-    final hoje = DateTime.now();
-    final prazos = List<int>.from(pagamentoSelecionado!["prazo"]);
-    final List<Map<String, String>> lista = [];
-
-    for (int i = 0; i < prazos.length; i++) {
-      final venc = hoje.add(Duration(days: prazos[i]));
-      lista.add({
-        "parcela": "${i + 1}",
-        "vencimento":
-            "${venc.day.toString().padLeft(2, '0')}/"
-            "${venc.month.toString().padLeft(2, '0')}/"
-            "${venc.year}",
-      });
-    }
-    return lista;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -197,13 +180,23 @@ class _OrdersPageState extends State<OrdersPage> {
               onTap: () async {
                 final r = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const SelecaoPagamentoPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const SelecaoPagamentoPage(),
+                  ),
                 );
                 if (r != null) {
+                  final hoje = DateTime.now();
+                  final prazos = List<int>.from(r["prazo"]);
+
                   setState(() {
                     pagamentoSelecionado = r;
                     aplicarJuros = false;
+
+                    vencimentosParcelas = prazos
+                        .map((dias) => hoje.add(Duration(days: dias)))
+                        .toList();
                   });
+
                   if (r.containsKey("juros")) {
                     jurosSelecionado = r["juros"] * 1.0;
                     Future.delayed(
@@ -241,43 +234,57 @@ class _OrdersPageState extends State<OrdersPage> {
   // ====================== AUXILIARES ======================
 
   Widget _buildParcelasTable() {
-    final parcelas = gerarParcelas();
-    final totalParcelas = parcelas.length;
+    final totalParcelas = vencimentosParcelas.length;
+
     return Table(
       border: TableBorder.symmetric(
         inside: BorderSide(color: Colors.grey.shade400, width: 1),
       ),
       columnWidths: const {
-        0: FlexColumnWidth(1),
+        0: FlexColumnWidth(1.2),
         1: FlexColumnWidth(2),
         2: FlexColumnWidth(2),
       },
       children: [
         TableRow(
-          children:
-              [
-                "Parcela",
-                "Vencimento",
-                "Valor",
-              ].map((t) => _tableCell(t, bold: true)).toList(),
+          children: [
+            _tableCell("Parcela", bold: true),
+            _tableCell("Vencimento", bold: true),
+            _tableCell("Valor", bold: true),
+          ],
         ),
-        ...parcelas.map((p) {
+
+        ...List.generate(totalParcelas, (index) {
           final valorParcela = calcularTotal() / totalParcelas;
+          final bool podeEditar = totalParcelas == 1;
+
           return TableRow(
             children: [
-              _tableCell(p["parcela"]!),
-              _tableCell(p["vencimento"]!),
+              _tableCell("${index + 1}"),
+                podeEditar
+                    ? InkWell(
+                        onTap: () => _editarVencimento(index),
+                        child: _tableCell(
+                          DateFormat('dd/MM/yyyy')
+                            .format(vencimentosParcelas[index]),
+                        ),
+                      )
+                    : _tableCell(
+                        DateFormat('dd/MM/yyyy')
+                          .format(vencimentosParcelas[index]),
+                      ),
+
               _tableCell(formatador.format(valorParcela)),
             ],
           );
         }),
+
         TableRow(
           children: [
             const SizedBox(),
-            _tableCell("Total", fontSize: 14, bold: true),
+            _tableCell("Total", bold: true),
             _tableCell(
               formatador.format(calcularTotal()),
-              fontSize: 16,
               bold: true,
               color: Colors.green.shade700,
             ),
@@ -289,7 +296,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Padding _tableCell(
     String text, {
-    double fontSize = 13,
+    double fontSize = 15,
     bool bold = false,
     Color? color,
   }) {
@@ -305,6 +312,37 @@ class _OrdersPageState extends State<OrdersPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _editarVencimento(int index) async {
+    final DateTime? novaData = await showDatePicker(
+      context: context,
+      initialDate: vencimentosParcelas[index],
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      locale: const Locale('pt', 'BR'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black, // header e botão OK
+              onPrimary: Colors.white,
+              surface: Colors.white, // fundo do calendário
+              onSurface: Colors.black, // textos
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (novaData != null) {
+      setState(() {
+        vencimentosParcelas[index] = novaData;
+        vencimentoEditado = novaData;
+      });
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -386,12 +424,18 @@ class _OrdersPageState extends State<OrdersPage> {
                         width: 80,
                         child: Text(
                           "Estoque: $est",
-                          style: const TextStyle(fontSize: 13, color: Colors.black54),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
                       Text(
                         "Disponível: $disp",
-                        style: const TextStyle(fontSize: 13, color: Colors.black54),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   );
@@ -559,6 +603,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   clienteId: clienteSelecionado!.id,
                   cliente: clienteSelecionado!,
                   pagamentoId: pagamentoSelecionado!["id"],
+                  vencimentoEditado: vencimentoEditado,
                   pagamento: pagamentoSelecionado!,
                   produtos: produtosSelecionados,
                   quantidades: quantidades,
