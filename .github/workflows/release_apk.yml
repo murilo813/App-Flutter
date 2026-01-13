@@ -30,7 +30,7 @@ jobs:
         run: flutter test # Roda sempre (PR e Push)
 
       # --- PREPARAÇÃO DA ASSINATURA E SECRETS(SÓ NO MERGE/PUSH) ---
-      - Nname: Create secrets.dart
+      - name: Create secrets.dart
         if: github.event_name == 'push'
         run: echo "const String backendUrl = '${{ secrets.BACKEND_URL }}';" > lib/secrets.dart
 
