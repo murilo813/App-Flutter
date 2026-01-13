@@ -30,8 +30,8 @@ android {
     signingConfigs {
         create("release") {
             if (keyProperties.containsKey("storeFile")) {
-                // No GitHub, o arquivo estará dentro de android/app/
-                storeFile = file(keyProperties["storeFile"] as String)
+                val storeFileName = keyProperties["storeFile"] as String
+                storeFile = file(storeFileName) 
                 storePassword = keyProperties["storePassword"] as String
                 keyAlias = keyProperties["keyAlias"] as String
                 keyPassword = keyProperties["keyPassword"] as String
