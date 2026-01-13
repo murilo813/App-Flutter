@@ -51,7 +51,7 @@ flutter:
     - assets/icons/adminicon.png
     - assets/icons/usericon.png
     - assets/icons/iconWhite.png
-    - assets/animations/success.json
+    - assets/animations/Success.json
 
   fonts:
   - family: Inter
