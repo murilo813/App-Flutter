@@ -15,6 +15,7 @@ class ResumoPedidoPage extends StatefulWidget {
   final int clienteId;
   final Cliente cliente;
   final int pagamentoId;
+  final DateTime? vencimentoEditado;
   final Map<String, dynamic> pagamento;
   final List<Product> produtos;
   final Map<int, int> quantidades;
@@ -24,6 +25,7 @@ class ResumoPedidoPage extends StatefulWidget {
     required this.clienteId,
     required this.cliente,
     required this.pagamentoId,
+    this.vencimentoEditado,
     required this.pagamento,
     required this.produtos,
     required this.quantidades,
@@ -85,15 +87,24 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(widget.cliente.nomeCliente, style: const TextStyle(fontSize: 18)),
+            const Text(
+              "Cliente:",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.cliente.nomeCliente,
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 12),
 
             const Text(
               "Forma de Pagamento:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Text(widget.pagamento["nome"], style: const TextStyle(fontSize: 18)),
+            Text(
+              widget.pagamento["nome"],
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 5),
 
             const Row(
@@ -325,7 +336,9 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const PedidoConfirmadoPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const PedidoConfirmadoPage(),
+                  ),
                 );
 
                 () async {
@@ -379,7 +392,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   }
 
   Map<String, dynamic> montarJsonPedido() {
-    return {
+    final Map<String, dynamic> json = {
       "id_cliente": widget.clienteId,
       "lista_preco": widget.cliente.lista_preco,
       "id_pagamento": widget.pagamentoId,
@@ -397,6 +410,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
             };
           }).toList(),
     };
+
+    if (widget.vencimentoEditado != null) {
+      json["data_vencimento"] = widget.vencimentoEditado!.toIso8601String();
+    }
+
+    return json;
   }
 
   double precoProduto(Product p) {
@@ -438,7 +457,9 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               content: TextField(
                 controller: ctrl,
                 autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: "Digite o valor",
                   prefixText: "R\$ ",

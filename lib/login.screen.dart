@@ -66,17 +66,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   Future<void> registrarUso() async {
     final prefs = await SharedPreferences.getInstance();
     final String appVersion = prefs.getString('app_version') ?? 'desconhecida';
 
     final now = DateTime.now().toIso8601String();
-    final payload = {
-      'hora_acesso': now,
-      'versao_app': appVersion,
-    };
-
+    final payload = {'hora_acesso': now, 'versao_app': appVersion};
 
     try {
       final httpClient = HttpClient();
@@ -106,7 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final dispositivo = await androidIdPlugin.getId() ?? 'unknown';
 
       const platform = MethodChannel('app_signature_channel');
-      final assinatura = await platform.invokeMethod<String>('getassinatura') ?? 'unknown';
+      final assinatura =
+          await platform.invokeMethod<String>('getassinatura') ?? 'unknown';
 
       final body = {
         'nome': username,
@@ -150,62 +146,53 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
-      } 
+      }
       // senha ou usuário incorreto
       else if (response.statusCode == 401 || response.statusCode == 404) {
         setState(() {
           loginError = 'Usuário ou senha inválidos';
         });
-      } 
-
-      else if (response.statusCode == 403) {
+      } else if (response.statusCode == 403) {
         final data = jsonDecode(response.body);
         final detail = data['detail'] ?? '';
 
         setState(() {
           if (detail.contains('Dispositivo')) {
             loginError =
-              'Este dispositivo não está autorizado.\n'
-              'Por favor, contate o administrador.';
+                'Este dispositivo não está autorizado.\n'
+                'Por favor, contate o administrador.';
           } else if (detail.contains('desativado')) {
             loginError =
-              'Seu usuário foi desativado.\n'
-              'Por favor, contate o administrador.';
+                'Seu usuário foi desativado.\n'
+                'Por favor, contate o administrador.';
           } else {
             loginError = 'Acesso não permitido.';
           }
         });
-      }
-      
-      else if (response.statusCode == 409) {
+      } else if (response.statusCode == 409) {
         setState(() {
-          loginError = 
-            'Você não pode registrar mais dispositivos. \n' 
-            'Por favor, contato o administrador.';
+          loginError =
+              'Você não pode registrar mais dispositivos. \n'
+              'Por favor, contato o administrador.';
         });
-      }
-      else if (response.statusCode == 422) {
+      } else if (response.statusCode == 422) {
         setState(() {
-          loginError = 
-            'Aplicativo violado!';
+          loginError = 'Aplicativo violado!';
         });
       }
       // outros status do servidor (500, 502, etc) → modal de conexão
       else {
         _showConnectionError('Não foi possível conectar ao servidor.');
       }
-    } 
+    }
     // problemas de rede real
     on SocketException {
       _showConnectionError('Sem conexão com a internet.');
-    } 
-    on TimeoutException {
+    } on TimeoutException {
       _showConnectionError('Tempo de conexão esgotado.');
-    } 
-    catch (e) {
+    } catch (e) {
       _showConnectionError('Erro de conexão. Tente novamente.');
-    } 
-    finally {
+    } finally {
       setState(() => isLoading = false);
     }
   }
@@ -236,9 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: GradientGreen.primary,
-        ),
+        decoration: const BoxDecoration(gradient: GradientGreen.primary),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -246,7 +231,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(maxWidth: 420),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -283,10 +271,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
 
                       ShaderMask(
-                        shaderCallback: (bounds) =>
-                            GradientGreen.accent.createShader(bounds),
+                        shaderCallback:
+                            (bounds) =>
+                                GradientGreen.accent.createShader(bounds),
                         child: const Padding(
-                          padding: EdgeInsets.only(bottom: 2), 
+                          padding: EdgeInsets.only(bottom: 2),
                           child: Text(
                             'AgroZecão',
                             style: TextStyle(
@@ -303,10 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const Text(
                         'Faça login para continuar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
                       ),
 
                       const SizedBox(height: 24),
@@ -316,8 +302,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _usernameController,
                         hint: 'Digite seu usuário',
                         obscure: false,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Digite o usuário' : null,
+                        validator:
+                            (v) =>
+                                v == null || v.isEmpty
+                                    ? 'Digite o usuário'
+                                    : null,
                       ),
 
                       const SizedBox(height: 16),
@@ -327,8 +316,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         hint: 'Digite sua senha',
                         obscure: true,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Digite a senha' : null,
+                        validator:
+                            (v) =>
+                                v == null || v.isEmpty
+                                    ? 'Digite a senha'
+                                    : null,
                       ),
 
                       if (loginError != null)
@@ -363,26 +355,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Ink(
                             decoration: const BoxDecoration(
                               gradient: GradientGreen.accent,
-                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
                             ),
                             child: Center(
-                              child: isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
+                              child:
+                                  isLoading
+                                      ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                      : const Text(
+                                        'Entrar',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    )
-                                  : const Text(
-                                      'Entrar',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
                             ),
                           ),
                         ),
@@ -398,16 +393,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-
   Widget _inputLabel(String text) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -423,7 +414,7 @@ class _LoginScreenState extends State<LoginScreen> {
         gradient: GradientGreen.accent,
         borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.all(1.5), 
+      padding: const EdgeInsets.all(1.5),
       child: TextFormField(
         controller: controller,
         obscureText: obscure,
@@ -432,59 +423,62 @@ class _LoginScreenState extends State<LoginScreen> {
           hintText: hint,
           filled: true,
           fillColor: Colors.grey.shade100,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none, 
+            borderSide: BorderSide.none,
           ),
         ),
       ),
     );
   }
+
   void _showConnectionError(String message) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.wifi_off, color: Colors.red, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Sem conexão',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      builder:
+          (_) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sem conexão',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-                child: const Text(
-                  'Fechar',
-                  style: TextStyle(color: Colors.white),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Fechar',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }

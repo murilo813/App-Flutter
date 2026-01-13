@@ -405,7 +405,10 @@ class _AdminPageState extends State<AdminPage> {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(12),
@@ -601,7 +604,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "user",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -650,7 +655,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "admin",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -976,7 +983,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "user",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1025,7 +1034,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "admin",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1083,7 +1094,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => ativoLocal = 'S',
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1120,7 +1133,9 @@ class _AdminPageState extends State<AdminPage> {
                                             () => ativoLocal = 'N',
                                           ),
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:

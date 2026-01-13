@@ -27,7 +27,7 @@ class _PedidoConfirmadoPageState extends State<PedidoConfirmadoPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Lottie.asset(
-              'assets/animations/success.json',
+              'assets/animations/Success.json',
               width: 200,
               repeat: false,
             ),
