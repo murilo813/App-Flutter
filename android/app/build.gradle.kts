@@ -2,7 +2,8 @@ import java.util.Properties
 import java.io.FileInputStream
 
 val keyProperties = Properties()
-val keyPropertiesFile = File("../key.properties")
+// Busca o arquivo key.properties na pasta /android (uma acima desta)
+val keyPropertiesFile = rootProject.file("key.properties")
 if (keyPropertiesFile.exists()) {
     keyProperties.load(FileInputStream(keyPropertiesFile))
 }
@@ -31,16 +32,14 @@ android {
         create("release") {
             if (keyProperties.containsKey("storeFile")) {
                 val storeFileName = keyProperties["storeFile"] as String
-                
-                storeFile = file("../$storeFileName") 
-                
+                // Busca o arquivo .jks na mesma pasta do key.properties (raiz de /android)
+                storeFile = rootProject.file(storeFileName)
                 storePassword = keyProperties["storePassword"] as String
                 keyAlias = keyProperties["keyAlias"] as String
                 keyPassword = keyProperties["keyPassword"] as String
             }
         }
     }
-
 
     defaultConfig {
         applicationId = "com.alembro"
@@ -65,8 +64,9 @@ android {
 
 android.applicationVariants.all {
     outputs.all {
-        (this as com.android.build.gradle.internal.api.ApkVariantOutputImpl).outputFileName =
-            "Alembro.apk"
+        (this as com.android.build.buildType == null) // Apenas para contexto interno do Gradle
+        val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+        output.outputFileName = "Alembro.apk"
     }
 }
 
