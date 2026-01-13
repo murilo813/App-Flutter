@@ -31,13 +31,16 @@ android {
         create("release") {
             if (keyProperties.containsKey("storeFile")) {
                 val storeFileName = keyProperties["storeFile"] as String
-                storeFile = file(storeFileName) 
+                
+                storeFile = file("../$storeFileName") 
+                
                 storePassword = keyProperties["storePassword"] as String
                 keyAlias = keyProperties["keyAlias"] as String
                 keyPassword = keyProperties["keyPassword"] as String
             }
         }
     }
+
 
     defaultConfig {
         applicationId = "com.alembro"
