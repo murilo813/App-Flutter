@@ -757,7 +757,7 @@ class _OrdersPageState extends State<OrdersPage> {
     return prefs.getInt('id_empresa') ?? 1;
   }
 
-  int estoquePorEmpresa(Product p, int empresa) {
+  double estoquePorEmpresa(Product p, int empresa) {
     switch (empresa) {
       case 1:
         return p.estoqueBelavista;
@@ -772,7 +772,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
-  int disponivelPorEmpresa(Product p, int empresa) {
+  double disponivelPorEmpresa(Product p, int empresa) {
     switch (empresa) {
       case 1:
         return p.disponivelBelavista;

@@ -29,7 +29,11 @@ jobs:
       - name: Rodar Testes
         run: flutter test # Roda sempre (PR e Push)
 
-      # --- PREPARAÇÃO DA ASSINATURA (SÓ NO MERGE/PUSH) ---
+      # --- PREPARAÇÃO DA ASSINATURA E SECRETS(SÓ NO MERGE/PUSH) ---
+      - Nname: Create secrets.dart
+        if: github.event_name == 'push'
+        run: echo "const String backendUrl = '${{ secrets.BACKEND_URL }}';" > lib/secrets.dart
+
       - name: Decode Keystore
         if: github.event_name == 'push'
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
