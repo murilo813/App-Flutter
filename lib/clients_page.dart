@@ -520,6 +520,8 @@ class _ClientsPageState extends State<ClientsPage> {
       context: context,
       builder:
           (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white, // MATERIAL 3 (crítico)
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -551,7 +553,25 @@ class _ClientsPageState extends State<ClientsPage> {
                                 initialDate: selectedDate,
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(2100),
+                                locale: const Locale('pt', 'BR'),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: Colors.black, // header + OK
+                                        onPrimary: Colors.white,
+                                        surface: Colors.white, // fundo calendário
+                                        onSurface: Colors.black, // textos
+                                      ),
+                                      dialogTheme: const DialogThemeData(
+                                        backgroundColor: Colors.white,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
                               );
+
                               if (picked != null) {
                                 setState(() {
                                   selectedDate = picked;
