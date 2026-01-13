@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> registrarUso() async {
     final prefs = await SharedPreferences.getInstance();
-    String? appVersion = prefs.getString('app_version') ?? 'desconhecida';
+    final String appVersion = prefs.getString('app_version') ?? 'desconhecida';
 
     final now = DateTime.now().toIso8601String();
     final payload = {
@@ -98,11 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
       loginError = null;
     });
 
-    String username = _usernameController.text.trim();
-    String password = _passwordController.text.trim();
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text.trim();
 
     try {
-      final androidIdPlugin = AndroidId();
+      final androidIdPlugin = const AndroidId();
       final dispositivo = await androidIdPlugin.getId() ?? 'unknown';
 
       const platform = MethodChannel('app_signature_channel');
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        int idVendedor = data['id_vendedor'];
+        final int idVendedor = data['id_vendedor'];
         final idUsuario = data['id_usuario'].toString();
         final tipoUsuario = data['tipo'];
         final idEmpresa = data['id_empresa'];
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => const HomePage()),
         );
       } 
       // senha ou usuário incorreto
@@ -285,11 +285,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ShaderMask(
                         shaderCallback: (bounds) =>
                             GradientGreen.accent.createShader(bounds),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 2), 
+                        child: const Padding(
+                          padding: EdgeInsets.only(bottom: 2), 
                           child: Text(
                             'AgroZecão',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
@@ -452,9 +452,9 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.wifi_off, color: Colors.red, size: 48),
+              const Icon(Icons.wifi_off, color: Colors.red, size: 48),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Sem conexão',
                 style: TextStyle(
                   fontSize: 18,
@@ -465,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 16),
               ElevatedButton(

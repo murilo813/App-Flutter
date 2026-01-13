@@ -6,8 +6,7 @@ class Loading extends StatefulWidget {
   final Color? color;
   final double size;
 
-  const Loading({Key? key, this.child, this.icon, this.color, this.size = 70})
-    : super(key: key);
+  const Loading({super.key, this.child, this.icon, this.color, this.size = 70});
 
   @override
   State<Loading> createState() => _LoadingState();

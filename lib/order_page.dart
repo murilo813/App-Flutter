@@ -17,6 +17,8 @@ import 'resume_page.dart';
 import 'secrets.dart';
 
 class OrdersPage extends StatefulWidget {
+  const OrdersPage({super.key});
+
   @override
   _OrdersPageState createState() => _OrdersPageState();
 }
@@ -113,7 +115,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
     final hoje = DateTime.now();
     final prazos = List<int>.from(pagamentoSelecionado!["prazo"]);
-    List<Map<String, String>> lista = [];
+    final List<Map<String, String>> lista = [];
 
     for (int i = 0; i < prazos.length; i++) {
       final venc = hoje.add(Duration(days: prazos[i]));
@@ -178,7 +180,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 final r = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ClientsPage(modoSelecao: true),
+                    builder: (_) => const ClientsPage(modoSelecao: true),
                   ),
                 );
                 if (r != null) setState(() => clienteSelecionado = r);
@@ -195,7 +197,7 @@ class _OrdersPageState extends State<OrdersPage> {
               onTap: () async {
                 final r = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => SelecaoPagamentoPage()),
+                  MaterialPageRoute(builder: (_) => const SelecaoPagamentoPage()),
                 );
                 if (r != null) {
                   setState(() {
@@ -222,7 +224,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
             _buildSectionTitle("Produtos"),
 
-            ...produtosSelecionados.map(_buildProdutoItem).toList(),
+            ...produtosSelecionados.map(_buildProdutoItem),
 
             _buildAddProdutoButton(),
 
@@ -336,7 +338,7 @@ class _OrdersPageState extends State<OrdersPage> {
       direction: DismissDirection.endToStart,
       onUpdate: (details) {
         if (details.direction == DismissDirection.endToStart) {
-          double limit = MediaQuery.of(context).size.width * 0.30;
+          final double limit = MediaQuery.of(context).size.width * 0.30;
           if (details.progress * MediaQuery.of(context).size.width > limit) {
             details = DismissUpdateDetails(
               direction: details.direction,
@@ -384,12 +386,12 @@ class _OrdersPageState extends State<OrdersPage> {
                         width: 80,
                         child: Text(
                           "Estoque: $est",
-                          style: TextStyle(fontSize: 13, color: Colors.black54),
+                          style: const TextStyle(fontSize: 13, color: Colors.black54),
                         ),
                       ),
                       Text(
                         "Disponível: $disp",
-                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                        style: const TextStyle(fontSize: 13, color: Colors.black54),
                       ),
                     ],
                   );
@@ -511,7 +513,7 @@ class _OrdersPageState extends State<OrdersPage> {
       onTap: () async {
         final r = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => StorePage(modoSelecao: true)),
+          MaterialPageRoute(builder: (_) => const StorePage(modoSelecao: true)),
         );
         if (r != null) {
           setState(() {
@@ -528,9 +530,9 @@ class _OrdersPageState extends State<OrdersPage> {
           color: Colors.blue.shade600,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.add, color: Colors.white),
             SizedBox(width: 8),
             Text(
@@ -572,9 +574,9 @@ class _OrdersPageState extends State<OrdersPage> {
           gradient: GradientGreen.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.check, color: Colors.white),
             SizedBox(width: 8),
             Text(
@@ -604,8 +606,8 @@ class _OrdersPageState extends State<OrdersPage> {
     }
 
     if (dots == 1) {
-      int idx = input.indexOf('.');
-      int after = input.length - idx - 1;
+      final int idx = input.indexOf('.');
+      final int after = input.length - idx - 1;
 
       if (after == 3) {
         return double.tryParse(input.replaceAll('.', '')) ?? 0.0;
@@ -614,9 +616,9 @@ class _OrdersPageState extends State<OrdersPage> {
       return double.tryParse(input) ?? 0.0;
     }
 
-    int last = input.lastIndexOf('.');
-    String intPart = input.substring(0, last).replaceAll('.', '');
-    String decPart = input.substring(last + 1);
+    final int last = input.lastIndexOf('.');
+    final String intPart = input.substring(0, last).replaceAll('.', '');
+    final String decPart = input.substring(last + 1);
     return double.tryParse("$intPart.$decPart") ?? 0.0;
   }
 
@@ -625,11 +627,11 @@ class _OrdersPageState extends State<OrdersPage> {
         (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1);
     final precoMinimo = p.preco_minimo;
 
-    String precoInicial = (p.precoEditado ?? precoPadrao)
+    final String precoInicial = (p.precoEditado ?? precoPadrao)
         .toStringAsFixed(2)
         .replaceAll('.', ',');
 
-    TextEditingController ctrl = TextEditingController(text: precoInicial)
+    final TextEditingController ctrl = TextEditingController(text: precoInicial)
       ..selection = TextSelection(
         baseOffset: 0,
         extentOffset: precoInicial.length,
@@ -640,17 +642,17 @@ class _OrdersPageState extends State<OrdersPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            double valorDigitado = parsePreco(ctrl.text);
+            final double valorDigitado = parsePreco(ctrl.text);
 
-            bool valido = valorDigitado >= precoMinimo;
+            final bool valido = valorDigitado >= precoMinimo;
 
             return AlertDialog(
-              title: Text("Preço"),
+              title: const Text("Preço"),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!valido)
-                    Text(
+                    const Text(
                       "Preço abaixo do mínimo permitido!",
                       style: TextStyle(
                         color: Colors.red,
@@ -661,10 +663,10 @@ class _OrdersPageState extends State<OrdersPage> {
                   TextField(
                     controller: ctrl,
                     autofocus: true,
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "Digite o preço",
                       prefixText: "R\$ ",
                     ),
@@ -675,13 +677,13 @@ class _OrdersPageState extends State<OrdersPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Cancelar"),
+                  child: const Text("Cancelar"),
                 ),
                 TextButton(
                   onPressed:
                       valido
                           ? () {
-                            double novoPreco = parsePreco(ctrl.text);
+                            final double novoPreco = parsePreco(ctrl.text);
 
                             setState(() {
                               p.precoEditado = novoPreco;
@@ -690,7 +692,7 @@ class _OrdersPageState extends State<OrdersPage> {
                             Navigator.pop(context);
                           }
                           : null,
-                  child: Text("OK"),
+                  child: const Text("OK"),
                 ),
               ],
             );
@@ -705,7 +707,7 @@ class _OrdersPageState extends State<OrdersPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Aplicar juros?"),
+          title: const Text("Aplicar juros?"),
           content: Text(
             "Deseja aplicar o acréscimo de ${jurosSelecionado.toStringAsFixed(2)}% definido para este plano de pagamento?",
           ),
@@ -715,14 +717,14 @@ class _OrdersPageState extends State<OrdersPage> {
                 setState(() => aplicarJuros = false);
                 Navigator.pop(context);
               },
-              child: Text("Não"),
+              child: const Text("Não"),
             ),
             TextButton(
               onPressed: () {
                 setState(() => aplicarJuros = true);
                 Navigator.pop(context);
               },
-              child: Text("Sim"),
+              child: const Text("Sim"),
             ),
           ],
         );
@@ -791,7 +793,7 @@ class _OrdersPageState extends State<OrdersPage> {
     padding: const EdgeInsets.only(bottom: 6),
     child: Text(
       txt,
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     ),
   );
 
@@ -803,7 +805,7 @@ class _OrdersPageState extends State<OrdersPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12),
@@ -994,22 +996,24 @@ class SelecaoPagamentoPage extends StatelessWidget {
     },
   ];
 
+  const SelecaoPagamentoPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text("Forma de Pagamento")),
+      appBar: AppBar(title: const Text("Forma de Pagamento")),
       body: ListView(
         children:
             metodos.map((m) {
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: ListTile(
                   title: Text(
                     m["nome"],
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  trailing: Icon(Icons.check_circle_outline),
+                  trailing: const Icon(Icons.check_circle_outline),
                   onTap: () => Navigator.pop(context, m),
                 ),
               );

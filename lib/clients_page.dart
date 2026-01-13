@@ -20,7 +20,7 @@ import 'secrets.dart';
 class ClientsPage extends StatefulWidget {
   final bool modoSelecao;
 
-  ClientsPage({this.modoSelecao = false});
+  const ClientsPage({super.key, this.modoSelecao = false});
 
   @override
   _ClientsPageState createState() => _ClientsPageState();
@@ -69,7 +69,7 @@ class _ClientsPageState extends State<ClientsPage> {
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      List<Cliente> localClientes =
+      final List<Cliente> localClientes =
           (jsonData['data'] as List)
               .map((json) => Cliente.fromJson(json))
               .toList();
@@ -89,7 +89,7 @@ class _ClientsPageState extends State<ClientsPage> {
         if (aAniv && !bAniv) return -1;
         if (!aAniv && bAniv) return 1;
 
-        DateTime? ultimaObsA = allObs
+        final DateTime? ultimaObsA = allObs
             .where((o) => o['responsavel'] == a.responsavel)
             .map((o) => DateTime.parse(o['data']))
             .fold<DateTime?>(
@@ -97,7 +97,7 @@ class _ClientsPageState extends State<ClientsPage> {
               (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
             );
 
-        DateTime? ultimaObsB = allObs
+        final DateTime? ultimaObsB = allObs
             .where((o) => o['responsavel'] == b.responsavel)
             .map((o) => DateTime.parse(o['data']))
             .fold<DateTime?>(
@@ -523,10 +523,10 @@ class _ClientsPageState extends State<ClientsPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: Center(
+            title: const Center(
               child: Text(
                 'Nova observação',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             content: SingleChildScrollView(
@@ -670,7 +670,7 @@ class _ClientsPageState extends State<ClientsPage> {
                       'Erro: id_vendedor não encontrado no SharedPreferences',
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Erro: vendedor não encontrado')),
+                      const SnackBar(content: Text('Erro: vendedor não encontrado')),
                     );
                     return;
                   }
@@ -721,7 +721,7 @@ class _ClientsPageState extends State<ClientsPage> {
 
                         if (respBody['status'] == 'ok') {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text(
                                 'Observação registrada com sucesso',
                               ),
@@ -742,7 +742,7 @@ class _ClientsPageState extends State<ClientsPage> {
                           'Erro HTTP ao criar observação (status ${response.statusCode})',
                         );
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          const SnackBar(
                             content: Text('Erro ao registrar observação'),
                           ),
                         );
@@ -750,7 +750,7 @@ class _ClientsPageState extends State<ClientsPage> {
                     } else {
                       await OfflineQueue.addToQueue({'url': url, 'body': body});
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text(
                             'Sem internet: observação salva para envio posterior',
                           ),
@@ -762,7 +762,7 @@ class _ClientsPageState extends State<ClientsPage> {
                       'Erro ao criar observação: $e\nStackTrace: $stack',
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Erro ao registrar observação')),
+                      const SnackBar(content: Text('Erro ao registrar observação')),
                     );
                   }
 
@@ -859,19 +859,19 @@ class _ClientsPageState extends State<ClientsPage> {
     final clientesParaTotais =
         filteredClientes.isNotEmpty ? filteredClientes : allClientes;
 
-    double totalLimiteBM = clientesParaTotais.fold(
+    final double totalLimiteBM = clientesParaTotais.fold(
       0,
       (sum, c) => sum + c.limite,
     );
-    double totalSaldoBM = clientesParaTotais.fold(
+    final double totalSaldoBM = clientesParaTotais.fold(
       0,
       (sum, c) => sum + c.saldo_limite,
     );
-    double totalLimiteC = clientesParaTotais.fold(
+    final double totalLimiteC = clientesParaTotais.fold(
       0,
       (sum, c) => sum + c.limite_calculado,
     );
-    double totalSaldoC = clientesParaTotais.fold(
+    final double totalSaldoC = clientesParaTotais.fold(
       0,
       (sum, c) => sum + c.saldo_limite_calculado,
     );

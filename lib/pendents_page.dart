@@ -6,7 +6,7 @@ import 'background/pendents.dart';
 import 'secrets.dart';
 
 class PendentsPage extends StatefulWidget {
-  const PendentsPage({Key? key}) : super(key: key);
+  const PendentsPage({super.key});
 
   @override
   State<PendentsPage> createState() => _PendentsPageState();
@@ -39,7 +39,7 @@ class _PendentsPageState extends State<PendentsPage> {
         title: Text("Pendentes (${pendentes.length})"),
         actions: [
           IconButton(
-            icon: Icon(Icons.send),
+            icon: const Icon(Icons.send),
             tooltip: "Forçar envio",
             onPressed: () async {
               await OfflineQueue.trySendQueue(backendUrl);
@@ -50,9 +50,9 @@ class _PendentsPageState extends State<PendentsPage> {
       ),
       body:
           carregando
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : pendentes.isEmpty
-              ? Center(child: Text("Nenhum pedido pendente"))
+              ? const Center(child: Text("Nenhum pedido pendente"))
               : ListView.builder(
                 itemCount: pendentes.length,
                 itemBuilder: (_, i) {

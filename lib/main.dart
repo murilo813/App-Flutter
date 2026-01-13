@@ -86,8 +86,8 @@ void main() async {
     await Workmanager().registerPeriodicTask(
       "1",
       tarefaSync,
-      frequency: Duration(minutes: 15),
-      initialDelay: Duration(seconds: 10),
+      frequency: const Duration(minutes: 15),
+      initialDelay: const Duration(seconds: 10),
       constraints: Constraints(
         networkType: NetworkType.connected,
         requiresBatteryNotLow: false,
@@ -102,10 +102,12 @@ void main() async {
     );
   }
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -126,7 +128,7 @@ class MyApp extends StatelessWidget {
           margin: EdgeInsets.symmetric(vertical: 6),
         ),
       ),
-      home: LoginScreen(),
+      home: const LoginScreen(),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

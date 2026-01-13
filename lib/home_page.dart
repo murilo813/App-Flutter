@@ -50,7 +50,7 @@ class HomePageState extends State<HomePage> {
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
 
-    bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    final bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
       await AwesomeNotifications().requestPermissionToSendNotifications();
     }
@@ -70,13 +70,13 @@ class HomePageState extends State<HomePage> {
 
   Future<void> checkLoginStatus(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
-    int? idVendedor = prefs.getInt('id_vendedor');
+    final bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final int? idVendedor = prefs.getInt('id_vendedor');
 
     if (!loggedIn || idVendedor == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
       await checkAppVersion();
@@ -122,12 +122,12 @@ class HomePageState extends State<HomePage> {
         builder: (context) {
           return AlertDialog(
             backgroundColor: Colors.white,
-            title: Column(
+            title: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Aniversariantes de hoje 🎉'),
-                const SizedBox(height: 8),
-                const Text(
+                Text('Aniversariantes de hoje 🎉'),
+                SizedBox(height: 8),
+                Text(
                   'Por favor, verifique se é realmente o aniversário do cliente',
                   style: TextStyle(color: Colors.red, fontSize: 14),
                 ),
@@ -166,7 +166,7 @@ class HomePageState extends State<HomePage> {
 
   Future<void> checkAppVersion() async {
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) return;
+    if (connectivityResult.contains(ConnectivityResult.none)) return;
 
     try {
       final httpClient = HttpClient();
@@ -176,13 +176,15 @@ class HomePageState extends State<HomePage> {
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        print('Resposta da versão: $json');
+        debugPrint('Resposta da versão: $json');
 
         final latestVersion = json['versao'];
         final status = json['status'];
 
         final prefs = await SharedPreferences.getInstance();
         final currentVersion = prefs.getString('app_version');
+
+        if (!mounted) return;
 
         if (status == "INATIVO" && mounted) {
           showDialog(
@@ -280,7 +282,7 @@ class HomePageState extends State<HomePage> {
         ),
       );
     }
-    String empresaNome = _idEmpresa != null ? empresas[_idEmpresa!]! : '';
+    final String empresaNome = _idEmpresa != null ? empresas[_idEmpresa!]! : '';
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -323,11 +325,11 @@ class HomePageState extends State<HomePage> {
               ShaderMask(
                 shaderCallback:
                     (bounds) => GradientGreen.accent.createShader(bounds),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
+                child: const Padding(
+                  padding: EdgeInsets.only(bottom: 2),
                   child: Text(
                     'AgroZecão',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -358,7 +360,7 @@ class HomePageState extends State<HomePage> {
                 onTap:
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => StorePage()),
+                      MaterialPageRoute(builder: (_) => const StorePage()),
                     ),
               ),
 
@@ -369,7 +371,7 @@ class HomePageState extends State<HomePage> {
                 onTap:
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => ClientsPage()),
+                      MaterialPageRoute(builder: (_) => const ClientsPage()),
                     ),
               ),
 
@@ -380,7 +382,7 @@ class HomePageState extends State<HomePage> {
                 onTap:
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => OrdersPage()),
+                      MaterialPageRoute(builder: (_) => const OrdersPage()),
                     ),
               ),
 
@@ -392,7 +394,7 @@ class HomePageState extends State<HomePage> {
                   onTap:
                       () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => AdminPage()),
+                        MaterialPageRoute(builder: (_) => const AdminPage()),
                       ),
                 ),
 

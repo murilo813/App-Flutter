@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/widgets/gradientgreen.dart'; // Ajuste o caminho conforme seu projeto
+import 'package:alembro/widgets/gradientgreen.dart'; // Ajuste o caminho conforme seu projeto
 
 void main() {
   group('Testes de Gradiente - GradientGreen', () {

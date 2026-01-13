@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ErrorScreen extends StatelessWidget {
   final VoidCallback onRetry;
 
-  const ErrorScreen({Key? key, required this.onRetry}) : super(key: key);
+  const ErrorScreen({super.key, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,9 @@ class ErrorScreen extends StatelessWidget {
             width: double.infinity,
             height: double.infinity,
             color: Colors.white,
-            child: Column(
+            child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 Icon(Icons.wifi_off, size: 120, color: Colors.red),
                 SizedBox(height: 16),
                 Text(

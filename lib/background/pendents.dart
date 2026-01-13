@@ -1,9 +1,6 @@
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
-// import 'local_log.dart';
 import '../services/http_client.dart';
 
 class OfflineQueue {
@@ -31,28 +28,13 @@ class OfflineQueue {
   }
 
   static void startSyncWhenOnline(String backendUrl) {
-    Connectivity().onConnectivityChanged.listen((status) async {
-      if (status != ConnectivityResult.none) {
-        final queue = await getQueue();
-        if (queue.isEmpty) return;
-
-        List<Map<String, dynamic>> failed = [];
-        final httpClient = HttpClient(baseUrl: backendUrl);
-
-        for (final item in queue) {
-          try {
-            final String url = item['url'];
-            final dynamic body = item['body'];
-
-            await httpClient.post(url, body);
-          } catch (e) {
-            failed.add(item);
-          }
-        }
-
-        final prefs = await SharedPreferences.getInstance();
-        final updatedQueue = failed.map((e) => jsonEncode(e)).toList();
-        await prefs.setStringList(_key, updatedQueue);
+    // Atualizado para 2026: onConnectivityChanged retorna List<ConnectivityResult>
+    Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> statusList,
+    ) async {
+      if (statusList.isNotEmpty &&
+          !statusList.contains(ConnectivityResult.none)) {
+        await trySendQueue(backendUrl);
       }
     });
   }
@@ -61,12 +43,12 @@ class OfflineQueue {
     final queue = await getQueue();
     if (queue.isEmpty) return;
 
-    List<Map<String, dynamic>> failed = [];
+    final List<Map<String, dynamic>> failed = [];
     final httpClient = HttpClient(baseUrl: backendUrl);
 
     for (final item in queue) {
       try {
-        final String url = item['url'];
+        final String url = item['url'] as String;
         final dynamic body = item['body'];
 
         await httpClient.post(url, body);
@@ -76,7 +58,8 @@ class OfflineQueue {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final updatedQueue = failed.map((e) => jsonEncode(e)).toList();
+    final List<String> updatedQueue = failed.map((e) => jsonEncode(e)).toList();
+
     await prefs.setStringList(_key, updatedQueue);
   }
 }

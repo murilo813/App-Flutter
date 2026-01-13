@@ -18,7 +18,7 @@ import 'secrets.dart';
 class StorePage extends StatefulWidget {
   final bool modoSelecao;
 
-  const StorePage({this.modoSelecao = false});
+  const StorePage({super.key, this.modoSelecao = false});
 
   @override
   _StorePageState createState() => _StorePageState();
@@ -39,11 +39,11 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     searchController = TextEditingController();
 
-    Timer? _debounce;
+    Timer? debounce;
 
     searchController.addListener(() {
-      if (_debounce?.isActive ?? false) _debounce!.cancel();
-      _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (debounce?.isActive ?? false) debounce!.cancel();
+      debounce = Timer(const Duration(milliseconds: 500), () {
         final termoAtual = searchController.text.trim();
         if (termoAtual.isNotEmpty) {
           _savePesquisa(termoAtual);
@@ -408,13 +408,13 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                   // Preço 1
                   RichText(
                     text: TextSpan(
-                      style: TextStyle(fontSize: 13, color: Colors.black),
+                      style: const TextStyle(fontSize: 13, color: Colors.black),
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'Preço 1: ',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        TextSpan(text: '${product.preco1Formatado}'),
+                        TextSpan(text: product.preco1Formatado),
                       ],
                     ),
                   ),
@@ -423,13 +423,13 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                     padding: const EdgeInsets.only(right: 8),
                     child: RichText(
                       text: TextSpan(
-                        style: TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(fontSize: 13, color: Colors.black),
                         children: [
-                          TextSpan(
+                          const TextSpan(
                             text: 'Preço 2: ',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          TextSpan(text: '${product.preco2Formatado}'),
+                          TextSpan(text: product.preco2Formatado),
                         ],
                       ),
                     ),
@@ -438,8 +438,8 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
               child: Center(
                 child: Text(
                   'Qtd',
@@ -450,8 +450,8 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
               child: Center(
                 child: Text(
                   'Disp',
@@ -472,7 +472,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Text(
                   row[0],
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
@@ -488,7 +488,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
               ),
             ],
           );
-        }).toList(),
+        }),
       ],
     );
   }

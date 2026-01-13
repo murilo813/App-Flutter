@@ -56,5 +56,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Alembro-Release
-          path: build/app/outputs/flutter-apk/**/Alembro.apk
+          path: build/app/outputs/flutter-apk/**/app-release.apk
           if-no-files-found: error

@@ -28,8 +28,8 @@ class ResumoPedidoPage extends StatefulWidget {
     required this.produtos,
     required this.quantidades,
     required this.total,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ResumoPedidoPage> createState() => _ResumoPedidoPageState();
@@ -72,7 +72,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "Resumo do Pedido",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -85,22 +85,22 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(widget.cliente.nomeCliente, style: TextStyle(fontSize: 18)),
-            SizedBox(height: 12),
+            const Text("Cliente:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(widget.cliente.nomeCliente, style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 12),
 
-            Text(
+            const Text(
               "Forma de Pagamento:",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Text(widget.pagamento["nome"], style: TextStyle(fontSize: 18)),
-            SizedBox(height: 5),
+            Text(widget.pagamento["nome"], style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 5),
 
-            Row(
+            const Row(
               children: [
                 Expanded(child: Divider(thickness: 2)),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     "Produtos",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -110,7 +110,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               ],
             ),
 
-            SizedBox(height: 1),
+            const SizedBox(height: 1),
 
             /// produtos
             Expanded(
@@ -124,14 +124,14 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
                   return Column(
                     children: [
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
 
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               p.nome,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -139,7 +139,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                           ),
                           Text(
                             "$qtd",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
@@ -148,14 +148,14 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                         ],
                       ),
 
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             "Valor Unitário: ${formatador.format(preco)}",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black87,
                             ),
@@ -171,18 +171,18 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                         ],
                       ),
 
-                      SizedBox(height: 1),
+                      const SizedBox(height: 1),
 
-                      Divider(thickness: 1),
+                      const Divider(thickness: 1),
                     ],
                   );
                 },
               ),
             ),
 
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
 
-            Divider(thickness: 2),
+            const Divider(thickness: 2),
 
             // totais
             Builder(
@@ -197,12 +197,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           "Total dos Produtos",
                           style: TextStyle(
                             fontSize: 20,
@@ -212,7 +212,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                         ),
                         Text(
                           formatador.format(totalProdutos),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                           ),
@@ -220,12 +220,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                       ],
                     ),
 
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           "Juros",
                           style: TextStyle(
                             fontSize: 20,
@@ -257,12 +257,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                       ],
                     ),
 
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           "Desconto",
                           style: TextStyle(
                             fontSize: 20,
@@ -301,7 +301,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   "TOTAL:",
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
@@ -316,7 +316,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               ],
             ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             GestureDetector(
               onTap: () {
@@ -325,7 +325,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => PedidoConfirmadoPage()),
+                  MaterialPageRoute(builder: (_) => const PedidoConfirmadoPage()),
                 );
 
                 () async {
@@ -355,12 +355,12 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: GradientGreen.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     "Confirmar Pedido",
                     style: TextStyle(
@@ -425,7 +425,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   }) {
     final texto = valorAtual.toStringAsFixed(2).replaceAll('.', ',');
 
-    TextEditingController ctrl = TextEditingController(text: texto)
+    final TextEditingController ctrl = TextEditingController(text: texto)
       ..selection = TextSelection(baseOffset: 0, extentOffset: texto.length);
 
     showDialog(
@@ -438,8 +438,8 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               content: TextField(
                 controller: ctrl,
                 autofocus: true,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
                   labelText: "Digite o valor",
                   prefixText: "R\$ ",
                 ),
@@ -447,7 +447,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Cancelar"),
+                  child: const Text("Cancelar"),
                 ),
                 TextButton(
                   onPressed: () {
@@ -455,7 +455,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                     setState(() => onSalvar(valor));
                     Navigator.pop(context);
                   },
-                  child: Text("OK"),
+                  child: const Text("OK"),
                 ),
               ],
             );
@@ -479,8 +479,8 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
     }
 
     if (dots == 1) {
-      int idx = input.indexOf('.');
-      int after = input.length - idx - 1;
+      final int idx = input.indexOf('.');
+      final int after = input.length - idx - 1;
 
       if (after == 3) {
         return double.tryParse(input.replaceAll('.', '')) ?? 0.0;
@@ -489,9 +489,9 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       return double.tryParse(input) ?? 0.0;
     }
 
-    int last = input.lastIndexOf('.');
-    String intPart = input.substring(0, last).replaceAll('.', '');
-    String decPart = input.substring(last + 1);
+    final int last = input.lastIndexOf('.');
+    final String intPart = input.substring(0, last).replaceAll('.', '');
+    final String decPart = input.substring(last + 1);
 
     return double.tryParse("$intPart.$decPart") ?? 0.0;
   }

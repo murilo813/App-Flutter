@@ -16,6 +16,8 @@ import 'models/user.dart';
 import 'secrets.dart';
 
 class AdminPage extends StatefulWidget {
+  const AdminPage({super.key});
+
   @override
   _AdminPageState createState() => _AdminPageState();
 }
@@ -180,7 +182,7 @@ class _AdminPageState extends State<AdminPage> {
                           bottom: 0,
                           child: BackButton(color: Colors.white),
                         ),
-                      Center(
+                      const Center(
                         child: Text(
                           "Administração",
                           style: TextStyle(
@@ -203,7 +205,7 @@ class _AdminPageState extends State<AdminPage> {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 4,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -258,9 +260,9 @@ class _AdminPageState extends State<AdminPage> {
                       gradient: GradientGreen.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.add, color: Colors.white),
                         SizedBox(width: 8),
                         Text(
@@ -403,7 +405,7 @@ class _AdminPageState extends State<AdminPage> {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(12),
@@ -411,7 +413,7 @@ class _AdminPageState extends State<AdminPage> {
                 child: Text(
                   mensagem,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
             ),
@@ -420,18 +422,18 @@ class _AdminPageState extends State<AdminPage> {
 
     overlay.insert(overlayEntry);
 
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       overlayEntry.remove();
     });
   }
 
   void _abrirDialogNovoUsuario() {
-    TextEditingController idEmpresaController = TextEditingController();
-    TextEditingController usuarioController = TextEditingController();
-    TextEditingController senhaController = TextEditingController();
-    TextEditingController nomeclaturaController = TextEditingController();
-    TextEditingController idVendedorController = TextEditingController();
-    TextEditingController creditoDispController = TextEditingController();
+    final TextEditingController idEmpresaController = TextEditingController();
+    final TextEditingController usuarioController = TextEditingController();
+    final TextEditingController senhaController = TextEditingController();
+    final TextEditingController nomeclaturaController = TextEditingController();
+    final TextEditingController idVendedorController = TextEditingController();
+    final TextEditingController creditoDispController = TextEditingController();
     String tipoUsuario = "user";
     bool senhaVisivel = false;
 
@@ -442,7 +444,7 @@ class _AdminPageState extends State<AdminPage> {
           builder: (context, setStateDialog) {
             return Dialog(
               backgroundColor: Colors.white,
-              insetPadding: EdgeInsets.all(20),
+              insetPadding: const EdgeInsets.all(20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -453,14 +455,14 @@ class _AdminPageState extends State<AdminPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "Novo Usuário",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Divider(height: 20),
+                    const Divider(height: 20),
                     Expanded(
                       child: SingleChildScrollView(
                         child: Column(
@@ -599,7 +601,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "user",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -624,7 +626,7 @@ class _AdminPageState extends State<AdminPage> {
                                                       ? Colors.blue
                                                       : Colors.grey,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
                                               "User",
                                               style: TextStyle(
@@ -640,7 +642,7 @@ class _AdminPageState extends State<AdminPage> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
                                       onTap:
@@ -648,7 +650,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "admin",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -673,7 +675,7 @@ class _AdminPageState extends State<AdminPage> {
                                                       ? Colors.green
                                                       : Colors.grey,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
                                               "Admin",
                                               style: TextStyle(
@@ -696,15 +698,15 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                       ),
                     ),
-                    Divider(),
+                    const Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Cancelar"),
+                          child: const Text("Cancelar"),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () async {
                             final body = {
@@ -726,7 +728,7 @@ class _AdminPageState extends State<AdminPage> {
                                 (body["senha"] as String).isEmpty ||
                                 (body["nomeclatura"] as String).isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                   content: Text(
                                     "Preencha todos os campos obrigatórios",
                                   ),
@@ -794,7 +796,7 @@ class _AdminPageState extends State<AdminPage> {
 
                             Navigator.pop(context);
                           },
-                          child: Text("Salvar"),
+                          child: const Text("Salvar"),
                         ),
                       ],
                     ),
@@ -809,12 +811,12 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   void _abrirDialogEditarUsuario(User u) {
-    int registrarNovoDisp = u.registrar_novo_disp;
-    TextEditingController senhaController = TextEditingController();
-    TextEditingController vendedorController = TextEditingController(
+    final int registrarNovoDisp = u.registrar_novo_disp;
+    final TextEditingController senhaController = TextEditingController();
+    final TextEditingController vendedorController = TextEditingController(
       text: u.id_vendedor.toString(),
     );
-    TextEditingController novoDispController = TextEditingController(
+    final TextEditingController novoDispController = TextEditingController(
       text: registrarNovoDisp.toString(),
     );
     bool senhaVisivel = false;
@@ -835,7 +837,7 @@ class _AdminPageState extends State<AdminPage> {
           builder: (context, setStateDialog) {
             return Dialog(
               backgroundColor: Colors.white,
-              insetPadding: EdgeInsets.all(20),
+              insetPadding: const EdgeInsets.all(20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -846,14 +848,14 @@ class _AdminPageState extends State<AdminPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "Editar Usuário",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Divider(height: 20),
+                    const Divider(height: 20),
                     Text(
                       u.id.toString(),
                       style: TextStyle(
@@ -862,7 +864,7 @@ class _AdminPageState extends State<AdminPage> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -872,12 +874,12 @@ class _AdminPageState extends State<AdminPage> {
                             children: [
                               Text(
                                 u.nomeclatura,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Text(
                                 _nomeEmpresa(u.id_empresa),
                                 style: TextStyle(
@@ -890,7 +892,7 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Expanded(
                       child: SingleChildScrollView(
                         child: Column(
@@ -974,7 +976,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "user",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -999,7 +1001,7 @@ class _AdminPageState extends State<AdminPage> {
                                                       ? Colors.blue
                                                       : Colors.grey,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
                                               "User",
                                               style: TextStyle(
@@ -1015,7 +1017,7 @@ class _AdminPageState extends State<AdminPage> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
                                       onTap:
@@ -1023,7 +1025,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => tipoUsuario = "admin",
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1048,7 +1050,7 @@ class _AdminPageState extends State<AdminPage> {
                                                       ? Colors.green
                                                       : Colors.grey,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
                                               "Admin",
                                               style: TextStyle(
@@ -1081,7 +1083,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => ativoLocal = 'S',
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1110,7 +1112,7 @@ class _AdminPageState extends State<AdminPage> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: GestureDetector(
                                       onTap:
@@ -1118,7 +1120,7 @@ class _AdminPageState extends State<AdminPage> {
                                             () => ativoLocal = 'N',
                                           ),
                                       child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 300),
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color:
@@ -1154,18 +1156,18 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                       ),
                     ),
-                    Divider(),
+                    const Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Cancelar"),
+                          child: const Text("Cancelar"),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () async {
-                            Map<String, dynamic> body = {};
+                            final Map<String, dynamic> body = {};
                             if (senhaController.text.isNotEmpty) {
                               body['senha'] = senhaController.text;
                             }
@@ -1219,8 +1221,9 @@ class _AdminPageState extends State<AdminPage> {
                                 final fIndex = filteredUsuarios.indexWhere(
                                   (usr) => usr.id == u.id,
                                 );
-                                if (fIndex != -1)
+                                if (fIndex != -1) {
                                   filteredUsuarios[fIndex] = updatedUser;
+                                }
                               });
                             }
 
@@ -1268,7 +1271,7 @@ class _AdminPageState extends State<AdminPage> {
 
                             Navigator.pop(context);
                           },
-                          child: Text("Salvar"),
+                          child: const Text("Salvar"),
                         ),
                       ],
                     ),
