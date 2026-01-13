@@ -29,12 +29,26 @@ jobs:
       - name: Rodar Testes
         run: flutter test # Roda sempre (PR e Push)
 
+      # --- PREPARAÇÃO DA ASSINATURA (SÓ NO MERGE/PUSH) ---
+      - name: Decode Keystore
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        if: github.event_name == 'push'
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+      # --- BUILD DO APK ASSINADO ---
       - name: Build APK Release
-        if: github.event_name == 'push' # Só roda no Merge/Push direto na main
+        if: github.event_name == 'push'
         run: flutter build apk --release
 
       - name: Salvar APK como Artefato
-        if: github.event_name == 'push' # Só gera o arquivo para download na main
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: Alembro-Release
