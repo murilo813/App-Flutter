@@ -21,7 +21,7 @@ class Obs {
       nome_cliente: json['nome_cliente'],
       responsavel: json['responsavel'],
       data: DateTime.parse(json['data']),
-      visitado: json['visitado'] ?? false,
+      visitado: json['visitado'],
       observacao: json['observacao'],
     );
   }

@@ -35,12 +35,12 @@ class Cliente {
       saldo_limite_calculado: json['saldo_limite_calculado'],
       data_nasc:
           json['data_nasc'] != null && json['data_nasc'] != ""
-              ? DateTime.parse(json['data_nasc'])
+              ? DateTime.tryParse(json['data_nasc'])
               : null,
       id: json['id_cliente'],
       ultima_compra:
           json['ultima_compra'] != null && json['ultima_compra'] != ""
-              ? DateTime.parse(json['ultima_compra'])
+              ? DateTime.tryParse(json['ultima_compra'])
               : null,
       lista_preco: json['lista_preco'] ?? 1,
     );

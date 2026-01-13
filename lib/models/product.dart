@@ -3,14 +3,14 @@ import 'package:intl/intl.dart';
 class Product {
   final int id;
   final String nome;
-  final int estoqueAurora;
-  final int estoqueImbuia;
-  final int estoqueVilanova;
-  final int estoqueBelavista;
-  final int disponivelAurora;
-  final int disponivelImbuia;
-  final int disponivelVilanova;
-  final int disponivelBelavista;
+  final double estoqueAurora;
+  final double estoqueImbuia;
+  final double estoqueVilanova;
+  final double estoqueBelavista;
+  final double disponivelAurora;
+  final double disponivelImbuia;
+  final double disponivelVilanova;
+  final double disponivelBelavista;
   final String marca;
   final double preco1;
   final double preco2;
@@ -43,31 +43,16 @@ class Product {
     return Product(
       id: json['id'],
       nome: json['nome'],
-      estoqueAurora:
-          (double.tryParse(json['estoque_aurora']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      estoqueImbuia:
-          (double.tryParse(json['estoque_imbuia']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      estoqueVilanova:
-          (double.tryParse(json['estoque_vilanova']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      estoqueBelavista:
-          (double.tryParse(json['estoque_belavista']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      disponivelAurora:
-          (double.tryParse(json['disponivel_aurora']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      disponivelImbuia:
-          (double.tryParse(json['disponivel_imbuia']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      disponivelVilanova:
-          (double.tryParse(json['disponivel_vilanova']?.toString() ?? '0') ?? 0)
-              .toInt(),
-      disponivelBelavista:
-          (double.tryParse(json['disponivel_belavista']?.toString() ?? '0') ??
-                  0)
-              .toInt(),
+      estoqueAurora: (json['estoque_aurora'] as num?)?.toDouble() ?? 0.0,
+      estoqueImbuia: (json['estoque_imbuia'] as num?)?.toDouble() ?? 0.0,
+      estoqueVilanova: (json['estoque_vilanova'] as num?)?.toDouble() ?? 0.0,
+      estoqueBelavista: (json['estoque_belavista'] as num?)?.toDouble() ?? 0.0,
+    
+      disponivelAurora: (json['disponivel_aurora'] as num?)?.toDouble() ?? 0.0,
+      disponivelImbuia: (json['disponivel_imbuia'] as num?)?.toDouble() ?? 0.0,
+      disponivelVilanova: (json['disponivel_vilanova'] as num?)?.toDouble() ?? 0.0,
+      disponivelBelavista: (json['disponivel_belavista'] as num?)?.toDouble() ?? 0.0,
+
       marca: json['marca'],
       preco1: json['preco1'],
       preco2: json['preco2'],
