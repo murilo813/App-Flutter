@@ -29,23 +29,17 @@ Future<void> onActionReceivedMethod(ReceivedAction receivedNotification) async {
 @pragma("vm:entry-point")
 Future<void> onNotificationCreatedMethod(
   ReceivedNotification notification,
-) async {
-  print("Notificação criada: ${notification.id}");
-}
+) async {}
 
 // quando a notificacao e exibida na barra
 @pragma("vm:entry-point")
 Future<void> onNotificationDisplayedMethod(
   ReceivedNotification notification,
-) async {
-  print("Notificação exibida: ${notification.id}");
-}
+) async {}
 
 // quando o usuario descarta a notificacao
 @pragma("vm:entry-point")
-Future<void> onDismissActionReceivedMethod(ReceivedAction action) async {
-  print("Notificação descartada: ${action.id}");
-}
+Future<void> onDismissActionReceivedMethod(ReceivedAction action) async {}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,11 +70,7 @@ void main() async {
   );
 
   try {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode:
-          false, // DESATIVAR PARA NAO MOSTRAR NOTIFICACAO DO WORKMANAGER
-    );
+    await Workmanager().initialize(callbackDispatcher);
 
     // sincronizacao de dados
     await Workmanager().registerPeriodicTask(

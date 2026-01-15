@@ -19,10 +19,10 @@ class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
 
   @override
-  _AdminPageState createState() => _AdminPageState();
+  AdminPageState createState() => AdminPageState();
 }
 
-class _AdminPageState extends State<AdminPage> {
+class AdminPageState extends State<AdminPage> {
   bool loading = true;
   bool erroCritico = false;
   String? mensagemErro;
@@ -203,7 +203,7 @@ class _AdminPageState extends State<AdminPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -299,17 +299,17 @@ class _AdminPageState extends State<AdminPage> {
               children: [
                 CircleAvatar(
                   backgroundColor:
-                      u.tipo_usuario.toLowerCase() == 'admin'
+                      u.tipoUsuario.toLowerCase() == 'admin'
                           ? Colors.green.shade100
                           : Colors.blue.shade50,
                   child: Image.asset(
-                    u.tipo_usuario.toLowerCase() == 'admin'
+                    u.tipoUsuario.toLowerCase() == 'admin'
                         ? 'assets/icons/adminicon.png'
                         : 'assets/icons/usericon.png',
                     width: 24,
                     height: 24,
                     errorBuilder:
-                        (_, __, ___) =>
+                        (context, error, stackTrace) =>
                             const Icon(Icons.person, color: Colors.grey),
                   ),
                 ),
@@ -334,7 +334,7 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                       ),
                       Text(
-                        "${_nomeEmpresa(u.id_empresa)} | Vendedor: ${u.id_vendedor}",
+                        "${_nomeEmpresa(u.idEmpresa)} | Vendedor: ${u.idVendedor}",
                         style: TextStyle(
                           color:
                               u.ativo == 'N'
@@ -717,17 +717,17 @@ class _AdminPageState extends State<AdminPage> {
                         ElevatedButton(
                           onPressed: () async {
                             final body = {
-                              "id_empresa": int.parse(idEmpresaController.text),
+                              "idEmpresa": int.parse(idEmpresaController.text),
                               "nome": usuarioController.text.trim(),
                               "senha": senhaController.text.trim(),
                               "nomeclatura": nomeclaturaController.text.trim(),
-                              "id_vendedor": int.parse(
+                              "idVendedor": int.parse(
                                 idVendedorController.text,
                               ),
-                              "registrar_novo_disp": int.parse(
+                              "registrarNovoDisp": int.parse(
                                 creditoDispController.text,
                               ),
-                              "tipo_usuario": tipoUsuario,
+                              "tipoUsuario": tipoUsuario,
                             };
 
                             // validação
@@ -757,12 +757,12 @@ class _AdminPageState extends State<AdminPage> {
                             // cria na memoria para UI
                             final newUser = User(
                               id: nextId,
-                              id_empresa: body["id_empresa"] as int,
+                              idEmpresa: body["idEmpresa"] as int,
                               usuario: body["nome"] as String,
-                              id_vendedor: body["id_vendedor"] as int,
-                              registrar_novo_disp:
-                                  body["registrar_novo_disp"] as int,
-                              tipo_usuario: body["tipo_usuario"] as String,
+                              idVendedor: body["idVendedor"] as int,
+                              registrarNovoDisp:
+                                  body["registrarNovoDisp"] as int,
+                              tipoUsuario: body["tipoUsuario"] as String,
                               nomeclatura: body["nomeclatura"] as String,
                             );
 
@@ -787,20 +787,14 @@ class _AdminPageState extends State<AdminPage> {
 
                             // envia pro back, se não tem conexão salva no pendent
                             try {
-                              final response = await httpClient.post(url, body);
-                              if (response.statusCode == 200) {
-                                print("Usuário criado com sucesso!");
-                              } else {
-                                print("Erro do servidor: ${response.body}");
-                              }
-                            } catch (e) {
+                              await httpClient.post(url, body);
+                            } catch (_) {
                               await OfflineQueue.addToQueue({
                                 'url': url,
                                 'body': body,
                               });
-                              print("Sem conexão, criação salva no pendente.");
                             }
-
+                            if (!context.mounted) return;
                             Navigator.pop(context);
                           },
                           child: const Text("Salvar"),
@@ -818,10 +812,10 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   void _abrirDialogEditarUsuario(User u) {
-    final int registrarNovoDisp = u.registrar_novo_disp;
+    final int registrarNovoDisp = u.registrarNovoDisp;
     final TextEditingController senhaController = TextEditingController();
     final TextEditingController vendedorController = TextEditingController(
-      text: u.id_vendedor.toString(),
+      text: u.idVendedor.toString(),
     );
     final TextEditingController novoDispController = TextEditingController(
       text: registrarNovoDisp.toString(),
@@ -829,13 +823,9 @@ class _AdminPageState extends State<AdminPage> {
     bool senhaVisivel = false;
 
     String tipoUsuario =
-        (u.tipo_usuario.toLowerCase() == "admin") ? "admin" : "user";
+        (u.tipoUsuario.toLowerCase() == "admin") ? "admin" : "user";
 
     String ativoLocal = (u.ativo?.trim().toUpperCase() == 'S') ? 'S' : 'N';
-
-    print(
-      'Usuário ${u.id} ativo: "${u.ativo}", ativoLocal inicial: $ativoLocal',
-    );
 
     showDialog(
       context: context,
@@ -888,7 +878,7 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                _nomeEmpresa(u.id_empresa),
+                                _nomeEmpresa(u.idEmpresa),
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey[700],
@@ -1187,19 +1177,19 @@ class _AdminPageState extends State<AdminPage> {
                               body['senha'] = senhaController.text;
                             }
                             if (vendedorController.text !=
-                                u.id_vendedor.toString()) {
-                              body['id_vendedor'] = int.tryParse(
+                                u.idVendedor.toString()) {
+                              body['idVendedor'] = int.tryParse(
                                 vendedorController.text,
                               );
                             }
                             if (novoDispController.text !=
-                                u.registrar_novo_disp.toString()) {
-                              body['registrar_novo_disp'] = int.tryParse(
+                                u.registrarNovoDisp.toString()) {
+                              body['registrarNovoDisp'] = int.tryParse(
                                 novoDispController.text,
                               );
                             }
 
-                            body['tipo_usuario'] = tipoUsuario;
+                            body['tipoUsuario'] = tipoUsuario;
 
                             body['ativo'] = ativoLocal;
 
@@ -1219,14 +1209,14 @@ class _AdminPageState extends State<AdminPage> {
                               final oldUser = allUsuarios[index];
                               final updatedUser = User(
                                 id: oldUser.id,
-                                id_empresa: oldUser.id_empresa,
+                                idEmpresa: oldUser.idEmpresa,
                                 usuario: oldUser.usuario,
-                                id_vendedor:
-                                    body['id_vendedor'] ?? oldUser.id_vendedor,
-                                registrar_novo_disp:
-                                    body['registrar_novo_disp'] ??
-                                    oldUser.registrar_novo_disp,
-                                tipo_usuario: tipoUsuario,
+                                idVendedor:
+                                    body['idVendedor'] ?? oldUser.idVendedor,
+                                registrarNovoDisp:
+                                    body['registrarNovoDisp'] ??
+                                    oldUser.registrarNovoDisp,
+                                tipoUsuario: tipoUsuario,
                                 nomeclatura: oldUser.nomeclatura,
                                 ativo: body['ativo'] ?? oldUser.ativo,
                               );
@@ -1265,25 +1255,14 @@ class _AdminPageState extends State<AdminPage> {
 
                             // Atualiza backend
                             try {
-                              final response = await httpClient.patch(
-                                url,
-                                body,
-                              );
-                              if (response.statusCode == 200) {
-                                print("Alterações salvas com sucesso!");
-                              } else {
-                                print("Erro do servidor: ${response.body}");
-                              }
+                              await httpClient.patch(url, body);
                             } catch (e) {
                               await OfflineQueue.addToQueue({
                                 'url': url,
                                 'body': body,
                               });
-                              print(
-                                "Sem conexão, alteração salva no pendente.",
-                              );
                             }
-
+                            if (!context.mounted) return;
                             Navigator.pop(context);
                           },
                           child: const Text("Salvar"),

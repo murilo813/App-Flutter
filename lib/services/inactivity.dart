@@ -14,8 +14,6 @@ class InactivityService {
 
   static Future<void> checkAndNotify() async {
     try {
-      _logInicio();
-
       if (await _naoDeveEnviarHoje()) return;
 
       final clientes = await _carregarClientes();
@@ -31,7 +29,6 @@ class InactivityService {
       );
 
       if (inativos.isEmpty) {
-        print("Nenhum cliente inativo encontrado.");
         return;
       }
 
@@ -58,7 +55,6 @@ class InactivityService {
     final idVendedor = prefs.getInt('id_vendedor');
 
     if (idVendedor == null || idVendedor == 0 || idVendedor == 1) {
-      print("Admin ou id inválido, notificações não enviadas.");
       return true;
     }
 
@@ -66,7 +62,6 @@ class InactivityService {
     final ultimoEnvio = prefs.getString('ultimo_inativo');
 
     if (ultimoEnvio == hojeStr) {
-      print("Notificações de inatividade já foram enviadas hoje.");
       return true;
     }
 
@@ -79,10 +74,6 @@ class InactivityService {
   }
 
   static String _hojeStr() => DateTime.now().toIso8601String().substring(0, 10);
-
-  static void _logInicio() {
-    print("Função inactivity chamada");
-  }
 
   // ================= DADOS =================
 
@@ -137,7 +128,7 @@ class InactivityService {
     Cliente c,
     Map<int, DateTime> ultimaObsPorCliente,
   ) {
-    DateTime? ultima = c.ultima_compra;
+    DateTime? ultima = c.ultimaCompra;
     final obs = ultimaObsPorCliente[c.id];
 
     if (obs != null && (ultima == null || obs.isAfter(ultima))) {

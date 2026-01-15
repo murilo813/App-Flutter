@@ -11,7 +11,6 @@ import '../background/local_log.dart';
 class AnniversaryService {
   static Future<void> checkAndNotify() async {
     try {
-      print("Função anniversary chamada");
       final prefs = await SharedPreferences.getInstance();
       final idVendedor = prefs.getInt('id_vendedor');
       if (idVendedor == 1 || idVendedor == 0) {
@@ -21,11 +20,9 @@ class AnniversaryService {
       final ultimoEnvio = prefs.getString('ultimo_aniversario') ?? '';
 
       if (ultimoEnvio == hojeStr) {
-        print("Notificações do dia já foram enviadas, nada a fazer.");
         return;
       }
 
-      print("Notificações de aniversário do dia foram enviadas");
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/clientes.json');
       if (!(await file.exists())) return;

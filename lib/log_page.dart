@@ -6,10 +6,10 @@ class LogViewerPage extends StatefulWidget {
   const LogViewerPage({super.key});
 
   @override
-  _LogViewerPageState createState() => _LogViewerPageState();
+  LogViewerPageState createState() => LogViewerPageState();
 }
 
-class _LogViewerPageState extends State<LogViewerPage> {
+class LogViewerPageState extends State<LogViewerPage> {
   String _logContent = '';
   bool _loading = true;
 
@@ -102,6 +102,7 @@ class _LogViewerPageState extends State<LogViewerPage> {
         await file.writeAsString('');
       }
       await _loadLog();
+      if (!mounted) return;
     } catch (e) {
       ScaffoldMessenger.of(
         context,

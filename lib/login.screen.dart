@@ -19,10 +19,10 @@ import 'secrets.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -50,10 +50,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final idVendedor = prefs.getInt('id_vendedor');
     final idUsuario = prefs.getString('id_usuario');
 
-    if (!mounted) return;
-
     if (loggedIn && idUsuario != null && idVendedor != null) {
       await registrarUso();
+      if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
@@ -141,6 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setInt('id_empresa', idEmpresa);
 
         await registrarUso();
+        if (!mounted) return;
 
         Navigator.pushReplacement(
           context,

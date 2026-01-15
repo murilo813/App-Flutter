@@ -3,20 +3,24 @@ import 'package:intl/intl.dart';
 class Product {
   final int id;
   final String nome;
+
   final double estoqueAurora;
   final double estoqueImbuia;
   final double estoqueVilanova;
   final double estoqueBelavista;
+
   final double disponivelAurora;
   final double disponivelImbuia;
   final double disponivelVilanova;
   final double disponivelBelavista;
+
   final String marca;
   final double preco1;
   final double preco2;
-  final double preco_minimo;
+  final double precoMinimo;
   final String aplicacao;
 
+  /// Apenas UI / estado local
   double? precoEditado;
 
   Product({
@@ -33,30 +37,29 @@ class Product {
     required this.marca,
     required this.preco1,
     required this.preco2,
-    required this.preco_minimo,
+    required this.precoMinimo,
     required this.aplicacao,
     this.precoEditado,
   });
 
-  // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
   factory Product.fromJson(Map<String, dynamic> json) {
+    double d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
+
     return Product(
       id: json['id'],
       nome: json['nome'],
-      estoqueAurora: (json['estoque_aurora'] as num?)?.toDouble() ?? 0.0,
-      estoqueImbuia: (json['estoque_imbuia'] as num?)?.toDouble() ?? 0.0,
-      estoqueVilanova: (json['estoque_vilanova'] as num?)?.toDouble() ?? 0.0,
-      estoqueBelavista: (json['estoque_belavista'] as num?)?.toDouble() ?? 0.0,
-    
-      disponivelAurora: (json['disponivel_aurora'] as num?)?.toDouble() ?? 0.0,
-      disponivelImbuia: (json['disponivel_imbuia'] as num?)?.toDouble() ?? 0.0,
-      disponivelVilanova: (json['disponivel_vilanova'] as num?)?.toDouble() ?? 0.0,
-      disponivelBelavista: (json['disponivel_belavista'] as num?)?.toDouble() ?? 0.0,
-
+      estoqueAurora: d(json['estoque_aurora']),
+      estoqueImbuia: d(json['estoque_imbuia']),
+      estoqueVilanova: d(json['estoque_vilanova']),
+      estoqueBelavista: d(json['estoque_belavista']),
+      disponivelAurora: d(json['disponivel_aurora']),
+      disponivelImbuia: d(json['disponivel_imbuia']),
+      disponivelVilanova: d(json['disponivel_vilanova']),
+      disponivelBelavista: d(json['disponivel_belavista']),
       marca: json['marca'],
-      preco1: json['preco1'],
-      preco2: json['preco2'],
-      preco_minimo: (json['preco_minimo'] ?? 0).toDouble(),
+      preco1: d(json['preco1']),
+      preco2: d(json['preco2']),
+      precoMinimo: d(json['preco_minimo']),
       aplicacao: json['aplicacao'] ?? '',
     );
   }
@@ -76,21 +79,21 @@ class Product {
       'marca': marca,
       'preco1': preco1,
       'preco2': preco2,
-      'preco_minimo': preco_minimo,
+      'preco_minimo': precoMinimo,
       'aplicacao': aplicacao,
     };
   }
 
-  String formatarPreco(double preco) {
+  String _formatar(double valor) {
     final formatter = NumberFormat.currency(
       locale: 'pt_BR',
       symbol: '',
       decimalDigits: 2,
     );
-    return formatter.format(preco).trim();
+    return formatter.format(valor).trim();
   }
 
-  String get preco1Formatado => formatarPreco(preco1);
-  String get preco2Formatado => formatarPreco(preco2);
-  String get precomFormatado => formatarPreco(preco_minimo);
+  String get preco1Formatado => _formatar(preco1);
+  String get preco2Formatado => _formatar(preco2);
+  String get precoMinimoFormatado => _formatar(precoMinimo);
 }

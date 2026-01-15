@@ -24,6 +24,7 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  late Future<int> empresaFuture;
   bool loading = true;
   bool erroCritico = false;
   String? mensagemErro;
@@ -48,9 +49,21 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   void initState() {
     super.initState();
+    empresaFuture = getEmpresa();
     Future.microtask(() async {
       await sincronizarAoEntrar();
     });
+  }
+
+  @override
+  void dispose() {
+    for (final c in controllers.values) {
+      c.dispose();
+    }
+    for (final c in precoControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> sincronizarAoEntrar() async {
@@ -326,12 +339,12 @@ class _OrdersPageState extends State<OrdersPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Colors.black, // header e botão OK
+              primary: Colors.black,
               onPrimary: Colors.white,
-              surface: Colors.white, // fundo do calendário
-              onSurface: Colors.black, // textos
+              surface: Colors.white,
+              onSurface: Colors.black,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -413,7 +426,7 @@ class _OrdersPageState extends State<OrdersPage> {
               ),
               const SizedBox(height: 6),
               FutureBuilder(
-                future: getEmpresa(),
+                future: empresaFuture,
                 builder: (context, snap) {
                   if (!snap.hasData) return const SizedBox();
                   final emp = snap.data!;
@@ -492,7 +505,7 @@ class _OrdersPageState extends State<OrdersPage> {
           child: Text(
             formatador.format(
               p.precoEditado ??
-                  (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1),
+                  (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1),
             ),
             style: TextStyle(
               fontSize: 20,
@@ -670,8 +683,8 @@ class _OrdersPageState extends State<OrdersPage> {
 
   void editarPrecoProduto(Product p) {
     final precoPadrao =
-        (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1);
-    final precoMinimo = p.preco_minimo;
+        (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1);
+    final precoMinimo = p.precoMinimo;
 
     final String precoInicial = (p.precoEditado ?? precoPadrao)
         .toStringAsFixed(2)
@@ -787,7 +800,7 @@ class _OrdersPageState extends State<OrdersPage> {
       final qtd = quantidades[p.id] ?? 1;
 
       final precoBase =
-          (clienteSelecionado?.lista_preco == 2 ? p.preco2 : p.preco1);
+          (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1);
       final preco = p.precoEditado ?? precoBase;
 
       total += preco * qtd;

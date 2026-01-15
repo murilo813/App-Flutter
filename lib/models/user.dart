@@ -1,46 +1,45 @@
 class User {
   final int id;
-  final int id_empresa;
+  final int idEmpresa;
   final String usuario;
-  final int id_vendedor;
-  final int registrar_novo_disp;
-  final String tipo_usuario;
+  final int idVendedor;
+  final int registrarNovoDisp;
+  final String tipoUsuario;
   final String nomeclatura;
   final String? ativo;
 
-  User({
+  const User({
     required this.id,
-    required this.id_empresa,
+    required this.idEmpresa,
     required this.usuario,
-    required this.id_vendedor,
-    required this.registrar_novo_disp,
-    required this.tipo_usuario,
+    required this.idVendedor,
+    required this.registrarNovoDisp,
+    required this.tipoUsuario,
     required this.nomeclatura,
     this.ativo,
   });
 
-  // como eu tenho certeza do tipo que os valores vem da api, eu nao trato outros tipos de dados ou faço conversoes
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      id_empresa: json['id_empresa'],
-      usuario: json['nome'],
-      id_vendedor: json['id_vendedor'],
-      registrar_novo_disp: json['registrar_novo_disp'],
-      tipo_usuario: json['tipo_usuario'],
-      nomeclatura: json['nomeclatura'],
-      ativo: json['ativo'],
+      id: json['id'] as int,
+      idEmpresa: json['id_empresa'] as int,
+      usuario: json['nome'] as String,
+      idVendedor: json['id_vendedor'] as int,
+      registrarNovoDisp: json['registrar_novo_disp'] as int,
+      tipoUsuario: json['tipo_usuario'] as String,
+      nomeclatura: json['nomeclatura'] as String,
+      ativo: json['ativo'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'id_empresa': id_empresa,
+      'id_empresa': idEmpresa,
       'nome': usuario,
-      'id_vendedor': id_vendedor,
-      'registrar_novo_disp': registrar_novo_disp,
-      'tipo_usuario': tipo_usuario,
+      'id_vendedor': idVendedor,
+      'registrar_novo_disp': registrarNovoDisp,
+      'tipo_usuario': tipoUsuario,
       'nomeclatura': nomeclatura,
       'ativo': ativo,
     };

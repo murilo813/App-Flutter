@@ -37,7 +37,7 @@ void main() {
         reason: 'Deve converter int para double corretamente',
       );
       expect(produto.marca, 'MARCA TESTE');
-      expect(produto.preco_minimo, 300.00);
+      expect(produto.precoMinimo, 300.00);
     });
 
     test('Deve lidar com campos nulos e opcionais usando valores padrão', () {
@@ -60,7 +60,7 @@ void main() {
         reason: 'Campo ausente deve virar 0.0',
       );
       expect(
-        produto.preco_minimo,
+        produto.precoMinimo,
         0.0,
         reason: 'Preço mínimo ausente deve virar 0.0',
       );
@@ -86,7 +86,7 @@ void main() {
         marca: '',
         preco1: 1250.50,
         preco2: 1000.00,
-        preco_minimo: 950.45,
+        precoMinimo: 950.45,
         aplicacao: '',
       );
 
@@ -94,7 +94,7 @@ void main() {
         RegExp(r'\s+'),
         '',
       );
-      final precoMinFormatado = produto.precomFormatado.replaceAll(
+      final precoMinFormatado = produto.precoMinimoFormatado.replaceAll(
         RegExp(r'\s+'),
         '',
       );
@@ -118,7 +118,7 @@ void main() {
         marca: 'SEMM',
         preco1: 45.0,
         preco2: 40.0,
-        preco_minimo: 38.0,
+        precoMinimo: 38.0,
         aplicacao: 'TERRA',
       );
 
@@ -146,7 +146,7 @@ void main() {
         marca: '',
         preco1: 10,
         preco2: 10,
-        preco_minimo: 10,
+        precoMinimo: 10,
         aplicacao: '',
       );
 

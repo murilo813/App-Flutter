@@ -15,8 +15,9 @@ void main() {
 
       final obs = Obs.fromJson(json);
 
-      expect(obs.idCliente, equals(2317));
-      expect(obs.nome_cliente, 'JOEIMIR MARIAN');
+      expect(obs.idCliente, 2317);
+      expect(obs.nomeCliente, 'JOEIMIR MARIAN');
+      expect(obs.responsavel, 'ALEXANDRE MARIAN');
       expect(obs.data.year, 1990);
       expect(obs.data.month, 5);
       expect(obs.data.day, 15);
@@ -24,7 +25,7 @@ void main() {
       expect(obs.observacao, 'Nota de teste.');
     });
 
-    test('Deve lidar com campos nulos no JSON sem crashar', () {
+    test('Deve lidar com observacao nula sem crashar', () {
       final json = {
         'id_cliente': 2317,
         'nome_cliente': 'JOEIMIR MARIAN',
@@ -35,13 +36,15 @@ void main() {
 
       final obs = Obs.fromJson(json);
 
-      expect(obs.observacao, isNull, reason: 'Observação deve aceitar nulo');
+      expect(obs.observacao, isNull);
     });
+
     test('Deve converter o objeto Obs de volta para JSON corretamente', () {
-      final dataTeste = DateTime(2026, 01, 13);
+      final dataTeste = DateTime(2026, 1, 13);
+
       final obs = Obs(
         idCliente: 2317,
-        nome_cliente: 'JOEIMIR MARIAN',
+        nomeCliente: 'JOEIMIR MARIAN',
         responsavel: 'ALEXANDRE MARIAN',
         data: dataTeste,
         visitado: true,
@@ -53,8 +56,7 @@ void main() {
       expect(json['id_cliente'], 2317);
       expect(json['nome_cliente'], 'JOEIMIR MARIAN');
       expect(json['responsavel'], 'ALEXANDRE MARIAN');
-      expect(json['data'], isA<DateTime>());
-      expect(json['data'], dataTeste);
+      expect(json['data'], dataTeste.toIso8601String());
       expect(json['visitado'], isTrue);
       expect(json['observacao'], 'Cliente atendeu na porta.');
     });
