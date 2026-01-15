@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:alembro/models/obs.dart';
+import 'package:alembro/models/observation.dart';
 
 void main() {
   group('Obs Model - Unit Tests', () {
@@ -13,7 +13,7 @@ void main() {
         'observacao': 'Nota de teste.',
       };
 
-      final obs = Obs.fromJson(json);
+      final obs = Observation.fromJson(json);
 
       expect(obs.idCliente, 2317);
       expect(obs.nomeCliente, 'JOEIMIR MARIAN');
@@ -34,7 +34,7 @@ void main() {
         'visitado': true,
       };
 
-      final obs = Obs.fromJson(json);
+      final obs = Observation.fromJson(json);
 
       expect(obs.observacao, isNull);
     });
@@ -42,7 +42,7 @@ void main() {
     test('Deve converter o objeto Obs de volta para JSON corretamente', () {
       final dataTeste = DateTime(2026, 1, 13);
 
-      final obs = Obs(
+      final obs = Observation(
         idCliente: 2317,
         nomeCliente: 'JOEIMIR MARIAN',
         responsavel: 'ALEXANDRE MARIAN',

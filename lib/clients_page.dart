@@ -159,8 +159,8 @@ class ClientsPageState extends State<ClientsPage> {
         }
       } else {
         try {
-          await syncService.syncClientes();
-          await syncService.syncObservacoes();
+          await syncService.syncClients();
+          await syncService.syncObservations();
         } catch (e, stack) {
           await LocalLogger.log(
             'Erro na sincronização de clientes\nErro: $e\nStack: $stack',

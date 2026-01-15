@@ -1,4 +1,4 @@
-class Obs {
+class Observation {
   final int idCliente;
   final String nomeCliente;
   final String responsavel;
@@ -6,7 +6,7 @@ class Obs {
   final bool visitado;
   final String? observacao;
 
-  Obs({
+  Observation({
     required this.idCliente,
     required this.nomeCliente,
     required this.responsavel,
@@ -15,8 +15,8 @@ class Obs {
     this.observacao,
   });
 
-  factory Obs.fromJson(Map<String, dynamic> json) {
-    return Obs(
+  factory Observation.fromJson(Map<String, dynamic> json) {
+    return Observation(
       idCliente: json['id_cliente'],
       nomeCliente: json['nome_cliente'],
       responsavel: json['responsavel'],

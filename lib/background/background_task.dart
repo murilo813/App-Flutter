@@ -14,9 +14,9 @@ void callbackDispatcher() {
     try {
       if (task == taskSync) {
         final syncService = SyncService();
-        await syncService.syncEstoqueGeral();
-        await syncService.syncClientes();
-        await syncService.syncObservacoes();
+        await syncService.syncStock();
+        await syncService.syncClients();
+        await syncService.syncObservations();
         await OfflineQueue.trySendQueue(backendUrl);
 
         final agora = DateTime.now().toIso8601String();

@@ -134,7 +134,7 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
       } else {
         List<Product> produtos = [];
         try {
-          produtos = await syncService.syncEstoqueGeral();
+          produtos = await syncService.syncStock();
         } catch (e, stack) {
           await LocalLogger.log('Erro na sincronização: $e\n$stack');
         }

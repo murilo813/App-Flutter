@@ -74,9 +74,9 @@ class _OrdersPageState extends State<OrdersPage> {
 
       if (temInternet) {
         try {
-          await sync.syncClientes();
-          await sync.syncObservacoes();
-          await sync.syncEstoqueGeral();
+          await sync.syncClients();
+          await sync.syncObservations();
+          await sync.syncStock();
           await OfflineQueue.trySendQueue(backendUrl);
         } catch (e, stack) {
           await LocalLogger.log(
@@ -117,12 +117,12 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   Future<void> carregarClientes() async {
-    final dados = await sync.lerClientesLocal();
+    final dados = await sync.readClients();
     setState(() => clientes = dados);
   }
 
   Future<void> carregarProdutos() async {
-    final dados = await sync.lerEstoqueLocalGeral();
+    final dados = await sync.readStock();
     setState(() => produtos = dados);
   }
 
