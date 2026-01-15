@@ -68,15 +68,17 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> checkLoginStatus(BuildContext context) async {
+  Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
     final int? idVendedor = prefs.getInt('id_vendedor');
 
+    if (!mounted) return;
+
     if (!loggedIn || idVendedor == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
       await checkAppVersion();
@@ -116,10 +118,11 @@ class HomePageState extends State<HomePage> {
               .toList();
 
       if (aniversariantes.isEmpty) return;
+      if (!mounted) return;
 
       showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return AlertDialog(
             backgroundColor: Colors.white,
             title: const Column(
@@ -160,7 +163,9 @@ class HomePageState extends State<HomePage> {
 
       await prefs.setBool('aniversario_ja_exibido', true);
     } catch (e, stack) {
-      print('Erro ao exibir aniversariantes: $e\n$stack');
+      await LocalLogger.log(
+        'Erro na checagem de versão: $e\nStackTrace: $stack',
+      );
     }
   }
 
@@ -200,7 +205,7 @@ class HomePageState extends State<HomePage> {
                     TextButton(
                       onPressed: () async {
                         await prefs.clear();
-                        if (context.mounted) {
+                        if (mounted) {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
@@ -218,7 +223,9 @@ class HomePageState extends State<HomePage> {
           return;
         }
 
-        if (latestVersion != currentVersion && mounted) {
+        if (!mounted) return;
+
+        if (latestVersion != currentVersion) {
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -235,6 +242,7 @@ class HomePageState extends State<HomePage> {
                     TextButton(
                       onPressed: () async {
                         await openURL();
+                        if (!mounted) return;
                         Navigator.of(context).pop();
                       },
                       child: const Text('Atualizar'),
@@ -252,7 +260,6 @@ class HomePageState extends State<HomePage> {
       await LocalLogger.log(
         'Erro na checagem de versão: $e\nStackTrace: $stack',
       );
-      print('Erro ao verificar versão: $e');
     }
   }
 
@@ -266,8 +273,10 @@ class HomePageState extends State<HomePage> {
 
     try {
       await platform.invokeMethod('abrirNoChrome', {'url': url});
-    } on PlatformException catch (e) {
-      print('Erro ao abrir no Chrome: $e');
+    } catch (e, stack) {
+      await LocalLogger.log(
+        'Erro ao abrir no Chrome ($url): $e\nStackTrace: $stack',
+      );
     }
   }
 

@@ -1,6 +1,6 @@
 class Obs {
   final int idCliente;
-  final String nome_cliente;
+  final String nomeCliente;
   final String responsavel;
   final DateTime data;
   final bool visitado;
@@ -8,7 +8,7 @@ class Obs {
 
   Obs({
     required this.idCliente,
-    required this.nome_cliente,
+    required this.nomeCliente,
     required this.responsavel,
     required this.data,
     required this.visitado,
@@ -18,10 +18,11 @@ class Obs {
   factory Obs.fromJson(Map<String, dynamic> json) {
     return Obs(
       idCliente: json['id_cliente'],
-      nome_cliente: json['nome_cliente'],
+      nomeCliente: json['nome_cliente'],
       responsavel: json['responsavel'],
       data: DateTime.parse(json['data']),
-      visitado: json['visitado'],
+      visitado:
+          json['visitado'] is bool ? json['visitado'] : json['visitado'] == 1,
       observacao: json['observacao'],
     );
   }
@@ -29,9 +30,9 @@ class Obs {
   Map<String, dynamic> toJson() {
     return {
       'id_cliente': idCliente,
-      'nome_cliente': nome_cliente,
+      'nome_cliente': nomeCliente,
       'responsavel': responsavel,
-      'data': data,
+      'data': data.toIso8601String(),
       'visitado': visitado,
       'observacao': observacao,
     };

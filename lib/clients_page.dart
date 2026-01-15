@@ -23,10 +23,10 @@ class ClientsPage extends StatefulWidget {
   const ClientsPage({super.key, this.modoSelecao = false});
 
   @override
-  _ClientsPageState createState() => _ClientsPageState();
+  ClientsPageState createState() => ClientsPageState();
 }
 
-class _ClientsPageState extends State<ClientsPage> {
+class ClientsPageState extends State<ClientsPage> {
   List<Cliente> clientes = [];
   late List<Cliente> filteredClientes;
   late List<Cliente> allClientes = [];
@@ -78,13 +78,13 @@ class _ClientsPageState extends State<ClientsPage> {
 
       localClientes.sort((a, b) {
         final aAniv =
-            a.data_nasc != null &&
-            a.data_nasc!.day == hoje.day &&
-            a.data_nasc!.month == hoje.month;
+            a.dataNasc != null &&
+            a.dataNasc!.day == hoje.day &&
+            a.dataNasc!.month == hoje.month;
         final bAniv =
-            b.data_nasc != null &&
-            b.data_nasc!.day == hoje.day &&
-            b.data_nasc!.month == hoje.month;
+            b.dataNasc != null &&
+            b.dataNasc!.day == hoje.day &&
+            b.dataNasc!.month == hoje.month;
 
         if (aAniv && !bAniv) return -1;
         if (!aAniv && bAniv) return 1;
@@ -105,8 +105,8 @@ class _ClientsPageState extends State<ClientsPage> {
               (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
             );
 
-        final refA = _maisRecenteEntre(ultimaObsA, a.ultima_compra);
-        final refB = _maisRecenteEntre(ultimaObsB, b.ultima_compra);
+        final refA = _maisRecenteEntre(ultimaObsA, a.ultimaCompra);
+        final refB = _maisRecenteEntre(ultimaObsB, b.ultimaCompra);
 
         if (refA == null && refB == null) {
           return a.nomeCliente.compareTo(b.nomeCliente);
@@ -150,7 +150,6 @@ class _ClientsPageState extends State<ClientsPage> {
       }
 
       if (!temInternet) {
-        print('Sem conexão — carregando clientes do cache');
         await carregarDadosLocais();
 
         if (allClientes.isEmpty) {
@@ -159,7 +158,6 @@ class _ClientsPageState extends State<ClientsPage> {
           });
         }
       } else {
-        print('Com conexão — sincronizando clientes');
         try {
           await syncService.syncClientes();
           await syncService.syncObservacoes();
@@ -274,7 +272,7 @@ class _ClientsPageState extends State<ClientsPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -323,14 +321,14 @@ class _ClientsPageState extends State<ClientsPage> {
                         : ListView.separated(
                           padding: const EdgeInsets.only(bottom: 160),
                           itemCount: filteredClientes.length,
-                          separatorBuilder: (_, __) => const Divider(),
+                          separatorBuilder: (context, index) => const Divider(),
                           itemBuilder: (context, index) {
                             final cliente = filteredClientes[index];
                             final hoje = DateTime.now();
                             final isAniversariante =
-                                cliente.data_nasc != null &&
-                                cliente.data_nasc!.day == hoje.day &&
-                                cliente.data_nasc!.month == hoje.month;
+                                cliente.dataNasc != null &&
+                                cliente.dataNasc!.day == hoje.day &&
+                                cliente.dataNasc!.month == hoje.month;
 
                             // Cálculo cor do ícone
                             final obsDoResponsavel =
@@ -364,10 +362,10 @@ class _ClientsPageState extends State<ClientsPage> {
                                       : (dias <= 25
                                           ? Colors.orangeAccent
                                           : Colors.red);
-                            } else if (cliente.ultima_compra != null) {
+                            } else if (cliente.ultimaCompra != null) {
                               final diasSemCompra =
                                   DateTime.now()
-                                      .difference(cliente.ultima_compra!)
+                                      .difference(cliente.ultimaCompra!)
                                       .inDays;
                               corIcone =
                                   diasSemCompra <= 10
@@ -468,20 +466,17 @@ class _ClientsPageState extends State<ClientsPage> {
       final dir = await getApplicationDocumentsDirectory();
       final obsFile = File('${dir.path}/observacoes.json');
 
-      if (await obsFile.exists()) {
-        final obsContent = await obsFile.readAsString();
-        final Map<String, dynamic> obsData = json.decode(obsContent);
+      if (!await obsFile.exists()) return;
 
-        setState(() {
-          allObs = List<Map<String, dynamic>>.from(obsData['data'] ?? []);
-        });
+      final obsContent = await obsFile.readAsString();
+      final Map<String, dynamic> obsData = json.decode(obsContent);
 
-        print('🔄 Observações recarregadas (${allObs.length})');
-      } else {
-        print('⚠️ Nenhum arquivo de observações encontrado.');
-      }
-    } catch (e) {
-      print('❌ Erro ao atualizar observações locais: $e');
+      if (!mounted) return;
+      setState(() {
+        allObs = List<Map<String, dynamic>>.from(obsData['data'] ?? []);
+      });
+    } catch (_) {
+      // erro silencioso (arquivo corrompido, permissão, etc.)
     }
   }
 
@@ -516,10 +511,11 @@ class _ClientsPageState extends State<ClientsPage> {
       );
     }
 
+    if (!context.mounted) return;
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (dialogContext) => AlertDialog(
             backgroundColor: Colors.white,
             surfaceTintColor: Colors.white, // MATERIAL 3 (crítico)
             shape: RoundedRectangleBorder(
@@ -678,11 +674,14 @@ class _ClientsPageState extends State<ClientsPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Fechar'),
               ),
               ElevatedButton(
                 onPressed: () async {
+                  final navigator = Navigator.of(dialogContext);
+                  final messenger = ScaffoldMessenger.of(dialogContext);
+
                   final prefs = await SharedPreferences.getInstance();
                   final int? idVendedor = prefs.getInt('id_vendedor');
 
@@ -690,7 +689,7 @@ class _ClientsPageState extends State<ClientsPage> {
                     await LocalLogger.log(
                       'Erro: id_vendedor não encontrado no SharedPreferences',
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Erro: vendedor não encontrado'),
                       ),
@@ -733,38 +732,19 @@ class _ClientsPageState extends State<ClientsPage> {
 
                     await file.writeAsString(json.encode(jsonData));
 
-                    // salva online (ou no pendents se nao houver internet)
                     final online = await hasInternetConnection();
                     if (online) {
                       final httpClient = HttpClient();
                       final response = await httpClient.post(url, body);
 
                       if (response.statusCode == 200) {
-                        final respBody = json.decode(response.body);
-
-                        if (respBody['status'] == 'ok') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Observação registrada com sucesso',
-                              ),
-                            ),
-                          );
-                        } else {
-                          await LocalLogger.log(
-                            'Erro ao criar observação: ${respBody['mensagem']}',
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Erro: ${respBody['mensagem']}'),
-                            ),
-                          );
-                        }
-                      } else {
-                        await LocalLogger.log(
-                          'Erro HTTP ao criar observação (status ${response.statusCode})',
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Observação registrada com sucesso'),
+                          ),
                         );
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      } else {
+                        messenger.showSnackBar(
                           const SnackBar(
                             content: Text('Erro ao registrar observação'),
                           ),
@@ -772,7 +752,7 @@ class _ClientsPageState extends State<ClientsPage> {
                       }
                     } else {
                       await OfflineQueue.addToQueue({'url': url, 'body': body});
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text(
                             'Sem internet: observação salva para envio posterior',
@@ -784,14 +764,15 @@ class _ClientsPageState extends State<ClientsPage> {
                     await LocalLogger.log(
                       'Erro ao criar observação: $e\nStackTrace: $stack',
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Erro ao registrar observação'),
                       ),
                     );
                   }
 
-                  Navigator.pop(context);
+                  if (!dialogContext.mounted) return;
+                  navigator.pop();
                   await atualizarObservacoesLocais();
                 },
                 child: const Text('Salvar'),
@@ -813,19 +794,19 @@ class _ClientsPageState extends State<ClientsPage> {
         _buildColunaLimiteComLinhaInterna(
           "Saldo BM",
           cliente.saldoFormatado,
-          cliente.saldo_limite,
+          cliente.saldoLimite,
           true,
         ),
         _buildColunaLimiteComLinhaInterna(
           "Limite C",
-          cliente.limiteCFormatado,
-          cliente.limite_calculado,
+          cliente.limiteCalculadoFormatado,
+          cliente.limiteCalculado,
           true,
         ),
         _buildColunaLimiteComLinhaInterna(
           "Saldo C",
-          cliente.saldoCFormatado,
-          cliente.saldo_limite_calculado,
+          cliente.saldoCalculadoFormatado,
+          cliente.saldoLimiteCalculado,
           false,
         ),
       ],
@@ -890,15 +871,15 @@ class _ClientsPageState extends State<ClientsPage> {
     );
     final double totalSaldoBM = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.saldo_limite,
+      (sum, c) => sum + c.saldoLimite,
     );
     final double totalLimiteC = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.limite_calculado,
+      (sum, c) => sum + c.limiteCalculado,
     );
     final double totalSaldoC = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.saldo_limite_calculado,
+      (sum, c) => sum + c.saldoLimiteCalculado,
     );
 
     return SafeArea(

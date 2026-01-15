@@ -14,6 +14,7 @@ class _PedidoConfirmadoPageState extends State<PedidoConfirmadoPage> {
     super.initState();
 
     Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     });
   }

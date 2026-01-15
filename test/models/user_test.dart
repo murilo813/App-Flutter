@@ -11,19 +11,19 @@ void main() {
         'id_vendedor': 123,
         'registrar_novo_disp': 0,
         'tipo_usuario': 'USER',
-        'nomeclatura': 'Jõao da Silva',
+        'nomeclatura': 'João da Silva',
         'ativo': 'S',
       };
 
       final user = User.fromJson(json);
 
       expect(user.id, 1);
-      expect(
-        user.usuario,
-        'joao',
-      ); // vem do banco como 'nome' mas vira 'usuario'
-      expect(user.id_vendedor, 123);
-      expect(user.tipo_usuario, 'USER');
+      expect(user.idEmpresa, 10);
+      expect(user.usuario, 'joao'); // nome → usuario
+      expect(user.idVendedor, 123);
+      expect(user.registrarNovoDisp, 0);
+      expect(user.tipoUsuario, 'USER');
+      expect(user.nomeclatura, 'João da Silva');
       expect(user.ativo, 'S');
     });
 
@@ -41,17 +41,17 @@ void main() {
 
       final user = User.fromJson(json);
 
-      expect(user.ativo, isNull, reason: 'O campo ativo deve aceitar nulo');
+      expect(user.ativo, isNull);
     });
 
     test('Deve converter o objeto User de volta para JSON corretamente', () {
-      final user = User(
+      const user = User(
         id: 1,
-        id_empresa: 10,
+        idEmpresa: 10,
         usuario: 'marcos_vendas',
-        id_vendedor: 5,
-        registrar_novo_disp: 0,
-        tipo_usuario: 'USER',
+        idVendedor: 5,
+        registrarNovoDisp: 0,
+        tipoUsuario: 'USER',
         nomeclatura: 'Marcos Castro',
         ativo: 'S',
       );
@@ -59,6 +59,7 @@ void main() {
       final json = user.toJson();
 
       expect(json['id'], 1);
+      expect(json['id_empresa'], 10);
       expect(
         json['nome'],
         'marcos_vendas',
@@ -66,6 +67,7 @@ void main() {
             'A variável "usuario" deve ser exportada como "nome" para o Backend',
       );
       expect(json['id_vendedor'], 5);
+      expect(json['registrar_novo_disp'], 0);
       expect(json['tipo_usuario'], 'USER');
       expect(json['ativo'], 'S');
     });

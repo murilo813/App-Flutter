@@ -8,10 +8,6 @@ class AuthHeaders {
     final dispositivo = prefs.getString('dispositivo') ?? 'unknown';
     final appSig = prefs.getString('assinatura') ?? 'unknown';
 
-    print(
-      "AuthHeaders -> dispositivo=$dispositivo, assinatura=$appSig, id_usuario=$idUsuario",
-    );
-
     return {
       'dispositivo': dispositivo,
       'assinatura': appSig,

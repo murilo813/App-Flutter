@@ -21,10 +21,10 @@ class StorePage extends StatefulWidget {
   const StorePage({super.key, this.modoSelecao = false});
 
   @override
-  _StorePageState createState() => _StorePageState();
+  StorePageState createState() => StorePageState();
 }
 
-class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
+class StorePageState extends State<StorePage> with WidgetsBindingObserver {
   late List<Product> filteredProducts;
   late List<Product> allProducts = [];
   late TextEditingController searchController;
@@ -254,7 +254,7 @@ class _StorePageState extends State<StorePage> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

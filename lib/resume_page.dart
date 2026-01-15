@@ -68,8 +68,6 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.clienteId);
-    print(widget.pagamentoId);
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
@@ -394,7 +392,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   Map<String, dynamic> montarJsonPedido() {
     final Map<String, dynamic> json = {
       "id_cliente": widget.clienteId,
-      "lista_preco": widget.cliente.lista_preco,
+      "listaPreco": widget.cliente.listaPreco,
       "id_pagamento": widget.pagamentoId,
       "juros": juros,
       "desconto": desconto,
@@ -423,7 +421,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
       return p.precoEditado!;
     }
 
-    return widget.cliente.lista_preco == 2 ? p.preco2 : p.preco1;
+    return widget.cliente.listaPreco == 2 ? p.preco2 : p.preco1;
   }
 
   double getTotalCalculado() {
