@@ -1,6 +1,12 @@
 import 'package:intl/intl.dart';
 
 class Product {
+  static final NumberFormat _formatter = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: '',
+    decimalDigits: 2,
+  );
+
   final int id;
   final String nome;
 
@@ -85,12 +91,7 @@ class Product {
   }
 
   String _formatar(double valor) {
-    final formatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: '',
-      decimalDigits: 2,
-    );
-    return formatter.format(valor).trim();
+    return _formatter.format(valor).trim();
   }
 
   String get preco1Formatado => _formatar(preco1);

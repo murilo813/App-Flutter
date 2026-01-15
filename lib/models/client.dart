@@ -1,6 +1,12 @@
 import 'package:intl/intl.dart';
 
 class Cliente {
+  static final NumberFormat _formatter = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: '',
+    decimalDigits: 2,
+  );
+
   final int id;
   final String nomeCliente;
   final String responsavel;
@@ -62,14 +68,8 @@ class Cliente {
   }
 
   String _formatar(double valor) {
-    final formatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: '',
-      decimalDigits: 2,
-    );
-    return formatter.format(valor).trim();
+    return _formatter.format(valor).trim();
   }
-
   String get limiteFormatado => _formatar(limite);
   String get saldoFormatado => _formatar(saldoLimite);
   String get limiteCalculadoFormatado => _formatar(limiteCalculado);
