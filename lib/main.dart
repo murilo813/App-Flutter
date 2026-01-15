@@ -7,7 +7,7 @@ import 'background/background_task.dart';
 import 'background/pendents.dart';
 import 'background/local_log.dart';
 import 'home_page.dart';
-import 'login.screen.dart';
+import 'login_page.dart';
 import 'secrets.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -118,7 +118,7 @@ class MyApp extends StatelessWidget {
           margin: EdgeInsets.symmetric(vertical: 6),
         ),
       ),
-      home: const LoginScreen(),
+      home: const LoginPage(),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

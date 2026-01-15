@@ -14,7 +14,7 @@ import 'services/http_client.dart';
 import 'models/client.dart';
 import 'widgets/gradientgreen.dart';
 import 'widgets/loading.dart';
-import 'login.screen.dart';
+import 'login_page.dart';
 import 'store_page.dart';
 import 'clients_page.dart';
 import 'order_page.dart';
@@ -78,7 +78,7 @@ class HomePageState extends State<HomePage> {
     if (!loggedIn || idVendedor == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginPage()),
       );
     } else {
       await checkAppVersion();
@@ -209,7 +209,7 @@ class HomePageState extends State<HomePage> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const LoginScreen(),
+                              builder: (_) => const LoginPage(),
                             ),
                             (route) => false,
                           );
@@ -431,7 +431,7 @@ class HomePageState extends State<HomePage> {
                     if (context.mounted) {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
                         (route) => false,
                       );
                     }

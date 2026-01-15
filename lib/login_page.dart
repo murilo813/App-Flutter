@@ -16,13 +16,13 @@ import 'widgets/gradientgreen.dart';
 import 'home_page.dart';
 import 'secrets.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
   @override
-  LoginScreenState createState() => LoginScreenState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
+class LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -40,18 +40,18 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _initApp() async {
-    await _verificarAtualizacaoApp();
+    await _checkAppUpdate();
     await checkLoginStatus();
   }
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final loggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     final idVendedor = prefs.getInt('id_vendedor');
     final idUsuario = prefs.getString('id_usuario');
 
-    if (loggedIn && idUsuario != null && idVendedor != null) {
-      await registrarUso();
+    if (isLoggedIn && idUsuario != null && idVendedor != null) {
+      await logUsage();
       if (!mounted) return;
 
       Navigator.pushReplacement(
@@ -65,7 +65,7 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> registrarUso() async {
+  Future<void> logUsage() async {
     final prefs = await SharedPreferences.getInstance();
     final String appVersion = prefs.getString('app_version') ?? 'desconhecida';
 
@@ -97,17 +97,16 @@ class LoginScreenState extends State<LoginScreen> {
 
     try {
       final androidIdPlugin = const AndroidId();
-      final dispositivo = await androidIdPlugin.getId() ?? 'unknown';
+      final device = await androidIdPlugin.getId() ?? 'unknown';
 
       const platform = MethodChannel('app_signature_channel');
-      final assinatura =
-          await platform.invokeMethod<String>('getassinatura') ?? 'unknown';
+      final signature = await platform.invokeMethod<String>('getSignature') ?? 'unknown';
 
       final body = {
         'nome': username,
         'senha': password,
-        'dispositivo': dispositivo,
-        'assinatura': assinatura,
+        'dispositivo': device,
+        'assinatura': signature,
       };
 
       final response = await http
@@ -125,7 +124,7 @@ class LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final int idVendedor = data['id_vendedor'];
+        final idVendedor = data['id_vendedor'];
         final idUsuario = data['id_usuario'].toString();
         final tipoUsuario = data['tipo'];
         final idEmpresa = data['id_empresa'];
@@ -134,12 +133,12 @@ class LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('id_usuario', idUsuario);
         await prefs.setInt('id_vendedor', idVendedor);
-        await prefs.setString('dispositivo', dispositivo);
-        await prefs.setString('assinatura', assinatura);
+        await prefs.setString('dispositivo', device);
+        await prefs.setString('assinatura', signature);
         await prefs.setString('tipo_usuario', tipoUsuario);
         await prefs.setInt('id_empresa', idEmpresa);
 
-        await registrarUso();
+        await logUsage();
         if (!mounted) return;
 
         Navigator.pushReplacement(
@@ -197,15 +196,15 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _verificarAtualizacaoApp() async {
+  Future<void> _checkAppUpdate() async {
     final prefs = await SharedPreferences.getInstance();
     final packageInfo = await PackageInfo.fromPlatform();
 
-    final versaoAtual = packageInfo.version;
-    final versaoSalva = prefs.getString('app_version');
+    final currentVersion = packageInfo.version;
+    final storedVersion = prefs.getString('app_version');
 
-    if (versaoSalva == null || versaoSalva != versaoAtual) {
-      await prefs.setString('app_version', versaoAtual);
+    if (storedVersion == null || storedVersion != currentVersion) {
+      await prefs.setString('app_version', currentVersion);
     }
   }
 

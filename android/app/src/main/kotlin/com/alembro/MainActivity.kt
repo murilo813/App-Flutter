@@ -37,7 +37,7 @@ class MainActivity: FlutterActivity() {
         // Canal para obter assinatura do app (compatível com Android 7+)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_SIGNATURE)
             .setMethodCallHandler { call, result ->
-                if (call.method == "getassinatura") {
+                if (call.method == "getSignature") {
                     try {
                         val md = MessageDigest.getInstance("SHA-256")
 
