@@ -75,7 +75,7 @@ void main() async {
     // sincronizacao de dados
     await Workmanager().registerPeriodicTask(
       "1",
-      tarefaSync,
+      taskSync,
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(seconds: 10),
       constraints: Constraints(
