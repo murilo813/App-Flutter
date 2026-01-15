@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../services/http_client.dart';
+
+import 'package:alembro/services/http_client.dart';
 
 class OfflineQueue {
   static const _key = 'offline_queue';
@@ -27,10 +29,13 @@ class OfflineQueue {
     await prefs.remove(_key);
   }
 
+  static StreamSubscription<List<ConnectivityResult>>? _subscription;
+
   static void startSyncWhenOnline(String backendUrl) {
-    // Atualizado para 2026: onConnectivityChanged retorna List<ConnectivityResult>
-    Connectivity().onConnectivityChanged.listen((
-      List<ConnectivityResult> statusList,
+    if (_subscription != null) return;
+
+    _subscription = Connectivity().onConnectivityChanged.listen((
+      statusList,
     ) async {
       if (statusList.isNotEmpty &&
           !statusList.contains(ConnectivityResult.none)) {

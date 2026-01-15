@@ -1,9 +1,10 @@
 import 'package:workmanager/workmanager.dart';
 
-import '../services/sync_service.dart';
-import '../services/anniversary.dart';
-import '../services/inactivity.dart';
-import '../secrets.dart';
+import 'package:alembro/services/sync_service.dart';
+import 'package:alembro/services/anniversary.dart';
+import 'package:alembro/services/inactivity.dart';
+import 'package:alembro/secrets.dart';
+
 import 'local_log.dart';
 import 'pendents.dart';
 
@@ -26,12 +27,12 @@ void callbackDispatcher() {
         final agora = DateTime.now().toIso8601String();
         await LocalLogger.log("Dados sincronizados $agora");
       }
-      return Future.value(true);
+      return true;
     } catch (e, stack) {
       await LocalLogger.log(
         'Erro na execução da task $task: $e\nStack: $stack',
       );
-      return Future.value(false);
+      return false;
     }
   });
 }
