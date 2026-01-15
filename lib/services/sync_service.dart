@@ -58,7 +58,7 @@ class SyncService {
   }
 
   // CLIENTES
-  Future<List<Cliente>> syncClientes() async {
+  Future<List<Client>> syncClientes() async {
     final prefs = await SharedPreferences.getInstance();
     final idVendedor = prefs.getInt('id_vendedor');
     if (idVendedor == null) return [];
@@ -78,19 +78,19 @@ class SyncService {
         }),
       );
 
-      return data.map(Cliente.fromJson).toList();
+      return data.map(Client.fromJson).toList();
     }
     return [];
   }
 
-  Future<List<Cliente>> lerClientesLocal() async {
+  Future<List<Client>> lerClientesLocal() async {
     final file = File(
       '${(await getApplicationDocumentsDirectory()).path}/clientes.json',
     );
     if (!await file.exists()) return [];
 
     final data = await compute(parseLocalList, await file.readAsString());
-    return data.map(Cliente.fromJson).toList();
+    return data.map(Client.fromJson).toList();
   }
 
   // USERS

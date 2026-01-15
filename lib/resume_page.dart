@@ -13,7 +13,7 @@ import 'secrets.dart';
 
 class ResumoPedidoPage extends StatefulWidget {
   final int clienteId;
-  final Cliente cliente;
+  final Client cliente;
   final int pagamentoId;
   final DateTime? vencimentoEditado;
   final Map<String, dynamic> pagamento;

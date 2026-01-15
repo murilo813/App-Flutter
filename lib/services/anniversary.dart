@@ -5,8 +5,8 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/client.dart';
-import '../background/local_log.dart';
+import 'package:alembro/models/client.dart';
+import 'package:alembro/background/local_log.dart';
 
 class AnniversaryService {
   static Future<void> checkAndNotify() async {
@@ -33,7 +33,7 @@ class AnniversaryService {
       if (jsonMap['data'] is! List) return;
 
       final clientes =
-          jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
+          jsonMap['data'].map<Client>((e) => Client.fromJson(e)).toList();
 
       final hoje = DateTime.now();
       final aniversariantes =

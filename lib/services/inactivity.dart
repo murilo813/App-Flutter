@@ -77,7 +77,7 @@ class InactivityService {
 
   // ================= DADOS =================
 
-  static Future<List<Cliente>> _carregarClientes() async {
+  static Future<List<Client>> _carregarClientes() async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/clientes.json');
 
@@ -86,7 +86,7 @@ class InactivityService {
     final jsonMap = json.decode(await file.readAsString());
     if (jsonMap['data'] is! List) return [];
 
-    return jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
+    return jsonMap['data'].map<Client>((e) => Client.fromJson(e)).toList();
   }
 
   static Future<Map<int, DateTime>> _carregarUltimaObsPorCliente() async {
@@ -112,8 +112,8 @@ class InactivityService {
 
   // ================= REGRA =================
 
-  static List<Cliente> _filtrarClientesInativos(
-    List<Cliente> clientes,
+  static List<Client> _filtrarClientesInativos(
+    List<Client> clientes,
     Map<int, DateTime> ultimaObsPorCliente,
     DateTime hoje,
   ) {
@@ -125,7 +125,7 @@ class InactivityService {
   }
 
   static DateTime? _ultimaAtividade(
-    Cliente c,
+    Client c,
     Map<int, DateTime> ultimaObsPorCliente,
   ) {
     DateTime? ultima = c.ultimaCompra;
@@ -138,10 +138,10 @@ class InactivityService {
     return ultima;
   }
 
-  static Map<String, List<Cliente>> _agruparPorResponsavel(
-    List<Cliente> clientes,
+  static Map<String, List<Client>> _agruparPorResponsavel(
+    List<Client> clientes,
   ) {
-    final Map<String, List<Cliente>> mapa = {};
+    final Map<String, List<Client>> mapa = {};
 
     for (final c in clientes) {
       mapa.putIfAbsent(c.responsavel, () => []).add(c);
@@ -153,7 +153,7 @@ class InactivityService {
   // ================= NOTIFICAÇÃO =================
 
   static Future<void> _enviarNotificacoes(
-    Map<String, List<Cliente>> clientesPorResponsavel,
+    Map<String, List<Client>> clientesPorResponsavel,
     Map<int, DateTime> ultimaObsPorCliente,
     DateTime hoje,
   ) async {

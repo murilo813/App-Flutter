@@ -29,14 +29,14 @@ class _OrdersPageState extends State<OrdersPage> {
   bool erroCritico = false;
   String? mensagemErro;
 
-  Cliente? clienteSelecionado;
+  Client? clienteSelecionado;
   Map<String, dynamic>? pagamentoSelecionado;
   DateTime? vencimentoEditado;
   List<DateTime> vencimentosParcelas = [];
   List<Product> produtosSelecionados = [];
   Map<int, TextEditingController> precoControllers = {};
 
-  List<Cliente> clientes = [];
+  List<Client> clientes = [];
   List<Product> produtos = [];
   bool aplicarJuros = false;
   double jurosSelecionado = 0.0;

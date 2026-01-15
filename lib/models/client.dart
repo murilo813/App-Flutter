@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-class Cliente {
+class Client {
   static final NumberFormat _formatter = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: '',
@@ -18,7 +18,7 @@ class Cliente {
   final DateTime? ultimaCompra;
   final int listaPreco;
 
-  Cliente({
+  Client({
     required this.id,
     required this.nomeCliente,
     required this.responsavel,
@@ -31,8 +31,8 @@ class Cliente {
     this.listaPreco = 1,
   });
 
-  factory Cliente.fromJson(Map<String, dynamic> json) {
-    return Cliente(
+  factory Client.fromJson(Map<String, dynamic> json) {
+    return Client(
       id: json['id_cliente'],
       nomeCliente: json['nome_cliente'],
       responsavel: json['responsavel'] ?? '',

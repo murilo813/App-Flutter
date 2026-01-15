@@ -16,7 +16,7 @@ void main() {
         'lista_preco': 2,
       };
 
-      final cliente = Cliente.fromJson(json);
+      final cliente = Client.fromJson(json);
 
       expect(cliente.nomeCliente, 'MARCOLINO DOS SANTOS');
       expect(cliente.responsavel, 'MARCOS CASTRO');
@@ -37,7 +37,7 @@ void main() {
         'id_cliente': 999,
       };
 
-      final cliente = Cliente.fromJson(json);
+      final cliente = Client.fromJson(json);
 
       expect(cliente.responsavel, '');
       expect(cliente.listaPreco, 1);
@@ -55,12 +55,12 @@ void main() {
         'data_nasc': '',
       };
 
-      final cliente = Cliente.fromJson(json);
+      final cliente = Client.fromJson(json);
       expect(cliente.dataNasc, isNull);
     });
 
     test('Deve formatar valores monetários corretamente para PT-BR', () {
-      final cliente = Cliente(
+      final cliente = Client(
         id: 1,
         nomeCliente: 'MARCOLINO DOS SANTOS',
         responsavel: '',
@@ -81,7 +81,7 @@ void main() {
     test('Deve converter o objeto Cliente de volta para JSON corretamente', () {
       final data = DateTime(1990, 5, 15);
 
-      final cliente = Cliente(
+      final cliente = Client(
         id: 123,
         nomeCliente: 'MARCOLINO DOS SANTOS',
         responsavel: 'MARCOS CASTRO',

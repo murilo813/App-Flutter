@@ -104,7 +104,7 @@ class HomePageState extends State<HomePage> {
       if (jsonMap['data'] is! List) return;
 
       final clientes =
-          jsonMap['data'].map<Cliente>((e) => Cliente.fromJson(e)).toList();
+          jsonMap['data'].map<Client>((e) => Client.fromJson(e)).toList();
 
       final hoje = DateTime.now();
       final aniversariantes =

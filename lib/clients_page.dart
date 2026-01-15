@@ -27,9 +27,9 @@ class ClientsPage extends StatefulWidget {
 }
 
 class ClientsPageState extends State<ClientsPage> {
-  List<Cliente> clientes = [];
-  late List<Cliente> filteredClientes;
-  late List<Cliente> allClientes = [];
+  List<Client> clientes = [];
+  late List<Client> filteredClientes;
+  late List<Client> allClientes = [];
   late List<Map<String, dynamic>> allObs = [];
   late TextEditingController searchController;
   String? ultimaAtualizacao;
@@ -69,9 +69,9 @@ class ClientsPageState extends State<ClientsPage> {
       final content = await file.readAsString();
       final Map<String, dynamic> jsonData = json.decode(content);
 
-      final List<Cliente> localClientes =
+      final List<Client> localClientes =
           (jsonData['data'] as List)
-              .map((json) => Cliente.fromJson(json))
+              .map((json) => Client.fromJson(json))
               .toList();
 
       final hoje = DateTime.now();
@@ -482,7 +482,7 @@ class ClientsPageState extends State<ClientsPage> {
 
   Future<void> _mostrarInfoCliente(
     BuildContext context,
-    Cliente cliente,
+    Client cliente,
   ) async {
     DateTime selectedDate = DateTime.now();
 
@@ -782,7 +782,7 @@ class ClientsPageState extends State<ClientsPage> {
     );
   }
 
-  Widget _buildLimitesTable(Cliente cliente) {
+  Widget _buildLimitesTable(Client cliente) {
     return Row(
       children: [
         _buildColunaLimiteComLinhaInterna(
@@ -951,7 +951,7 @@ class ClientsPageState extends State<ClientsPage> {
     );
   }
 
-  List<Cliente> _getFilteredClientes() {
+  List<Client> _getFilteredClientes() {
     final query = searchController.text.trim().toLowerCase();
 
     final filtrados =
