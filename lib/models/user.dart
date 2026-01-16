@@ -1,47 +1,47 @@
 class User {
-  final int id;
-  final int idEmpresa;
-  final String usuario;
-  final int idVendedor;
-  final int registrarNovoDisp;
-  final String tipoUsuario;
-  final String nomeclatura;
-  final String? ativo;
+  final int userId;
+  final int companyId;
+  final String userName;
+  final int sellerId;
+  final int deviceCredit;
+  final String userType;
+  final String nomenclature;
+  final String? active;
 
   const User({
-    required this.id,
-    required this.idEmpresa,
-    required this.usuario,
-    required this.idVendedor,
-    required this.registrarNovoDisp,
-    required this.tipoUsuario,
-    required this.nomeclatura,
-    this.ativo,
+    required this.userId,
+    required this.companyId,
+    required this.userName,
+    required this.sellerId,
+    required this.deviceCredit,
+    required this.userType,
+    required this.nomenclature,
+    this.active,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as int,
-      idEmpresa: json['id_empresa'] as int,
-      usuario: json['nome'] as String,
-      idVendedor: json['id_vendedor'] as int,
-      registrarNovoDisp: json['registrar_novo_disp'] as int,
-      tipoUsuario: json['tipo_usuario'] as String,
-      nomeclatura: json['nomeclatura'] as String,
-      ativo: json['ativo'] as String?,
+      userId: json['userId'] as int,
+      companyId: json['companyId'] as int,
+      userName: json['userName'] as String,
+      sellerId: json['sellerId'] as int,
+      deviceCredit: json['deviceCredit'] as int,
+      userType: json['userType'] as String,
+      nomenclature: json['nomenclature'] as String,
+      active: json['active'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'id_empresa': idEmpresa,
-      'nome': usuario,
-      'id_vendedor': idVendedor,
-      'registrar_novo_disp': registrarNovoDisp,
-      'tipo_usuario': tipoUsuario,
-      'nomeclatura': nomeclatura,
-      'ativo': ativo,
+      'userId': userId,
+      'companyId': companyId,
+      'userName': userName,
+      'sellerId': sellerId,
+      'deviceCredit': deviceCredit,
+      'userType': userType,
+      'nomenclature': nomenclature,
+      'active': active,
     };
   }
 }

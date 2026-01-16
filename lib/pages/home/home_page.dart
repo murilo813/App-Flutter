@@ -9,17 +9,17 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
-import 'background/local_log.dart';
-import 'services/http_client.dart';
-import 'models/client.dart';
-import 'widgets/gradientgreen.dart';
-import 'widgets/loading.dart';
-import 'login_page.dart';
-import 'store_page.dart';
-import 'clients_page.dart';
-import 'order_page.dart';
-import 'admin_page.dart';
-import 'debug_page.dart';
+import '../../services/local/local_log.dart';
+import '../../services/api/http_client.dart';
+import '../../models/client.dart';
+import '../../widgets/gradientgreen.dart';
+import '../../widgets/loading.dart';
+import '../auth/login_page.dart';
+import '../stock/store_page.dart';
+import '../clients/clients_page.dart';
+import '../order/order_page.dart';
+import '../admin/admin_page.dart';
+import '../debug/debug_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -94,7 +94,7 @@ class HomePageState extends State<HomePage> {
 
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/clientes.json');
+      final file = File('${dir.path}/clients.json');
 
       if (!await file.exists()) return;
 

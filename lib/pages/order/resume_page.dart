@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import 'services/http_client.dart';
-import 'background/pendents.dart';
-import 'background/local_log.dart';
-import 'models/client.dart';
-import 'models/product.dart';
-import 'widgets/gradientgreen.dart';
-import 'pedido_confirmado_page.dart';
-import 'secrets.dart';
+import '../../services/api/http_client.dart';
+import '../../services/local/pendents.dart';
+import '../../services/local/local_log.dart';
+import '../../models/client.dart';
+import '../../models/product.dart';
+import '../../widgets/gradientgreen.dart';
+import '../../widgets/pedido_confirmado_page.dart';
+import '../../secrets.dart';
 
 class ResumoPedidoPage extends StatefulWidget {
   final int clienteId;
@@ -48,7 +48,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
 
     double totalProdutos = 0;
     for (var p in widget.produtos) {
-      final qtd = widget.quantidades[p.id] ?? 1;
+      final qtd = widget.quantidades[p.productId] ?? 1;
       totalProdutos += precoProduto(p) * qtd;
     }
 
@@ -90,7 +90,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Text(
-              widget.cliente.nomeCliente,
+              widget.cliente.clientName,
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 12),
@@ -127,7 +127,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                 itemCount: widget.produtos.length,
                 itemBuilder: (_, i) {
                   final p = widget.produtos[i];
-                  final qtd = widget.quantidades[p.id] ?? 1;
+                  final qtd = widget.quantidades[p.productId] ?? 1;
                   final preco = precoProduto(p);
                   final totalProduto = preco * qtd;
 
@@ -139,7 +139,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              p.nome,
+                              p.productName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -199,7 +199,7 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
                 double totalProdutos = 0;
 
                 for (var p in widget.produtos) {
-                  final qtd = widget.quantidades[p.id] ?? 1;
+                  final qtd = widget.quantidades[p.productId] ?? 1;
                   totalProdutos += precoProduto(p) * qtd;
                 }
 
@@ -392,17 +392,17 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   Map<String, dynamic> montarJsonPedido() {
     final Map<String, dynamic> json = {
       "id_cliente": widget.clienteId,
-      "listaPreco": widget.cliente.listaPreco,
+      "listaPreco": widget.cliente.priceList,
       "id_pagamento": widget.pagamentoId,
       "juros": juros,
       "desconto": desconto,
       "data": DateTime.now().toIso8601String(),
       "itens":
           widget.produtos.map((p) {
-            final qtd = widget.quantidades[p.id] ?? 1;
+            final qtd = widget.quantidades[p.productId] ?? 1;
 
             return {
-              "id_produto": p.id,
+              "id_produto": p.productId,
               "quantidade": qtd,
               "preco_unitario": precoProduto(p),
             };
@@ -417,18 +417,18 @@ class _ResumoPedidoPageState extends State<ResumoPedidoPage> {
   }
 
   double precoProduto(Product p) {
-    if (p.precoEditado != null) {
-      return p.precoEditado!;
+    if (p.editedPrice != null) {
+      return p.editedPrice!;
     }
 
-    return widget.cliente.listaPreco == 2 ? p.preco2 : p.preco1;
+    return widget.cliente.priceList == 2 ? p.price2 : p.price1;
   }
 
   double getTotalCalculado() {
     double totalProdutos = 0;
 
     for (var p in widget.produtos) {
-      final qtd = widget.quantidades[p.id] ?? 1;
+      final qtd = widget.quantidades[p.productId] ?? 1;
       totalProdutos += precoProduto(p) * qtd;
     }
 

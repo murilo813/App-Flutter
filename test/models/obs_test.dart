@@ -5,60 +5,60 @@ void main() {
   group('Obs Model - Unit Tests', () {
     test('Deve converter JSON corretamente para objeto Obs', () {
       final json = {
-        'id_cliente': 2317,
-        'nome_cliente': 'JOEIMIR MARIAN',
-        'responsavel': 'ALEXANDRE MARIAN',
-        'data': '1990-05-15',
-        'visitado': true,
-        'observacao': 'Nota de teste.',
+        'clientId': 2317,
+        'clientName': 'JOEIMIR MARIAN',
+        'responsible': 'ALEXANDRE MARIAN',
+        'date': '1990-05-15',
+        'visited': true,
+        'observation': 'Nota de teste.',
       };
 
       final obs = Observation.fromJson(json);
 
-      expect(obs.idCliente, 2317);
-      expect(obs.nomeCliente, 'JOEIMIR MARIAN');
-      expect(obs.responsavel, 'ALEXANDRE MARIAN');
-      expect(obs.data.year, 1990);
-      expect(obs.data.month, 5);
-      expect(obs.data.day, 15);
-      expect(obs.visitado, isTrue);
-      expect(obs.observacao, 'Nota de teste.');
+      expect(obs.clientId, 2317);
+      expect(obs.clientName, 'JOEIMIR MARIAN');
+      expect(obs.responsible, 'ALEXANDRE MARIAN');
+      expect(obs.date.year, 1990);
+      expect(obs.date.month, 5);
+      expect(obs.date.day, 15);
+      expect(obs.visited, isTrue);
+      expect(obs.observation, 'Nota de teste.');
     });
 
-    test('Deve lidar com observacao nula sem crashar', () {
+    test('Deve lidar com observation nula sem crashar', () {
       final json = {
-        'id_cliente': 2317,
-        'nome_cliente': 'JOEIMIR MARIAN',
-        'responsavel': 'ALEXANDRE MARIAN',
-        'data': '1990-05-15',
-        'visitado': true,
+        'clientId': 2317,
+        'clientName': 'JOEIMIR MARIAN',
+        'responsible': 'ALEXANDRE MARIAN',
+        'date': '1990-05-15',
+        'visited': true,
       };
 
       final obs = Observation.fromJson(json);
 
-      expect(obs.observacao, isNull);
+      expect(obs.observation, isNull);
     });
 
     test('Deve converter o objeto Obs de volta para JSON corretamente', () {
-      final dataTeste = DateTime(2026, 1, 13);
+      final testDate = DateTime(2026, 1, 13);
 
       final obs = Observation(
-        idCliente: 2317,
-        nomeCliente: 'JOEIMIR MARIAN',
-        responsavel: 'ALEXANDRE MARIAN',
-        data: dataTeste,
-        visitado: true,
-        observacao: 'Cliente atendeu na porta.',
+        clientId: 2317,
+        clientName: 'JOEIMIR MARIAN',
+        responsible: 'ALEXANDRE MARIAN',
+        date: testDate,
+        visited: true,
+        observation: 'Cliente atendeu na porta.',
       );
 
       final json = obs.toJson();
 
-      expect(json['id_cliente'], 2317);
-      expect(json['nome_cliente'], 'JOEIMIR MARIAN');
-      expect(json['responsavel'], 'ALEXANDRE MARIAN');
-      expect(json['data'], dataTeste.toIso8601String());
-      expect(json['visitado'], isTrue);
-      expect(json['observacao'], 'Cliente atendeu na porta.');
+      expect(json['clientId'], 2317);
+      expect(json['clientName'], 'JOEIMIR MARIAN');
+      expect(json['responsible'], 'ALEXANDRE MARIAN');
+      expect(json['date'], testDate.toIso8601String());
+      expect(json['visited'], isTrue);
+      expect(json['observation'], 'Cliente atendeu na porta.');
     });
   });
 }

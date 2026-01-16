@@ -1,20 +1,20 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'services/sync_service.dart';
-import 'background/local_log.dart';
-import 'background/pendents.dart';
-import 'models/client.dart';
-import 'models/product.dart';
-import 'widgets/loading.dart';
-import 'widgets/error.dart';
-import 'widgets/gradientgreen.dart';
-import 'clients_page.dart';
-import 'store_page.dart';
+import '../../services/api/sync_data.dart';
+import 'package:alembro/services/connectivity.dart';
+import '../../services/local/local_log.dart';
+import '../../services/local/pendents.dart';
+import '../../models/client.dart';
+import '../../models/product.dart';
+import '../../widgets/loading.dart';
+import '../../widgets/error.dart';
+import '../../widgets/gradientgreen.dart';
+import '../clients/clients_page.dart';
+import '../stock/store_page.dart';
 import 'resume_page.dart';
-import 'secrets.dart';
+import '../../secrets.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -70,7 +70,7 @@ class _OrdersPageState extends State<OrdersPage> {
     setState(() => loading = true);
 
     try {
-      final temInternet = await _hasInternet();
+      final temInternet = await hasInternetConnection();
 
       if (temInternet) {
         try {
@@ -105,16 +105,6 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
-  Future<bool> _hasInternet() async {
-    try {
-      final resp = await http
-          .get(Uri.parse("$backendUrl/ping"))
-          .timeout(const Duration(seconds: 6));
-      return resp.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
-  }
 
   Future<void> carregarClientes() async {
     final dados = await sync.readClients();
@@ -170,7 +160,7 @@ class _OrdersPageState extends State<OrdersPage> {
           children: [
             _titulo("Cliente"),
             _caixaSelecao(
-              label: clienteSelecionado?.nomeCliente ?? "Selecionar Cliente",
+              label: clienteSelecionado?.clientName ?? "Selecionar Cliente",
               icon: Icons.person_search,
               onTap: () async {
                 final r = await Navigator.push(
@@ -383,10 +373,10 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   Widget _buildProdutoItem(Product p) {
-    final qtd = quantidades[p.id] ?? 1;
+    final qtd = quantidades[p.productId] ?? 1;
 
     return Dismissible(
-      key: Key("produto_${p.id}"),
+      key: Key("produto_${p.productId}"),
       direction: DismissDirection.endToStart,
       onUpdate: (details) {
         if (details.direction == DismissDirection.endToStart) {
@@ -404,8 +394,8 @@ class _OrdersPageState extends State<OrdersPage> {
       onDismissed: (_) {
         setState(() {
           produtosSelecionados.remove(p);
-          quantidades.remove(p.id);
-          controllers.remove(p.id);
+          quantidades.remove(p.productId);
+          controllers.remove(p.productId);
         });
       },
       child: Card(
@@ -418,7 +408,7 @@ class _OrdersPageState extends State<OrdersPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                p.nome,
+                p.productName,
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
@@ -478,8 +468,8 @@ class _OrdersPageState extends State<OrdersPage> {
               () {
                 if (qtd > 1) {
                   setState(() {
-                    quantidades[p.id] = qtd - 1;
-                    controllers[p.id]!.text = (qtd - 1).toString();
+                    quantidades[p.productId] = qtd - 1;
+                    controllers[p.productId]!.text = (qtd - 1).toString();
                   });
                 }
               },
@@ -493,8 +483,8 @@ class _OrdersPageState extends State<OrdersPage> {
               Colors.green.shade100,
               () {
                 setState(() {
-                  quantidades[p.id] = qtd + 1;
-                  controllers[p.id]!.text = (qtd + 1).toString();
+                  quantidades[p.productId] = qtd + 1;
+                  controllers[p.productId]!.text = (qtd + 1).toString();
                 });
               },
             ),
@@ -504,8 +494,8 @@ class _OrdersPageState extends State<OrdersPage> {
           onTap: () => editarPrecoProduto(p),
           child: Text(
             formatador.format(
-              p.precoEditado ??
-                  (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1),
+              p.editedPrice ??
+                  (clienteSelecionado?.priceList == 2 ? p.price2 : p.price1),
             ),
             style: TextStyle(
               fontSize: 20,
@@ -548,7 +538,7 @@ class _OrdersPageState extends State<OrdersPage> {
         border: Border.all(color: Colors.grey.shade400),
       ),
       child: TextFormField(
-        controller: controllers[p.id],
+        controller: controllers[p.productId],
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -560,7 +550,7 @@ class _OrdersPageState extends State<OrdersPage> {
         onChanged: (v) {
           int n = int.tryParse(v) ?? 1;
           if (n < 1) n = 1;
-          setState(() => quantidades[p.id] = n);
+          setState(() => quantidades[p.productId] = n);
         },
       ),
     );
@@ -614,7 +604,7 @@ class _OrdersPageState extends State<OrdersPage> {
           MaterialPageRoute(
             builder:
                 (_) => ResumoPedidoPage(
-                  clienteId: clienteSelecionado!.id,
+                  clienteId: clienteSelecionado!.clientId,
                   cliente: clienteSelecionado!,
                   pagamentoId: pagamentoSelecionado!["id"],
                   vencimentoEditado: vencimentoEditado,
@@ -683,10 +673,10 @@ class _OrdersPageState extends State<OrdersPage> {
 
   void editarPrecoProduto(Product p) {
     final precoPadrao =
-        (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1);
-    final precoMinimo = p.precoMinimo;
+        (clienteSelecionado?.priceList == 2 ? p.price2 : p.price1);
+    final precoMinimo = p.minimalPrice;
 
-    final String precoInicial = (p.precoEditado ?? precoPadrao)
+    final String precoInicial = (p.editedPrice ?? precoPadrao)
         .toStringAsFixed(2)
         .replaceAll('.', ',');
 
@@ -745,7 +735,7 @@ class _OrdersPageState extends State<OrdersPage> {
                             final double novoPreco = parsePreco(ctrl.text);
 
                             setState(() {
-                              p.precoEditado = novoPreco;
+                              p.editedPrice = novoPreco;
                             });
 
                             Navigator.pop(context);
@@ -797,11 +787,11 @@ class _OrdersPageState extends State<OrdersPage> {
     double total = 0.0;
 
     for (var p in produtosSelecionados) {
-      final qtd = quantidades[p.id] ?? 1;
+      final qtd = quantidades[p.productId] ?? 1;
 
       final precoBase =
-          (clienteSelecionado?.listaPreco == 2 ? p.preco2 : p.preco1);
-      final preco = p.precoEditado ?? precoBase;
+          (clienteSelecionado?.priceList == 2 ? p.price2 : p.price1);
+      final preco = p.editedPrice ?? precoBase;
 
       total += preco * qtd;
     }
@@ -821,13 +811,13 @@ class _OrdersPageState extends State<OrdersPage> {
   double estoquePorEmpresa(Product p, int empresa) {
     switch (empresa) {
       case 1:
-        return p.estoqueBelavista;
+        return p.belavistaStock;
       case 2:
-        return p.estoqueImbuia;
+        return p.imbuiaStock;
       case 3:
-        return p.estoqueVilanova;
+        return p.vilanovaStock;
       case 4:
-        return p.estoqueAurora;
+        return p.auroraStock;
       default:
         return 0;
     }
@@ -836,13 +826,13 @@ class _OrdersPageState extends State<OrdersPage> {
   double disponivelPorEmpresa(Product p, int empresa) {
     switch (empresa) {
       case 1:
-        return p.disponivelBelavista;
+        return p.belavistaAvailable;
       case 2:
-        return p.disponivelImbuia;
+        return p.imbuiaAvailable;
       case 3:
-        return p.disponivelVilanova;
+        return p.vilanovaAvailable;
       case 4:
-        return p.disponivelAurora;
+        return p.auroraAvailable;
       default:
         return 0;
     }

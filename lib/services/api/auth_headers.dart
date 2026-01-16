@@ -4,7 +4,7 @@ class AuthHeaders {
   static Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final userId = prefs.getString('id_usuario') ?? 'unknown';
+    final userId = prefs.getInt('id_usuario') ?? 'unknown';
     final device = prefs.getString('dispositivo') ?? 'unknown';
     final signature = prefs.getString('assinatura') ?? 'unknown';
 

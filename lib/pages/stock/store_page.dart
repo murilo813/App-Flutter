@@ -1,19 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 
-import 'models/product.dart';
-import 'services/sync_service.dart';
-import 'background/local_log.dart';
-import 'background/pendents.dart';
-import 'widgets/loading.dart';
-import 'widgets/error.dart';
-import 'widgets/gradientgreen.dart';
-import 'secrets.dart';
+import '../../models/product.dart';
+import '../../services/api/sync_data.dart';
+import 'package:alembro/services/connectivity.dart';
+import '../../services/local/local_log.dart';
+import '../../services/local/pendents.dart';
+import '../../widgets/loading.dart';
+import '../../widgets/error.dart';
+import '../../widgets/gradientgreen.dart';
+import 'stock_controller.dart';
 
 class StorePage extends StatefulWidget {
   final bool modoSelecao;
@@ -25,6 +22,7 @@ class StorePage extends StatefulWidget {
 }
 
 class StorePageState extends State<StorePage> with WidgetsBindingObserver {
+  final _stockController = StockController();
   late List<Product> filteredProducts;
   late List<Product> allProducts = [];
   late TextEditingController searchController;
@@ -65,59 +63,6 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<bool> hasInternetConnection() async {
-    try {
-      final response = await http
-          .get(Uri.parse('$backendUrl/ping'))
-          .timeout(const Duration(seconds: 7));
-      return response.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<void> carregarDadosLocais() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/estoque_geral.json');
-
-      if (!await file.exists()) {
-        await LocalLogger.log(
-          'Offline e sem cache: estoque_geral.json não encontrado',
-        );
-
-        setState(() {
-          allProducts = [];
-          filteredProducts = [];
-          ultimaAtualizacao = null;
-        });
-        return;
-      }
-
-      final content = await file.readAsString();
-      final Map<String, dynamic> jsonData = json.decode(content);
-
-      final List<Product> localProducts =
-          (jsonData['data'] as List).map((e) => Product.fromJson(e)).toList();
-
-      setState(() {
-        allProducts = localProducts;
-        filteredProducts = localProducts;
-        ultimaAtualizacao = jsonData['lastSynced'];
-      });
-    } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro ao carregar dados locais\nErro: $e\nStack: $stack',
-      );
-
-      setState(() {
-        allProducts = [];
-        filteredProducts = [];
-        ultimaAtualizacao = null;
-      });
-    }
-  }
-
   Future<void> checkConnectionAndLoadData() async {
     setState(() {
       loading = true;
@@ -127,43 +72,29 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
     try {
       final temInternet = await hasInternetConnection();
 
-      if (widget.modoSelecao) {
-        await carregarDadosLocais();
-      } else if (!temInternet) {
-        await carregarDadosLocais();
-      } else {
-        List<Product> produtos = [];
+      if (!widget.modoSelecao && temInternet) {
         try {
-          produtos = await syncService.syncStock();
+          await syncService.syncStock();
         } catch (e, stack) {
-          await LocalLogger.log('Erro na sincronização: $e\n$stack');
+          await LocalLogger.log('Erro na sincronização de estoque: $e\n$stack');
         }
-
-        // Atualiza o estado com os produtos sincronizados
-        if (produtos.isNotEmpty) {
-          setState(() {
-            allProducts = produtos;
-            filteredProducts = produtos;
-            ultimaAtualizacao = DateTime.now().toIso8601String();
-          });
-        }
-
-        // Se ainda não tiver produtos, tenta carregar local
-        if (produtos.isEmpty) await carregarDadosLocais();
       }
 
-      if (allProducts.isEmpty) {
-        setState(() {
-          erroCritico = true;
-        });
-      }
-    } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro crítico em checkConnectionAndLoadData\nErro: $e\nStack: $stack',
-      );
+      // 2. Carga de Dados (Sempre carrega do local após a tentativa de sync)
+      final StockData data = await _stockController.loadStock();
+
       setState(() {
-        erroCritico = true;
+        allProducts = data.products;
+        filteredProducts = data.products;
+        ultimaAtualizacao = data.lastSynced;
+        
+        // Se após tentar carregar ainda estiver vazio, dá erro crítico
+        erroCritico = allProducts.isEmpty;
       });
+
+    } catch (e, stack) {
+      await LocalLogger.log('Erro crítico em StorePage: $e\n$stack');
+      setState(() => erroCritico = true);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -317,7 +248,7 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${product.id}',
+                                '${product.productId}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -325,7 +256,7 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
                                 ),
                               ),
                               Text(
-                                product.nome,
+                                product.productName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -341,14 +272,14 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    product.marca,
+                                    product.brand,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  if (product.aplicacao.isNotEmpty)
+                                  if (product.aplication.isNotEmpty)
                                     Text(
-                                      product.aplicacao,
+                                      product.aplication,
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey[700],
@@ -372,17 +303,17 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
 
   Widget _buildEstoqueTable(Product product) {
     final List<List<String>> rows = [
-      ['Aurora', '${product.estoqueAurora}', '${product.disponivelAurora}'],
-      ['Imbuia', '${product.estoqueImbuia}', '${product.disponivelImbuia}'],
+      ['Aurora', '${product.auroraStock}', '${product.auroraAvailable}'],
+      ['Imbuia', '${product.imbuiaStock}', '${product.imbuiaAvailable}'],
       [
         'Vila Nova',
-        '${product.estoqueVilanova}',
-        '${product.disponivelVilanova}',
+        '${product.vilanovaStock}',
+        '${product.vilanovaAvailable}',
       ],
       [
         'Bela Vista',
-        '${product.estoqueBelavista}',
-        '${product.disponivelBelavista}',
+        '${product.belavistaStock}',
+        '${product.belavistaAvailable}',
       ],
     ];
 
@@ -414,7 +345,7 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
                           text: 'Preço 1: ',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        TextSpan(text: product.preco1Formatado),
+                        TextSpan(text: product.price1F),
                       ],
                     ),
                   ),
@@ -432,7 +363,7 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
                             text: 'Preço 2: ',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          TextSpan(text: product.preco2Formatado),
+                          TextSpan(text: product.price2F),
                         ],
                       ),
                     ),
@@ -538,12 +469,12 @@ class StorePageState extends State<StorePage> with WidgetsBindingObserver {
 
       filteredProducts =
           allProducts.where((product) {
-            final matchesName = product.nome.toLowerCase().contains(lowerQuery);
-            final matchesMarca = product.marca.toLowerCase().contains(
+            final matchesName = product.productName.toLowerCase().contains(lowerQuery);
+            final matchesMarca = product.brand.toLowerCase().contains(
               lowerQuery,
             );
-            final matchesId = product.id.toString().contains(lowerQuery);
-            final matchesAplicacao = product.aplicacao.toLowerCase().contains(
+            final matchesId = product.productId.toString().contains(lowerQuery);
+            final matchesAplicacao = product.aplication.toLowerCase().contains(
               lowerQuery,
             );
             return matchesName || matchesMarca || matchesId || matchesAplicacao;

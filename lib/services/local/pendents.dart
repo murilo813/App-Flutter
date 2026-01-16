@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-import 'package:alembro/services/http_client.dart';
+import 'package:alembro/services/api/http_client.dart';
 
 class OfflineQueue {
   static const _key = 'offline_queue';

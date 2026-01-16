@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
-import 'background/pendents.dart';
-import 'secrets.dart';
+import '../../services/local/pendents.dart';
+import '../../secrets.dart';
 
 class PendentsPage extends StatefulWidget {
   const PendentsPage({super.key});

@@ -10,9 +10,9 @@ import 'package:alembro/models/product.dart';
 import 'package:alembro/models/user.dart';
 import 'package:alembro/models/observation.dart';
 import 'package:alembro/secrets.dart';
-import 'package:alembro/background/local_log.dart';
+import 'package:alembro/services/local/local_log.dart';
 import 'http_client.dart';
-import 'parsers.dart';
+import '../local/parsers.dart';
 
 final httpClient = HttpClient();
 

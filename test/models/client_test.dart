@@ -5,100 +5,100 @@ void main() {
   group('Cliente Model - Unit Tests', () {
     test('Deve converter JSON corretamente para objeto Cliente', () {
       final json = {
-        'nome_cliente': 'MARCOLINO DOS SANTOS',
-        'responsavel': 'MARCOS CASTRO',
-        'limite': 1000.0,
-        'saldo_limite': -500.0,
-        'limite_calculado': 1000.0,
-        'saldo_limite_calculado': 500.0,
-        'id_cliente': 123,
-        'data_nasc': '1990-05-15',
-        'lista_preco': 2,
+        'clientName': 'MARCOLINO DOS SANTOS',
+        'responsible': 'MARCOS CASTRO',
+        'limitBM': 1000.0,
+        'balanceBM': -500.0,
+        'limitC': 1000.0,
+        'balanceC': 500.0,
+        'clientId': 123,
+        'birthday': '1990-05-15',
+        'priceList': 2,
       };
 
-      final cliente = Client.fromJson(json);
+      final client = Client.fromJson(json);
 
-      expect(cliente.nomeCliente, 'MARCOLINO DOS SANTOS');
-      expect(cliente.responsavel, 'MARCOS CASTRO');
-      expect(cliente.id, 123);
-      expect(cliente.listaPreco, 2);
-      expect(cliente.dataNasc?.year, 1990);
-      expect(cliente.dataNasc?.month, 5);
-      expect(cliente.dataNasc?.day, 15);
+      expect(client.clientName, 'MARCOLINO DOS SANTOS');
+      expect(client.responsible, 'MARCOS CASTRO');
+      expect(client.clientId, 123);
+      expect(client.priceList, 2);
+      expect(client.birthday?.year, 1990);
+      expect(client.birthday?.month, 5);
+      expect(client.birthday?.day, 15);
     });
 
     test('Deve lidar com campos nulos no JSON sem crashar', () {
       final json = {
-        'nome_cliente': 'MARCOLINO DOS SANTOS',
-        'limite': 0.0,
-        'saldo_limite': 0.0,
-        'limite_calculado': 0.0,
-        'saldo_limite_calculado': 0.0,
-        'id_cliente': 999,
+        'clientName': 'MARCOLINO DOS SANTOS',
+        'limitiBM': 0.0,
+        'balanceBM': 0.0,
+        'limitC': 0.0,
+        'balanceC': 0.0,
+        'clientId': 999,
       };
 
-      final cliente = Client.fromJson(json);
+      final client = Client.fromJson(json);
 
-      expect(cliente.responsavel, '');
-      expect(cliente.listaPreco, 1);
-      expect(cliente.dataNasc, isNull);
+      expect(client.responsible, '');
+      expect(client.priceList, 1);
+      expect(client.birthday, isNull);
     });
 
     test('Deve tratar string de data vazia como null', () {
       final json = {
-        'nome_cliente': 'MARCOLINO DOS SANTOS',
-        'id_cliente': 1,
-        'limite': 0.0,
-        'saldo_limite': 0.0,
-        'limite_calculado': 0.0,
-        'saldo_limite_calculado': 0.0,
-        'data_nasc': '',
+        'clientName': 'MARCOLINO DOS SANTOS',
+        'clientId': 1,
+        'limitBM': 0.0,
+        'balanceBM': 0.0,
+        'limitC': 0.0,
+        'balanceC': 0.0,
+        'birthday': '',
       };
 
-      final cliente = Client.fromJson(json);
-      expect(cliente.dataNasc, isNull);
+      final client = Client.fromJson(json);
+      expect(client.birthday, isNull);
     });
 
     test('Deve formatar valores monetários corretamente para PT-BR', () {
-      final cliente = Client(
-        id: 1,
-        nomeCliente: 'MARCOLINO DOS SANTOS',
-        responsavel: '',
-        limite: -1250.50,
-        saldoLimite: 0,
-        limiteCalculado: 0,
-        saldoLimiteCalculado: 0,
+      final client = Client(
+        clientId: 1,
+        clientName: 'MARCOLINO DOS SANTOS',
+        responsible: '',
+        limitBM: -1250.50,
+        balanceBM: 0,
+        limitC: 0,
+        balanceC: 0,
       );
 
-      final resultadoLimpo = cliente.limiteFormatado.replaceAll(
+      final cleanResult = client.limitBMF.replaceAll(
         RegExp(r'\s+'),
         '',
       );
 
-      expect(resultadoLimpo, '-1.250,50');
+      expect(cleanResult, '-1.250,50');
     });
 
     test('Deve converter o objeto Cliente de volta para JSON corretamente', () {
-      final data = DateTime(1990, 5, 15);
+      final date = DateTime(1990, 5, 15);
 
-      final cliente = Client(
-        id: 123,
-        nomeCliente: 'MARCOLINO DOS SANTOS',
-        responsavel: 'MARCOS CASTRO',
-        limite: 1000.0,
-        saldoLimite: -500.0,
-        limiteCalculado: 1000.0,
-        saldoLimiteCalculado: 500.0,
-        dataNasc: data,
-        listaPreco: 2,
+      final client = Client(
+        clientId: 123,
+        clientName: 'MARCOLINO DOS SANTOS',
+        responsible: 'MARCOS CASTRO',
+        limitBM: 1000.0,
+        balanceBM: -500.0,
+        limitC: 1000.0,
+        balanceC: 500.0,
+        birthday: date,
+        priceList: 2,
       );
 
-      final json = cliente.toJson();
+      final json = client.toJson();
 
-      expect(json['id_cliente'], 123);
-      expect(json['nome_cliente'], 'MARCOLINO DOS SANTOS');
-      expect(json['limite'], 1000.0);
-      expect(json['data_nasc'], data.toIso8601String());
+      expect(json['clientId'], 123);
+      expect(json['clientName'], 'MARCOLINO DOS SANTOS');
+      expect(json['limit'], 1000.0);
+      expect(json['birthday'], date.toIso8601String());
     });
   });
 }

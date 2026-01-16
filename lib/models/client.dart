@@ -7,71 +7,71 @@ class Client {
     decimalDigits: 2,
   );
 
-  final int id;
-  final String nomeCliente;
-  final String responsavel;
-  final double limite;
-  final double saldoLimite;
-  final double limiteCalculado;
-  final double saldoLimiteCalculado;
-  final DateTime? dataNasc;
-  final DateTime? ultimaCompra;
-  final int listaPreco;
+  final int clientId;
+  final String clientName;
+  final String responsible;
+  final double limitBM;
+  final double balanceBM;
+  final double limitC;
+  final double balanceC;
+  final DateTime? birthday;
+  final DateTime? lastSale;
+  final int priceList;
 
   Client({
-    required this.id,
-    required this.nomeCliente,
-    required this.responsavel,
-    required this.limite,
-    required this.saldoLimite,
-    required this.limiteCalculado,
-    required this.saldoLimiteCalculado,
-    this.dataNasc,
-    this.ultimaCompra,
-    this.listaPreco = 1,
+    required this.clientId,
+    required this.clientName,
+    required this.responsible,
+    required this.limitBM,
+    required this.balanceBM,
+    required this.limitC,
+    required this.balanceC,
+    this.birthday,
+    this.lastSale,
+    this.priceList = 1,
   });
 
   factory Client.fromJson(Map<String, dynamic> json) {
     return Client(
-      id: json['id_cliente'],
-      nomeCliente: json['nome_cliente'],
-      responsavel: json['responsavel'] ?? '',
-      limite: (json['limite'] as num).toDouble(),
-      saldoLimite: (json['saldo_limite'] as num).toDouble(),
-      limiteCalculado: (json['limite_calculado'] as num).toDouble(),
-      saldoLimiteCalculado: (json['saldo_limite_calculado'] as num).toDouble(),
-      dataNasc:
-          json['data_nasc'] != null && json['data_nasc'] != ''
-              ? DateTime.tryParse(json['data_nasc'])
+      clientId: json['clientId'],
+      clientName: json['clientName'],
+      responsible: json['responsible'] ?? '',
+      limitBM: (json['limitBM'] as num).toDouble(),
+      balanceBM: (json['balanceBM'] as num).toDouble(),
+      limitC: (json['limitC'] as num).toDouble(),
+      balanceC: (json['balanceC'] as num).toDouble(),
+      birthday:
+          json['birthday'] != null && json['birthday'] != ''
+              ? DateTime.tryParse(json['birthday'])
               : null,
-      ultimaCompra:
-          json['ultima_compra'] != null && json['ultima_compra'] != ''
-              ? DateTime.tryParse(json['ultima_compra'])
+      lastSale:
+          json['lastSale'] != null && json['lastSale'] != ''
+              ? DateTime.tryParse(json['lastSale'])
               : null,
-      listaPreco: json['lista_preco'] ?? 1,
+      priceList: json['priceList'] ?? 1,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id_cliente': id,
-      'nome_cliente': nomeCliente,
-      'responsavel': responsavel,
-      'limite': limite,
-      'saldo_limite': saldoLimite,
-      'limite_calculado': limiteCalculado,
-      'saldo_limite_calculado': saldoLimiteCalculado,
-      'data_nasc': dataNasc?.toIso8601String(),
-      'ultima_compra': ultimaCompra?.toIso8601String(),
-      'lista_preco': listaPreco,
+      'clientId': clientId,
+      'clientName': clientName,
+      'responsible': responsible,
+      'limitBM': limitBM,
+      'balanceBM': balanceBM,
+      'limitC': limitC,
+      'balanceC': balanceC,
+      'birthday': birthday?.toIso8601String(),
+      'lastSale': lastSale?.toIso8601String(),
+      'priceList': priceList,
     };
   }
 
-  String _formatar(double valor) {
+  String _format(double valor) {
     return _formatter.format(valor).trim();
   }
-  String get limiteFormatado => _formatar(limite);
-  String get saldoFormatado => _formatar(saldoLimite);
-  String get limiteCalculadoFormatado => _formatar(limiteCalculado);
-  String get saldoCalculadoFormatado => _formatar(saldoLimiteCalculado);
+  String get limitBMF => _format(limitBM);
+  String get balanceBMF => _format(balanceBM);
+  String get limitCF => _format(limitC);
+  String get balanceCF => _format(balanceC);
 }

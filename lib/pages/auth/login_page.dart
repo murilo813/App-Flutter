@@ -9,12 +9,12 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:android_id/android_id.dart';
 import 'package:flutter/services.dart';
 
-import 'background/pendents.dart';
-import 'services/http_client.dart';
-import 'widgets/loading.dart';
-import 'widgets/gradientgreen.dart';
-import 'home_page.dart';
-import 'secrets.dart';
+import '../../services/local/pendents.dart';
+import '../../services/api/http_client.dart';
+import '../../widgets/loading.dart';
+import '../../widgets/gradientgreen.dart';
+import '../home/home_page.dart';
+import '../../secrets.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -48,7 +48,7 @@ class LoginPageState extends State<LoginPage> {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     final idVendedor = prefs.getInt('id_vendedor');
-    final idUsuario = prefs.getString('id_usuario');
+    final idUsuario = prefs.getInt('id_usuario');
 
     if (isLoggedIn && idUsuario != null && idVendedor != null) {
       await logUsage();
@@ -125,13 +125,13 @@ class LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final idVendedor = data['id_vendedor'];
-        final idUsuario = data['id_usuario'].toString();
+        final idUsuario = data['id_usuario'];
         final tipoUsuario = data['tipo'];
         final idEmpresa = data['id_empresa'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('id_usuario', idUsuario);
+        await prefs.setInt('id_usuario', idUsuario);
         await prefs.setInt('id_vendedor', idVendedor);
         await prefs.setString('dispositivo', device);
         await prefs.setString('assinatura', signature);

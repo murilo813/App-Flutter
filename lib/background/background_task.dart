@@ -1,10 +1,10 @@
 import 'package:workmanager/workmanager.dart';
 
-import 'package:alembro/services/sync_service.dart';
+import 'package:alembro/services/api/sync_data.dart';
 import 'package:alembro/secrets.dart';
 
-import 'local_log.dart';
-import 'pendents.dart';
+import '../services/local/local_log.dart';
+import '../services/local/pendents.dart';
 
 const taskSync = "sync_estoque";
 

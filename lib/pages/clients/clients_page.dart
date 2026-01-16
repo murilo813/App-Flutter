@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
 
-import 'services/sync_service.dart';
-import 'services/http_client.dart';
-import 'background/local_log.dart';
-import 'background/pendents.dart';
-import 'widgets/loading.dart';
-import 'widgets/error.dart';
-import 'widgets/gradientgreen.dart';
-import 'models/client.dart';
-import 'secrets.dart';
+import 'package:alembro/services/api/sync_data.dart';
+import 'package:alembro/services/api/http_client.dart';
+import 'package:alembro/services/connectivity.dart';
+import 'package:alembro/services/local/local_log.dart';
+import 'package:alembro/services/local/pendents.dart';
+import 'package:alembro/widgets/loading.dart';
+import 'package:alembro/widgets/error.dart';
+import 'package:alembro/widgets/gradientgreen.dart';
+import 'package:alembro/models/client.dart';
+import 'clients_controller.dart';
 
 class ClientsPage extends StatefulWidget {
   final bool modoSelecao;
@@ -27,6 +27,7 @@ class ClientsPage extends StatefulWidget {
 }
 
 class ClientsPageState extends State<ClientsPage> {
+  final _controller = ClientController();
   List<Client> clientes = [];
   late List<Client> filteredClientes;
   late List<Client> allClientes = [];
@@ -45,143 +46,29 @@ class ClientsPageState extends State<ClientsPage> {
     checkConnectionAndLoadData();
   }
 
-  Future<bool> hasInternetConnection() async {
-    try {
-      final response = await http
-          .get(Uri.parse('$backendUrl/ping'))
-          .timeout(const Duration(seconds: 7));
-      return response.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<void> carregarDadosLocais() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/clientes.json');
-
-      if (!await file.exists()) {
-        await LocalLogger.log('Erro crítico: arquivo clientes.json não existe');
-        return;
-      }
-
-      final content = await file.readAsString();
-      final Map<String, dynamic> jsonData = json.decode(content);
-
-      final List<Client> localClientes =
-          (jsonData['data'] as List)
-              .map((json) => Client.fromJson(json))
-              .toList();
-
-      final hoje = DateTime.now();
-
-      localClientes.sort((a, b) {
-        final aAniv =
-            a.dataNasc != null &&
-            a.dataNasc!.day == hoje.day &&
-            a.dataNasc!.month == hoje.month;
-        final bAniv =
-            b.dataNasc != null &&
-            b.dataNasc!.day == hoje.day &&
-            b.dataNasc!.month == hoje.month;
-
-        if (aAniv && !bAniv) return -1;
-        if (!aAniv && bAniv) return 1;
-
-        final DateTime? ultimaObsA = allObs
-            .where((o) => o['responsavel'] == a.responsavel)
-            .map((o) => DateTime.parse(o['data']))
-            .fold<DateTime?>(
-              null,
-              (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
-            );
-
-        final DateTime? ultimaObsB = allObs
-            .where((o) => o['responsavel'] == b.responsavel)
-            .map((o) => DateTime.parse(o['data']))
-            .fold<DateTime?>(
-              null,
-              (prev, e) => prev == null || e.isAfter(prev) ? e : prev,
-            );
-
-        final refA = _maisRecenteEntre(ultimaObsA, a.ultimaCompra);
-        final refB = _maisRecenteEntre(ultimaObsB, b.ultimaCompra);
-
-        if (refA == null && refB == null) {
-          return a.nomeCliente.compareTo(b.nomeCliente);
-        }
-        if (refA == null) return 1;
-        if (refB == null) return -1;
-
-        return refA.compareTo(refB);
-      });
-
-      setState(() {
-        clientes = localClientes;
-        allClientes = localClientes;
-        filteredClientes = _getFilteredClientes();
-        ultimaAtualizacao = jsonData['lastSynced'];
-      });
-    } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro ao carregar dados locais\nErro: $e\nStack: $stack',
-      );
-      setState(() {
-        clientes = [];
-        allClientes = [];
-        filteredClientes = [];
-      });
-    }
-  }
-
   Future<void> checkConnectionAndLoadData() async {
-    setState(() {
-      loading = true;
-      erroCritico = false;
-    });
+    setState(() { loading = true; erroCritico = false; });
 
     try {
-      final temInternet = await hasInternetConnection();
+      final online = await hasInternetConnection();
 
-      if (widget.modoSelecao) {
-        await carregarDadosLocais();
-        return;
+      if (online && !widget.modoSelecao) {
+        await syncService.syncClients();
+        await syncService.syncObservations();
       }
 
-      if (!temInternet) {
-        await carregarDadosLocais();
+      final dadosProntos = await _controller.loadAndSort();
 
-        if (allClientes.isEmpty) {
-          setState(() {
-            erroCritico = true;
-          });
-        }
-      } else {
-        try {
-          await syncService.syncClients();
-          await syncService.syncObservations();
-        } catch (e, stack) {
-          await LocalLogger.log(
-            'Erro na sincronização de clientes\nErro: $e\nStack: $stack',
-          );
-        }
-
-        await carregarDadosLocais();
-
-        if (allClientes.isEmpty) {
-          setState(() {
-            erroCritico = true;
-          });
-        }
-      }
-    } catch (e, stack) {
-      await LocalLogger.log(
-        'Erro crítico em checkConnectionAndLoadData (clientes)\nErro: $e\nStack: $stack',
-      );
       setState(() {
-        erroCritico = true;
+        allClientes = dadosProntos;
+        clientes = dadosProntos;
+        filteredClientes = _getFilteredClientes();
+        erroCritico = allClientes.isEmpty;
       });
+
+    } catch (e) {
+      await LocalLogger.log('Erro na página de clientes: $e');
+      setState(() => erroCritico = true);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -326,29 +213,29 @@ class ClientsPageState extends State<ClientsPage> {
                             final cliente = filteredClientes[index];
                             final hoje = DateTime.now();
                             final isAniversariante =
-                                cliente.dataNasc != null &&
-                                cliente.dataNasc!.day == hoje.day &&
-                                cliente.dataNasc!.month == hoje.month;
+                                cliente.birthday != null &&
+                                cliente.birthday!.day == hoje.day &&
+                                cliente.birthday!.month == hoje.month;
 
                             // Cálculo cor do ícone
-                            final obsDoResponsavel =
+                            final obsDoresponsible =
                                 allObs
                                     .where(
                                       (o) =>
-                                          o['responsavel'] ==
-                                          cliente.responsavel,
+                                          o['responsible'] ==
+                                          cliente.responsible,
                                     )
                                     .toList();
 
                             DateTime? ultimaObs;
-                            if (obsDoResponsavel.isNotEmpty) {
-                              obsDoResponsavel.sort(
+                            if (obsDoresponsible.isNotEmpty) {
+                              obsDoresponsible.sort(
                                 (a, b) => DateTime.parse(
                                   b['data'],
                                 ).compareTo(DateTime.parse(a['data'])),
                               );
                               ultimaObs = DateTime.parse(
-                                obsDoResponsavel.first['data'],
+                                obsDoresponsible.first['data'],
                               );
                             }
 
@@ -362,10 +249,10 @@ class ClientsPageState extends State<ClientsPage> {
                                       : (dias <= 25
                                           ? Colors.orangeAccent
                                           : Colors.red);
-                            } else if (cliente.ultimaCompra != null) {
+                            } else if (cliente.lastSale != null) {
                               final diasSemCompra =
                                   DateTime.now()
-                                      .difference(cliente.ultimaCompra!)
+                                      .difference(cliente.lastSale!)
                                       .inDays;
                               corIcone =
                                   diasSemCompra <= 10
@@ -393,7 +280,7 @@ class ClientsPageState extends State<ClientsPage> {
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                cliente.nomeCliente,
+                                                cliente.clientName,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -420,9 +307,9 @@ class ClientsPageState extends State<ClientsPage> {
                                             ),
                                           ],
                                         ),
-                                        if (cliente.responsavel.isNotEmpty)
+                                        if (cliente.responsible.isNotEmpty)
                                           Text(
-                                            'Responsável: ${cliente.responsavel}',
+                                            'Responsável: ${cliente.responsible}',
                                             style: TextStyle(
                                               fontSize: 13,
                                               color: Colors.grey[700],
@@ -455,16 +342,10 @@ class ClientsPageState extends State<ClientsPage> {
     );
   }
 
-  DateTime? _maisRecenteEntre(DateTime? a, DateTime? b) {
-    if (a == null) return b;
-    if (b == null) return a;
-    return a.isAfter(b) ? a : b;
-  }
-
   Future<void> atualizarObservacoesLocais() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final obsFile = File('${dir.path}/observacoes.json');
+      final obsFile = File('${dir.path}/observations.json');
 
       if (!await obsFile.exists()) return;
 
@@ -486,13 +367,13 @@ class ClientsPageState extends State<ClientsPage> {
   ) async {
     DateTime selectedDate = DateTime.now();
 
-    bool visitado = false;
+    bool visited = false;
     final TextEditingController obsController = TextEditingController();
 
     List<Map<String, dynamic>> clienteObs = [];
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/observacoes.json');
+      final file = File('${dir.path}/observations.json');
 
       if (await file.exists()) {
         final content = await file.readAsString();
@@ -501,13 +382,13 @@ class ClientsPageState extends State<ClientsPage> {
 
         clienteObs =
             allObs
-                .where((o) => o['responsavel'] == cliente.responsavel)
+                .where((o) => o['responsible'] == cliente.responsible)
                 .map((o) => Map<String, dynamic>.from(o))
                 .toList();
       }
     } catch (e, stack) {
       await LocalLogger.log(
-        'Erro ao carregar observações do cliente ${cliente.id}: $e\nStackTrace: $stack',
+        'Erro ao carregar observações do cliente ${cliente.clientId}: $e\nStackTrace: $stack',
       );
     }
 
@@ -597,14 +478,14 @@ class ClientsPageState extends State<ClientsPage> {
                       Row(
                         children: [
                           const Text(
-                            'Visitado:',
+                            'visited:',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Checkbox(
-                            value: visitado,
+                            value: visited,
                             activeColor: Colors.green,
                             onChanged: (val) {
-                              visitado = val ?? false;
+                              visited = val ?? false;
                               (context as Element)
                                   .markNeedsBuild(); // Atualiza UI
                             },
@@ -647,15 +528,15 @@ class ClientsPageState extends State<ClientsPage> {
                               '${DateTime.parse(o['data']).day.toString().padLeft(2, '0')}/'
                               '${DateTime.parse(o['data']).month.toString().padLeft(2, '0')}/'
                               '${DateTime.parse(o['data']).year}  •  '
-                              '${o['visitado'] == true ? 'Visitado' : 'Não visitado'}  •  '
-                              '${o['nome_cliente'] ?? ''}',
+                              '${o['visited'] == true ? 'visited' : 'Não visitado'}  •  '
+                              '${o['clientName'] ?? ''}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if ((o['observacao'] ?? '').isNotEmpty)
+                            if ((o['observation'] ?? '').isNotEmpty)
                               Text(
-                                o['observacao']!,
+                                o['observation']!,
                                 style: const TextStyle(height: 1.4),
                               ),
                           ],
@@ -698,20 +579,20 @@ class ClientsPageState extends State<ClientsPage> {
                   }
 
                   final body = {
-                    'data': selectedDate.toIso8601String(),
-                    'visitado': visitado,
-                    'observacao':
+                    'date': selectedDate.toIso8601String(),
+                    'visited': visited,
+                    'observation':
                         obsController.text.isNotEmpty
                             ? obsController.text
                             : null,
                   };
 
-                  final url = '/clientes/${cliente.id}/observacoes';
+                  final url = '/clientes/${cliente.clientId}/observacoes';
 
                   try {
                     // salva local
                     final dir = await getApplicationDocumentsDirectory();
-                    final file = File('${dir.path}/observacoes.json');
+                    final file = File('${dir.path}/observations.json');
                     Map<String, dynamic> jsonData = {'data': []};
 
                     if (await file.exists()) {
@@ -721,12 +602,12 @@ class ClientsPageState extends State<ClientsPage> {
 
                     final List<dynamic> localData = jsonData['data'] ?? [];
                     localData.add({
-                      'id_cliente': cliente.id,
-                      'nome_cliente': cliente.nomeCliente,
-                      'responsavel': cliente.responsavel,
-                      'data': body['data'],
-                      'visitado': body['visitado'],
-                      'observacao': body['observacao'],
+                      'clientId': cliente.clientId,
+                      'clientName': cliente.clientName,
+                      'responsible': cliente.responsible,
+                      'date': body['date'],
+                      'visited': body['visited'],
+                      'observation': body['observation'],
                     });
                     jsonData['data'] = localData;
 
@@ -787,26 +668,26 @@ class ClientsPageState extends State<ClientsPage> {
       children: [
         _buildColunaLimiteComLinhaInterna(
           "Limite BM",
-          cliente.limiteFormatado,
-          cliente.limite,
+          cliente.limitBMF,
+          cliente.limitBM,
           true,
         ),
         _buildColunaLimiteComLinhaInterna(
           "Saldo BM",
-          cliente.saldoFormatado,
-          cliente.saldoLimite,
+          cliente.balanceBMF,
+          cliente.balanceBM,
           true,
         ),
         _buildColunaLimiteComLinhaInterna(
           "Limite C",
-          cliente.limiteCalculadoFormatado,
-          cliente.limiteCalculado,
+          cliente.limitCF,
+          cliente.limitC,
           true,
         ),
         _buildColunaLimiteComLinhaInterna(
           "Saldo C",
-          cliente.saldoCalculadoFormatado,
-          cliente.saldoLimiteCalculado,
+          cliente.balanceCF,
+          cliente.balanceC,
           false,
         ),
       ],
@@ -867,19 +748,19 @@ class ClientsPageState extends State<ClientsPage> {
 
     final double totalLimiteBM = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.limite,
+      (sum, c) => sum + c.limitBM,
     );
     final double totalSaldoBM = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.saldoLimite,
+      (sum, c) => sum + c.balanceBM,
     );
     final double totalLimiteC = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.limiteCalculado,
+      (sum, c) => sum + c.limitC,
     );
     final double totalSaldoC = clientesParaTotais.fold(
       0,
-      (sum, c) => sum + c.saldoLimiteCalculado,
+      (sum, c) => sum + c.balanceC,
     );
 
     return SafeArea(
@@ -956,8 +837,8 @@ class ClientsPageState extends State<ClientsPage> {
 
     final filtrados =
         allClientes.where((c) {
-          final nome = c.nomeCliente.toLowerCase();
-          final resp = c.responsavel.toLowerCase();
+          final nome = c.clientName.toLowerCase();
+          final resp = c.responsible.toLowerCase();
           return nome.contains(query) || resp.contains(query);
         }).toList();
 

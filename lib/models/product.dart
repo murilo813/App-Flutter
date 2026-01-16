@@ -7,94 +7,94 @@ class Product {
     decimalDigits: 2,
   );
 
-  final int id;
-  final String nome;
+  final int productId;
+  final String productName;
 
-  final double estoqueAurora;
-  final double estoqueImbuia;
-  final double estoqueVilanova;
-  final double estoqueBelavista;
+  final double auroraStock;
+  final double imbuiaStock;
+  final double vilanovaStock;
+  final double belavistaStock;
 
-  final double disponivelAurora;
-  final double disponivelImbuia;
-  final double disponivelVilanova;
-  final double disponivelBelavista;
+  final double auroraAvailable;
+  final double imbuiaAvailable;
+  final double vilanovaAvailable;
+  final double belavistaAvailable;
 
-  final String marca;
-  final double preco1;
-  final double preco2;
-  final double precoMinimo;
-  final String aplicacao;
+  final String brand;
+  final double price1;
+  final double price2;
+  final double minimalPrice;
+  final String aplication;
 
   /// Apenas UI / estado local
-  double? precoEditado;
+  double? editedPrice;
 
   Product({
-    required this.id,
-    required this.nome,
-    required this.estoqueAurora,
-    required this.estoqueImbuia,
-    required this.estoqueVilanova,
-    required this.estoqueBelavista,
-    required this.disponivelAurora,
-    required this.disponivelImbuia,
-    required this.disponivelVilanova,
-    required this.disponivelBelavista,
-    required this.marca,
-    required this.preco1,
-    required this.preco2,
-    required this.precoMinimo,
-    required this.aplicacao,
-    this.precoEditado,
+    required this.productId,
+    required this.productName,
+    required this.auroraStock,
+    required this.imbuiaStock,
+    required this.vilanovaStock,
+    required this.belavistaStock,
+    required this.auroraAvailable,
+    required this.imbuiaAvailable,
+    required this.vilanovaAvailable,
+    required this.belavistaAvailable,
+    required this.brand,
+    required this.price1,
+    required this.price2,
+    required this.minimalPrice,
+    required this.aplication,
+    this.editedPrice,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
     double d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
 
     return Product(
-      id: json['id'],
-      nome: json['nome'],
-      estoqueAurora: d(json['estoque_aurora']),
-      estoqueImbuia: d(json['estoque_imbuia']),
-      estoqueVilanova: d(json['estoque_vilanova']),
-      estoqueBelavista: d(json['estoque_belavista']),
-      disponivelAurora: d(json['disponivel_aurora']),
-      disponivelImbuia: d(json['disponivel_imbuia']),
-      disponivelVilanova: d(json['disponivel_vilanova']),
-      disponivelBelavista: d(json['disponivel_belavista']),
-      marca: json['marca'],
-      preco1: d(json['preco1']),
-      preco2: d(json['preco2']),
-      precoMinimo: d(json['preco_minimo']),
-      aplicacao: json['aplicacao'] ?? '',
+      productId: json['productId'],
+      productName: json['productName'],
+      auroraStock: d(json['auroraStock']),
+      imbuiaStock: d(json['imbuiaStock']),
+      vilanovaStock: d(json['vilanovaStock']),
+      belavistaStock: d(json['belavistaStock']),
+      auroraAvailable: d(json['auroraAvailable']),
+      imbuiaAvailable: d(json['imbuiaAvailable']),
+      vilanovaAvailable: d(json['vilanovaAvailable']),
+      belavistaAvailable: d(json['belavistaAvailable']),
+      brand: json['brand'],
+      price1: d(json['price1']),
+      price2: d(json['price2']),
+      minimalPrice: d(json['minimalPrice']),
+      aplication: json['aplication'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'nome': nome,
-      'estoque_aurora': estoqueAurora,
-      'estoque_imbuia': estoqueImbuia,
-      'estoque_vilanova': estoqueVilanova,
-      'estoque_belavista': estoqueBelavista,
-      'disponivel_aurora': disponivelAurora,
-      'disponivel_imbuia': disponivelImbuia,
-      'disponivel_vilanova': disponivelVilanova,
-      'disponivel_belavista': disponivelBelavista,
-      'marca': marca,
-      'preco1': preco1,
-      'preco2': preco2,
-      'preco_minimo': precoMinimo,
-      'aplicacao': aplicacao,
+      'productId': productId,
+      'productName': productName,
+      'auroraStock': auroraStock,
+      'imbuiaStock': imbuiaStock,
+      'vilanovaStock': vilanovaStock,
+      'belavistaStock': belavistaStock,
+      'auroraAvailable': auroraAvailable,
+      'imbuiaAvailable': imbuiaAvailable,
+      'vilanovaAvailable': vilanovaAvailable,
+      'belavistaAvailable': belavistaAvailable,
+      'brand': brand,
+      'price1': price1,
+      'price2': price2,
+      'minimalPrice': minimalPrice,
+      'aplication': aplication,
     };
   }
 
-  String _formatar(double valor) {
+  String _format(double valor) {
     return _formatter.format(valor).trim();
   }
 
-  String get preco1Formatado => _formatar(preco1);
-  String get preco2Formatado => _formatar(preco2);
-  String get precoMinimoFormatado => _formatar(precoMinimo);
+  String get price1F => _format(price1);
+  String get price2F => _format(price2);
+  String get minimalPriceF => _format(minimalPrice);
 }

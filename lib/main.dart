@@ -4,10 +4,10 @@ import 'package:workmanager/workmanager.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'background/background_task.dart';
-import 'background/pendents.dart';
-import 'background/local_log.dart';
-import 'home_page.dart';
-import 'login_page.dart';
+import 'services/local/pendents.dart';
+import 'services/local/local_log.dart';
+import 'pages/home/home_page.dart';
+import 'pages/auth/login_page.dart';
 import 'secrets.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
